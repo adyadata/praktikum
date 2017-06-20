@@ -4722,6 +4722,8 @@ class cAdvancedSecurity {
 		// Example:
 		//$_SESSION['UserEmail'] = $rs['Email'];
 
+		$_SESSION["praktikum_nim"] = $rs["NIM"];
+		echo $_SESSION["praktikum_nim"]; //exit;
 	}
 
 	// User PasswordExpired event

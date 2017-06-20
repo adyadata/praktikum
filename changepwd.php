@@ -513,8 +513,6 @@ fchangepwd.Validate = function() {
 <?php } ?>
 	if (!ew_HasValue(fobj.npwd))
 		return this.OnError(fobj.npwd, ewLanguage.Phrase("EnterNewPassword"));
-	if ($npwd.hasClass("ewPasswordStrength") && !$npwd.data("validated"))
-		return this.OnError(fobj.npwd, ewLanguage.Phrase("PasswordTooSimple"));
 	if (fobj.npwd.value != fobj.cpwd.value)
 		return this.OnError(fobj.cpwd, ewLanguage.Phrase("MismatchPassword"));
 
@@ -563,16 +561,7 @@ $changepwd->ShowMessage();
 	<div class="form-group">
 		<label class="col-sm-2 control-label ewLabel" for="npwd"><?php echo $Language->Phrase("NewPassword") ?></label>
 		<div class="col-sm-10">
-		<div class="input-group" id="ignpwd">
-		<input type="password" data-password-strength="pst_npwd" data-password-generated="pgt_npwd" name="npwd" id="npwd" class="form-control ewControl ewPasswordStrength" placeholder="<?php echo ew_HtmlEncode($Language->Phrase("NewPassword")) ?>">
-		<span class="input-group-btn">
-			<button type="button" class="btn btn-default ewPasswordGenerator" title="<?php echo ew_HtmlTitle($Language->Phrase("GeneratePassword")) ?>" data-password-field="npwd" data-password-confirm="cpwd" data-password-strength="pst_npwd" data-password-generated="pgt_npwd"><?php echo $Language->Phrase("GeneratePassword") ?></button>
-		</span>
-		</div>
-		<span class="help-block" id="pgt_npwd" style="display: none;"></span>
-		<div class="progress ewPasswordStrengthBar" id="pst_npwd" style="display: none;">
-			<div class="progress-bar" role="progressbar"></div>
-		</div>
+		<input type="password" name="npwd" id="npwd" class="form-control ewControl" placeholder="<?php echo ew_HtmlEncode($Language->Phrase("NewPassword")) ?>">
 		</div>
 	</div>
 	<div class="form-group">

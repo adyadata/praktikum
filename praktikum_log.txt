@@ -1,0 +1,34 @@
+1:53 AM 6/20/2017
+- keliatannya :: saat mahasiswa mendaftar => langsung ke tabel pendaftaran;
+
+
+2:10 AM 6/20/2017
+- harus berhasil dulu untuk buat form pendaftaran;
+- field2 apa aja yang diperlukan untuk proses pendaftaran ?;
+- dan bagaimana prosedur pendaftaran selanjutnya yang mengenai pemilihan dan pembatasan jumlah praktikum;
+
+
+2:15 AM 6/20/2017
+- dicoba untuk proses pendaftaran menggunakan "tabel pendaftaran" yang digunakan sekalian untuk "tabel userlevel";
+
+-----------------		---------------
+tabel pendaftaran		tabel t_02_user
+-----------------		---------------
+nama_mahasiswa			nama
+tlp						handphone
+[belum ada]				email
+[belum ada]				password
+[belum ada]				userlevel
+[belum ada]				username
+nim_mahasiswa			nim
+
+- atau ::
+	tabel t_02_user dibiarkan terpisah dengan tabel pendaftaran ?
+	
+- tabel t_02_user murni hanya untuk registrasi aplikasi, bukan untuk registrasi praktikum;
+- untuk registrasi praktikum :: tetap tersimpan di tabel pendaftaran dan tabel detail pendaftaran;
+
+
+2:44 AM 6/20/2017
+- relasi antara tabel pendaftaran dan tabel t_02_user => pendaftaran.nim_mahasiswa = t_02_user.nim
+- dicoba untuk mengubah penggunaan field UserID ke field NIM untuk pengaturan userID di tabel userlevels dan tabel userlevelpermissions

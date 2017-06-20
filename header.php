@@ -43,8 +43,6 @@ if (ew_IsResponsiveLayout()) {
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery-1.12.4.min.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery.ui.widget.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery.storageapi.min.js"></script>
-<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/pStrength.jquery.js"></script>
-<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/pGenerator.jquery.js"></script>
 <?php } ?>
 <?php if (@$gsExport == "" || @$gsExport == "print") { ?>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>bootstrap3/js/bootstrap.min.js"></script>
@@ -62,12 +60,6 @@ var EW_DATE_FORMAT = "<?php echo $EW_DATE_FORMAT ?>"; // Default date format
 var EW_DATE_FORMAT_ID = "<?php echo $EW_DATE_FORMAT_ID ?>"; // Default date format ID
 var EW_DECIMAL_POINT = "<?php echo $EW_DECIMAL_POINT ?>";
 var EW_THOUSANDS_SEP = "<?php echo $EW_THOUSANDS_SEP ?>";
-var EW_MIN_PASSWORD_STRENGTH = 60;
-var EW_GENERATE_PASSWORD_LENGTH = 16;
-var EW_GENERATE_PASSWORD_UPPERCASE = true;
-var EW_GENERATE_PASSWORD_LOWERCASE = true;
-var EW_GENERATE_PASSWORD_NUMBER = true;
-var EW_GENERATE_PASSWORD_SPECIALCHARS = false;
 var EW_SESSION_TIMEOUT = <?php echo (EW_SESSION_TIMEOUT > 0) ? ew_SessionTimeoutTime() : 0 ?>; // Session timeout time (seconds)
 var EW_SESSION_TIMEOUT_COUNTDOWN = <?php echo EW_SESSION_TIMEOUT_COUNTDOWN ?>; // Count down time to session timeout (seconds)
 var EW_SESSION_KEEP_ALIVE_INTERVAL = <?php echo EW_SESSION_KEEP_ALIVE_INTERVAL ?>; // Keep alive interval (seconds)

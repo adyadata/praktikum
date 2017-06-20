@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 20, 2017 at 02:33 AM
+-- Generation Time: Jun 20, 2017 at 10:09 AM
 -- Server version: 5.1.41
 -- PHP Version: 5.3.1
 
@@ -3364,7 +3364,7 @@ CREATE TABLE IF NOT EXISTS `t_01_audit_trail` (
   `oldvalue` longtext,
   `newvalue` longtext,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=10 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=51 ;
 
 --
 -- Dumping data for table `t_01_audit_trail`
@@ -3379,7 +3379,48 @@ INSERT INTO `t_01_audit_trail` (`id`, `datetime`, `script`, `user`, `action`, `t
 (6, '2017-06-20 01:07:52', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
 (7, '2017-06-20 01:13:21', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
 (8, '2017-06-20 01:27:58', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
-(9, '2017-06-20 01:28:00', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', '');
+(9, '2017-06-20 01:28:00', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(10, '2017-06-20 02:13:02', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(11, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'Nama', '14', '', 'dodo'),
+(12, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'Handphone', '14', '', '0'),
+(13, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'Email', '14', '', 'dodo@dodo.dodo'),
+(14, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'Password', '14', '', '********'),
+(15, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'UserName', '14', '', 'dodo'),
+(16, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'NIM', '14', '', '0001'),
+(17, '2017-06-20 02:27:26', '/praktikum/register.php', '-1', 'A', 't_02_user', 'UserID', '14', '', '14'),
+(18, '2017-06-20 02:30:30', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(19, '2017-06-20 02:31:05', '/praktikum/t_03_userlevelslist.php', '13', 'A', 't_03_userlevels', 'userlevelid', '1', '', '1'),
+(20, '2017-06-20 02:31:05', '/praktikum/t_03_userlevelslist.php', '13', 'A', 't_03_userlevels', 'userlevelname', '1', '', 'Mahasiswa'),
+(21, '2017-06-20 02:32:55', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(22, '2017-06-20 02:33:00', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(23, '2017-06-20 02:33:28', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(24, '2017-06-20 02:37:16', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(25, '2017-06-20 02:37:25', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(26, '2017-06-20 02:37:30', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(27, '2017-06-20 02:38:07', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(28, '2017-06-20 02:38:12', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(29, '2017-06-20 04:05:55', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(30, '2017-06-20 04:06:00', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(31, '2017-06-20 04:06:05', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(32, '2017-06-20 04:06:09', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(33, '2017-06-20 04:12:05', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(34, '2017-06-20 04:12:07', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(35, '2017-06-20 04:15:02', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(36, '2017-06-20 04:15:04', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(37, '2017-06-20 04:15:21', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(38, '2017-06-20 04:15:23', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(39, '2017-06-20 04:16:02', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(40, '2017-06-20 04:16:12', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(41, '2017-06-20 04:16:22', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(42, '2017-06-20 04:17:39', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(43, '2017-06-20 04:17:41', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(44, '2017-06-20 04:17:46', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(45, '2017-06-20 04:17:53', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(46, '2017-06-20 04:17:58', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(47, '2017-06-20 04:18:05', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(48, '2017-06-20 04:18:10', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(49, '2017-06-20 04:18:33', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(50, '2017-06-20 04:18:36', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -3395,29 +3436,18 @@ CREATE TABLE IF NOT EXISTS `t_02_user` (
   `Password` varchar(50) NOT NULL DEFAULT '',
   `UserLevel` int(11) DEFAULT '1',
   `UserName` varchar(20) NOT NULL DEFAULT '',
-  `NIM` varchar(50) NOT NULL,
+  `NIM` int(15) NOT NULL,
   PRIMARY KEY (`UserID`),
   UNIQUE KEY `Username` (`UserName`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=14 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=15 ;
 
 --
 -- Dumping data for table `t_02_user`
 --
 
 INSERT INTO `t_02_user` (`UserID`, `Nama`, `Handphone`, `Email`, `Password`, `UserLevel`, `UserName`, `NIM`) VALUES
-(1, 'Davolio', '(206) 555-9857', 'nancy@northwind.com', '1234', 1, 'nancy', ''),
-(2, 'Fuller', '(206) 555-9482', 'andrew@northwind.com', '1234', 2, 'andrew', ''),
-(3, 'Leverling', '(206) 555-3412', 'janet@northwind.com', '1234', 1, 'janet', ''),
-(4, 'Peacock', '(206) 555-8122', 'margaret@northwind.com', '1234', 1, 'margaret', ''),
-(5, 'Buchanan', '(71) 555-4848', 'steven@northwind.com', '1234', 2, 'steven', ''),
-(6, 'Suyama', '(71) 555-7773', 'michael@northwind.com', '1234', 1, 'michael', ''),
-(7, 'King', '(71) 555-5598', 'robert@northwind.com', '1234', 1, 'robert', ''),
-(8, 'Callahan', '(206) 555-1189', 'laura@northwind.com', '1234', 1, 'laura', ''),
-(9, 'Dodsworth', '(71) 555-4444', 'anne@northwind.com', '1234', 1, 'anne', ''),
-(10, 'dodo ananto', '08113422516', 'dodoananto@gmail.com', '1234', 1, 'dodo', '009008007'),
-(11, 'adi', '', '', '1234', 1, 'adi', ''),
-(12, 'ida', '085606064835', 'ida@gmail.com', '1234', 1, 'ida', '001002003'),
-(13, 'admin', '9', '9', '21232f297a57a5a743894a0e4a801fc3', -1, 'admin', '9');
+(14, 'dodo', '0', 'dodo@dodo.dodo', '81dc9bdb52d04dc20036dbd8313ed055', 1, 'dodo', 1),
+(13, 'admin', '9', '9', '21232f297a57a5a743894a0e4a801fc3', -1, 'admin', 9);
 
 -- --------------------------------------------------------
 
@@ -3438,7 +3468,8 @@ CREATE TABLE IF NOT EXISTS `t_03_userlevels` (
 INSERT INTO `t_03_userlevels` (`userlevelid`, `userlevelname`) VALUES
 (-2, 'Anonymous'),
 (-1, 'Administrator'),
-(0, 'Default');
+(0, 'Default'),
+(1, 'Mahasiswa');
 
 -- --------------------------------------------------------
 
@@ -3475,7 +3506,25 @@ INSERT INTO `t_04_userlevelpermissions` (`userlevelid`, `tablename`, `permission
 (-2, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_02_user', 0),
 (-2, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_03_userlevels', 0),
 (-2, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_04_userlevelpermissions', 0),
-(-2, '{47E9807F-0BA5-4478-84CF-DB02752CE563}c_home.php', 0);
+(-2, '{47E9807F-0BA5-4478-84CF-DB02752CE563}c_home.php', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}absensi2', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}accounting_debit_kredit', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}detail_pendaftaran', 111),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_asisten_pengajar', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_jam_praktikum', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_lab', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_nama_kelompok', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_pengajar', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_tanggal', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}master_waktu', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}pendaftaran', 111),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}praktikum', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}user', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_01_audit_trail', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_02_user', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_03_userlevels', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_04_userlevelpermissions', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}c_home.php', 111);
 
 -- --------------------------------------------------------
 

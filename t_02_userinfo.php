@@ -92,7 +92,7 @@ class ct_02_user extends cTable {
 		$this->fields['UserName'] = &$this->UserName;
 
 		// NIM
-		$this->NIM = new cField('t_02_user', 't_02_user', 'x_NIM', 'NIM', '`NIM`', '`NIM`', 200, -1, FALSE, '`NIM`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->NIM = new cField('t_02_user', 't_02_user', 'x_NIM', 'NIM', '`NIM`', '`NIM`', 3, -1, FALSE, '`NIM`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->NIM->Sortable = TRUE; // Allow sort
 		$this->fields['NIM'] = &$this->NIM;
 	}
@@ -776,7 +776,7 @@ class ct_02_user extends cTable {
 		$this->_Email->PlaceHolder = ew_RemoveHtml($this->_Email->FldCaption());
 
 		// Password
-		$this->Password->EditAttrs["class"] = "form-control ewPasswordStrength";
+		$this->Password->EditAttrs["class"] = "form-control";
 		$this->Password->EditCustomAttributes = "";
 		$this->Password->EditValue = $this->Password->CurrentValue;
 		$this->Password->PlaceHolder = ew_RemoveHtml($this->Password->FldCaption());

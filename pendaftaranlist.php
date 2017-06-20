@@ -1869,6 +1869,7 @@ class cpendaftaran_list extends cpendaftaran {
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
+				$this->setSessionOrderByList($sOrderBy);
 				$this->kodedaftar_mahasiswa->setSort("");
 				$this->nim_mahasiswa->setSort("");
 				$this->nama_mahasiswa->setSort("");
@@ -2741,7 +2742,7 @@ class cpendaftaran_list extends cpendaftaran {
 		if ($this->UseSelectLimit) {
 			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderByList())));
 			} else {
 				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 			}
@@ -2786,6 +2787,11 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->Row_Selected($row);
 		$this->kodedaftar_mahasiswa->setDbValue($rs->fields('kodedaftar_mahasiswa'));
 		$this->nim_mahasiswa->setDbValue($rs->fields('nim_mahasiswa'));
+		if (array_key_exists('EV__nim_mahasiswa', $rs->fields)) {
+			$this->nim_mahasiswa->VirtualValue = $rs->fields('EV__nim_mahasiswa'); // Set up virtual field value
+		} else {
+			$this->nim_mahasiswa->VirtualValue = ""; // Clear value
+		}
 		$this->nama_mahasiswa->setDbValue($rs->fields('nama_mahasiswa'));
 		$this->kelas_mahasiswa->setDbValue($rs->fields('kelas_mahasiswa'));
 		$this->semester_mahasiswa->setDbValue($rs->fields('semester_mahasiswa'));
@@ -2888,7 +2894,30 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 		// nim_mahasiswa
-		$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+		if ($this->nim_mahasiswa->VirtualValue <> "") {
+			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->VirtualValue;
+		} else {
+		if (strval($this->nim_mahasiswa->CurrentValue) <> "") {
+			$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
+		$sWhereWrk = "";
+		$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+			}
+		} else {
+			$this->nim_mahasiswa->ViewValue = NULL;
+		}
+		}
 		$this->nim_mahasiswa->ViewCustomAttributes = "";
 
 		// nama_mahasiswa
@@ -3033,10 +3062,30 @@ class cpendaftaran_list extends cpendaftaran {
 			$this->kodedaftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->kodedaftar_mahasiswa->FldCaption());
 
 			// nim_mahasiswa
-			$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
 			$this->nim_mahasiswa->EditCustomAttributes = "";
-			$this->nim_mahasiswa->EditValue = ew_HtmlEncode($this->nim_mahasiswa->CurrentValue);
-			$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
+			if (trim(strval($this->nim_mahasiswa->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `t_02_user`";
+			$sWhereWrk = "";
+			$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			if (!$GLOBALS["pendaftaran"]->UserIDAllow($GLOBALS["pendaftaran"]->CurrentAction)) $sWhereWrk = $GLOBALS["t_02_user"]->AddUserIDFilter($sWhereWrk);
+			$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
+			} else {
+				$this->nim_mahasiswa->ViewValue = $Language->Phrase("PleaseSelect");
+			}
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->nim_mahasiswa->EditValue = $arwrk;
 
 			// nama_mahasiswa
 			$this->nama_mahasiswa->EditAttrs["class"] = "form-control";
@@ -3188,10 +3237,30 @@ class cpendaftaran_list extends cpendaftaran {
 			$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 			// nim_mahasiswa
-			$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
 			$this->nim_mahasiswa->EditCustomAttributes = "";
-			$this->nim_mahasiswa->EditValue = ew_HtmlEncode($this->nim_mahasiswa->CurrentValue);
-			$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
+			if (trim(strval($this->nim_mahasiswa->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `t_02_user`";
+			$sWhereWrk = "";
+			$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			if (!$GLOBALS["pendaftaran"]->UserIDAllow($GLOBALS["pendaftaran"]->CurrentAction)) $sWhereWrk = $GLOBALS["t_02_user"]->AddUserIDFilter($sWhereWrk);
+			$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
+			} else {
+				$this->nim_mahasiswa->ViewValue = $Language->Phrase("PleaseSelect");
+			}
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->nim_mahasiswa->EditValue = $arwrk;
 
 			// nama_mahasiswa
 			$this->nama_mahasiswa->EditAttrs["class"] = "form-control";
@@ -3470,9 +3539,6 @@ class cpendaftaran_list extends cpendaftaran {
 			return ($gsFormError == "");
 		if (!$this->kodedaftar_mahasiswa->FldIsDetailKey && !is_null($this->kodedaftar_mahasiswa->FormValue) && $this->kodedaftar_mahasiswa->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->kodedaftar_mahasiswa->FldCaption(), $this->kodedaftar_mahasiswa->ReqErrMsg));
-		}
-		if (!ew_CheckInteger($this->nim_mahasiswa->FormValue)) {
-			ew_AddMessage($gsFormError, $this->nim_mahasiswa->FldErrMsg());
 		}
 		if (!ew_CheckInteger($this->semester_mahasiswa->FormValue)) {
 			ew_AddMessage($gsFormError, $this->semester_mahasiswa->FldErrMsg());
@@ -4110,6 +4176,19 @@ class cpendaftaran_list extends cpendaftaran {
 		$pageId = $pageId ?: $this->PageID;
 		if ($pageId == "list") {
 			switch ($fld->FldVar) {
+		case "x_nim_mahasiswa":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `NIM` AS `LinkFld`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
+			$sWhereWrk = "{filter}";
+			$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
+			if (!$GLOBALS["pendaftaran"]->UserIDAllow($GLOBALS["pendaftaran"]->CurrentAction)) $sWhereWrk = $GLOBALS["t_02_user"]->AddUserIDFilter($sWhereWrk);
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`NIM` = {filter_value}', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 			}
 		} elseif ($pageId == "extbs") {
 			switch ($fld->FldVar) {
@@ -4298,9 +4377,6 @@ fpendaftaranlist.Validate = function() {
 			elm = this.GetElements("x" + infix + "_kodedaftar_mahasiswa");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pendaftaran->kodedaftar_mahasiswa->FldCaption(), $pendaftaran->kodedaftar_mahasiswa->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_nim_mahasiswa");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->nim_mahasiswa->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_semester_mahasiswa");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->semester_mahasiswa->FldErrMsg()) ?>");
@@ -4366,6 +4442,7 @@ fpendaftaranlist.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
+fpendaftaranlist.Lists["x_nim_mahasiswa"] = {"LinkField":"x_NIM","Ajax":true,"AutoFill":false,"DisplayFields":["x_Nama","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"t_02_user"};
 fpendaftaranlist.Lists["x_kelas_mahasiswa"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpendaftaranlist.Lists["x_kelas_mahasiswa"].Options = <?php echo json_encode($pendaftaran->kelas_mahasiswa->Options()) ?>;
 
@@ -4808,7 +4885,12 @@ $pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowCnt
 	<?php if ($pendaftaran->nim_mahasiswa->Visible) { // nim_mahasiswa ?>
 		<td data-name="nim_mahasiswa">
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<span class="ewLookupList">
+	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa"><?php echo (strval($pendaftaran->nim_mahasiswa->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $pendaftaran->nim_mahasiswa->ViewValue); ?></span>
+</span>
+<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($pendaftaran->nim_mahasiswa->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
+<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $pendaftaran->nim_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->CurrentValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<input type="hidden" name="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->LookupFilterQuery() ?>">
 </span>
 <input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->OldValue) ?>">
 </td>
@@ -5072,13 +5154,23 @@ $pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowCnt
 		<td data-name="nim_mahasiswa"<?php echo $pendaftaran->nim_mahasiswa->CellAttributes() ?>>
 <?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<span class="ewLookupList">
+	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa"><?php echo (strval($pendaftaran->nim_mahasiswa->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $pendaftaran->nim_mahasiswa->ViewValue); ?></span>
+</span>
+<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($pendaftaran->nim_mahasiswa->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
+<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $pendaftaran->nim_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->CurrentValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<input type="hidden" name="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->LookupFilterQuery() ?>">
 </span>
 <input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->OldValue) ?>">
 <?php } ?>
 <?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<span class="ewLookupList">
+	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa"><?php echo (strval($pendaftaran->nim_mahasiswa->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $pendaftaran->nim_mahasiswa->ViewValue); ?></span>
+</span>
+<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($pendaftaran->nim_mahasiswa->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
+<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $pendaftaran->nim_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->CurrentValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<input type="hidden" name="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->LookupFilterQuery() ?>">
 </span>
 <?php } ?>
 <?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
@@ -5421,7 +5513,12 @@ $pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowInd
 	<?php if ($pendaftaran->nim_mahasiswa->Visible) { // nim_mahasiswa ?>
 		<td data-name="nim_mahasiswa">
 <span id="el$rowindex$_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<span class="ewLookupList">
+	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa"><?php echo (strval($pendaftaran->nim_mahasiswa->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $pendaftaran->nim_mahasiswa->ViewValue); ?></span>
+</span>
+<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($pendaftaran->nim_mahasiswa->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
+<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $pendaftaran->nim_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->CurrentValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
+<input type="hidden" name="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="s_x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->LookupFilterQuery() ?>">
 </span>
 <input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->OldValue) ?>">
 </td>

@@ -65,8 +65,10 @@ class cpendaftaran extends cTable {
 		$this->fields['kodedaftar_mahasiswa'] = &$this->kodedaftar_mahasiswa;
 
 		// nim_mahasiswa
-		$this->nim_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_nim_mahasiswa', 'nim_mahasiswa', '`nim_mahasiswa`', '`nim_mahasiswa`', 3, -1, FALSE, '`nim_mahasiswa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->nim_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_nim_mahasiswa', 'nim_mahasiswa', '`nim_mahasiswa`', '`nim_mahasiswa`', 3, -1, FALSE, '`EV__nim_mahasiswa`', TRUE, TRUE, TRUE, 'FORMATTED TEXT', 'SELECT');
 		$this->nim_mahasiswa->Sortable = TRUE; // Allow sort
+		$this->nim_mahasiswa->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->nim_mahasiswa->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->nim_mahasiswa->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['nim_mahasiswa'] = &$this->nim_mahasiswa;
 
@@ -171,9 +173,31 @@ class cpendaftaran extends cTable {
 			} else {
 				$this->setSessionOrderBy($sSortField . " " . $sThisSort); // Save to Session
 			}
+			$sSortFieldList = ($ofld->FldVirtualExpression <> "") ? $ofld->FldVirtualExpression : $sSortField;
+			if ($ctrl) {
+				$sOrderByList = $this->getSessionOrderByList();
+				if (strpos($sOrderByList, $sSortFieldList . " " . $sLastSort) !== FALSE) {
+					$sOrderByList = str_replace($sSortFieldList . " " . $sLastSort, $sSortFieldList . " " . $sThisSort, $sOrderByList);
+				} else {
+					if ($sOrderByList <> "") $sOrderByList .= ", ";
+					$sOrderByList .= $sSortFieldList . " " . $sThisSort;
+				}
+				$this->setSessionOrderByList($sOrderByList); // Save to Session
+			} else {
+				$this->setSessionOrderByList($sSortFieldList . " " . $sThisSort); // Save to Session
+			}
 		} else {
 			if (!$ctrl) $ofld->setSort("");
 		}
+	}
+
+	// Session ORDER BY for List page
+	function getSessionOrderByList() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST];
+	}
+
+	function setSessionOrderByList($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
 	}
 
 	// Current detail table name
@@ -227,11 +251,28 @@ class cpendaftaran extends cTable {
 	function setSqlSelect($v) {
 		$this->_SqlSelect = $v;
 	}
+	var $_SqlSelectList = "";
+
+	function getSqlSelectList() { // Select for List page
+		$select = "";
+		$select = "SELECT * FROM (" .
+			"SELECT *, (SELECT `Nama` FROM `t_02_user` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`NIM` = `pendaftaran`.`nim_mahasiswa` LIMIT 1) AS `EV__nim_mahasiswa` FROM `pendaftaran`" .
+			") `EW_TMP_TABLE`";
+		return ($this->_SqlSelectList <> "") ? $this->_SqlSelectList : $select;
+	}
+
+	function SqlSelectList() { // For backward compatibility
+		return $this->getSqlSelectList();
+	}
+
+	function setSqlSelectList($v) {
+		$this->_SqlSelectList = $v;
+	}
 	var $_SqlWhere = "";
 
 	function getSqlWhere() { // Where
 		$sWhere = ($this->_SqlWhere <> "") ? $this->_SqlWhere : "";
-		$this->TableFilter = "";
+		$this->TableFilter = (CurrentUserLevel() >= 0 ? "nim_mahasiswa = ".$_SESSION["praktikum_nim"] : "");
 		ew_AddFilter($sWhere, $this->TableFilter);
 		return $sWhere;
 	}
@@ -338,15 +379,38 @@ class cpendaftaran extends cTable {
 		ew_AddFilter($sFilter, $this->CurrentFilter);
 		$sFilter = $this->ApplyUserIDFilters($sFilter);
 		$this->Recordset_Selecting($sFilter);
-		$sSort = $this->getSessionOrderBy();
-		return ew_BuildSelectSql($this->getSqlSelect(), $this->getSqlWhere(), $this->getSqlGroupBy(),
-			$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
+		if ($this->UseVirtualFields()) {
+			$sSort = $this->getSessionOrderByList();
+			return ew_BuildSelectSql($this->getSqlSelectList(), $this->getSqlWhere(), $this->getSqlGroupBy(),
+				$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
+		} else {
+			$sSort = $this->getSessionOrderBy();
+			return ew_BuildSelectSql($this->getSqlSelect(), $this->getSqlWhere(), $this->getSqlGroupBy(),
+				$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
+		}
 	}
 
 	// Get ORDER BY clause
 	function GetOrderBy() {
-		$sSort = $this->getSessionOrderBy();
+		$sSort = ($this->UseVirtualFields()) ? $this->getSessionOrderByList() : $this->getSessionOrderBy();
 		return ew_BuildSelectSql("", "", "", "", $this->getSqlOrderBy(), "", $sSort);
+	}
+
+	// Check if virtual fields is used in SQL
+	function UseVirtualFields() {
+		$sWhere = $this->getSessionWhere();
+		$sOrderBy = $this->getSessionOrderByList();
+		if ($sWhere <> "")
+			$sWhere = " " . str_replace(array("(",")"), array("",""), $sWhere) . " ";
+		if ($sOrderBy <> "")
+			$sOrderBy = " " . str_replace(array("(",")"), array("",""), $sOrderBy) . " ";
+		if ($this->nim_mahasiswa->AdvancedSearch->SearchValue <> "" ||
+			$this->nim_mahasiswa->AdvancedSearch->SearchValue2 <> "" ||
+			strpos($sWhere, " " . $this->nim_mahasiswa->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		if (strpos($sOrderBy, " " . $this->nim_mahasiswa->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		return FALSE;
 	}
 
 	// Try to get record count
@@ -720,7 +784,30 @@ class cpendaftaran extends cTable {
 		$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 		// nim_mahasiswa
-		$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+		if ($this->nim_mahasiswa->VirtualValue <> "") {
+			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->VirtualValue;
+		} else {
+		if (strval($this->nim_mahasiswa->CurrentValue) <> "") {
+			$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
+		$sWhereWrk = "";
+		$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+			}
+		} else {
+			$this->nim_mahasiswa->ViewValue = NULL;
+		}
+		}
 		$this->nim_mahasiswa->ViewCustomAttributes = "";
 
 		// nama_mahasiswa
@@ -877,8 +964,6 @@ class cpendaftaran extends cTable {
 		// nim_mahasiswa
 		$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
 		$this->nim_mahasiswa->EditCustomAttributes = "";
-		$this->nim_mahasiswa->EditValue = $this->nim_mahasiswa->CurrentValue;
-		$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
 
 		// nama_mahasiswa
 		$this->nama_mahasiswa->EditAttrs["class"] = "form-control";

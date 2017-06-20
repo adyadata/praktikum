@@ -2474,7 +2474,7 @@ class ct_02_user_list extends ct_02_user {
 			$this->_Email->PlaceHolder = ew_RemoveHtml($this->_Email->FldCaption());
 
 			// Password
-			$this->Password->EditAttrs["class"] = "form-control ewPasswordStrength";
+			$this->Password->EditAttrs["class"] = "form-control";
 			$this->Password->EditCustomAttributes = "";
 			$this->Password->EditValue = ew_HtmlEncode($this->Password->CurrentValue);
 			$this->Password->PlaceHolder = ew_RemoveHtml($this->Password->FldCaption());
@@ -2574,7 +2574,7 @@ class ct_02_user_list extends ct_02_user {
 			$this->_Email->PlaceHolder = ew_RemoveHtml($this->_Email->FldCaption());
 
 			// Password
-			$this->Password->EditAttrs["class"] = "form-control ewPasswordStrength";
+			$this->Password->EditAttrs["class"] = "form-control";
 			$this->Password->EditCustomAttributes = "";
 			$this->Password->EditValue = ew_HtmlEncode($this->Password->CurrentValue);
 			$this->Password->PlaceHolder = ew_RemoveHtml($this->Password->FldCaption());
@@ -2845,7 +2845,7 @@ class ct_02_user_list extends ct_02_user {
 			$this->UserName->SetDbValueDef($rsnew, $this->UserName->CurrentValue, "", $this->UserName->ReadOnly);
 
 			// NIM
-			$this->NIM->SetDbValueDef($rsnew, $this->NIM->CurrentValue, "", $this->NIM->ReadOnly);
+			$this->NIM->SetDbValueDef($rsnew, $this->NIM->CurrentValue, 0, $this->NIM->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -2934,7 +2934,7 @@ class ct_02_user_list extends ct_02_user {
 		$this->UserName->SetDbValueDef($rsnew, $this->UserName->CurrentValue, "", FALSE);
 
 		// NIM
-		$this->NIM->SetDbValueDef($rsnew, $this->NIM->CurrentValue, "", FALSE);
+		$this->NIM->SetDbValueDef($rsnew, $this->NIM->CurrentValue, 0, FALSE);
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -3462,9 +3462,6 @@ ft_02_userlist.Validate = function() {
 			elm = this.GetElements("x" + infix + "_Password");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $t_02_user->Password->FldCaption(), $t_02_user->Password->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_Password");
-			if (elm && $(elm).hasClass("ewPasswordStrength") && !$(elm).data("validated"))
-				return this.OnError(elm, ewLanguage.Phrase("PasswordTooSimple"));
 			elm = this.GetElements("x" + infix + "_UserName");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $t_02_user->UserName->FldCaption(), $t_02_user->UserName->ReqErrMsg)) ?>");
@@ -3855,16 +3852,7 @@ $t_02_user_list->ListOptions->Render("body", "left", $t_02_user_list->RowCnt);
 	<?php if ($t_02_user->Password->Visible) { // Password ?>
 		<td data-name="Password">
 <span id="el<?php echo $t_02_user_list->RowCnt ?>_t_02_user_Password" class="form-group t_02_user_Password">
-<div class="input-group" id="ig<?php echo $t_02_user_list->RowIndex ?>_Password">
-<input type="text" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo $t_02_user->Password->EditValue ?>" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
-<span class="input-group-btn">
-	<button type="button" class="btn btn-default ewPasswordGenerator" title="<?php echo ew_HtmlTitle($Language->Phrase("GeneratePassword")) ?>" data-password-field="x<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-confirm="c<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password"><?php echo $Language->Phrase("GeneratePassword") ?></button>
-</span>
-</div>
-<span class="help-block" id="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;"></span>
-<div class="progress ewPasswordStrengthBar" id="pst<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;">
-	<div class="progress-bar" role="progressbar"></div>
-</div>
+<input type="text" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>" value="<?php echo $t_02_user->Password->EditValue ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
 </span>
 <input type="hidden" data-table="t_02_user" data-field="x_Password" name="o<?php echo $t_02_user_list->RowIndex ?>_Password" id="o<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo ew_HtmlEncode($t_02_user->Password->OldValue) ?>">
 </td>
@@ -4114,31 +4102,13 @@ $t_02_user_list->ListOptions->Render("body", "left", $t_02_user_list->RowCnt);
 		<td data-name="Password"<?php echo $t_02_user->Password->CellAttributes() ?>>
 <?php if ($t_02_user->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $t_02_user_list->RowCnt ?>_t_02_user_Password" class="form-group t_02_user_Password">
-<div class="input-group" id="ig<?php echo $t_02_user_list->RowIndex ?>_Password">
-<input type="text" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo $t_02_user->Password->EditValue ?>" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
-<span class="input-group-btn">
-	<button type="button" class="btn btn-default ewPasswordGenerator" title="<?php echo ew_HtmlTitle($Language->Phrase("GeneratePassword")) ?>" data-password-field="x<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-confirm="c<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password"><?php echo $Language->Phrase("GeneratePassword") ?></button>
-</span>
-</div>
-<span class="help-block" id="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;"></span>
-<div class="progress ewPasswordStrengthBar" id="pst<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;">
-	<div class="progress-bar" role="progressbar"></div>
-</div>
+<input type="text" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>" value="<?php echo $t_02_user->Password->EditValue ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
 </span>
 <input type="hidden" data-table="t_02_user" data-field="x_Password" name="o<?php echo $t_02_user_list->RowIndex ?>_Password" id="o<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo ew_HtmlEncode($t_02_user->Password->OldValue) ?>">
 <?php } ?>
 <?php if ($t_02_user->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $t_02_user_list->RowCnt ?>_t_02_user_Password" class="form-group t_02_user_Password">
-<div class="input-group" id="ig<?php echo $t_02_user_list->RowIndex ?>_Password">
-<input type="text" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo $t_02_user->Password->EditValue ?>" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
-<span class="input-group-btn">
-	<button type="button" class="btn btn-default ewPasswordGenerator" title="<?php echo ew_HtmlTitle($Language->Phrase("GeneratePassword")) ?>" data-password-field="x<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-confirm="c<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password"><?php echo $Language->Phrase("GeneratePassword") ?></button>
-</span>
-</div>
-<span class="help-block" id="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;"></span>
-<div class="progress ewPasswordStrengthBar" id="pst<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;">
-	<div class="progress-bar" role="progressbar"></div>
-</div>
+<input type="text" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>" value="<?php echo $t_02_user->Password->EditValue ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
 </span>
 <?php } ?>
 <?php if ($t_02_user->RowType == EW_ROWTYPE_VIEW) { // View record ?>
@@ -4304,16 +4274,7 @@ $t_02_user_list->ListOptions->Render("body", "left", $t_02_user_list->RowIndex);
 	<?php if ($t_02_user->Password->Visible) { // Password ?>
 		<td data-name="Password">
 <span id="el$rowindex$_t_02_user_Password" class="form-group t_02_user_Password">
-<div class="input-group" id="ig<?php echo $t_02_user_list->RowIndex ?>_Password">
-<input type="text" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo $t_02_user->Password->EditValue ?>" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
-<span class="input-group-btn">
-	<button type="button" class="btn btn-default ewPasswordGenerator" title="<?php echo ew_HtmlTitle($Language->Phrase("GeneratePassword")) ?>" data-password-field="x<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-confirm="c<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-strength="pst<?php echo $t_02_user_list->RowIndex ?>_Password" data-password-generated="pgt<?php echo $t_02_user_list->RowIndex ?>_Password"><?php echo $Language->Phrase("GeneratePassword") ?></button>
-</span>
-</div>
-<span class="help-block" id="pgt<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;"></span>
-<div class="progress ewPasswordStrengthBar" id="pst<?php echo $t_02_user_list->RowIndex ?>_Password" style="display: none;">
-	<div class="progress-bar" role="progressbar"></div>
-</div>
+<input type="text" data-table="t_02_user" data-field="x_Password" name="x<?php echo $t_02_user_list->RowIndex ?>_Password" id="x<?php echo $t_02_user_list->RowIndex ?>_Password" size="30" maxlength="50" placeholder="<?php echo ew_HtmlEncode($t_02_user->Password->getPlaceHolder()) ?>" value="<?php echo $t_02_user->Password->EditValue ?>"<?php echo $t_02_user->Password->EditAttributes() ?>>
 </span>
 <input type="hidden" data-table="t_02_user" data-field="x_Password" name="o<?php echo $t_02_user_list->RowIndex ?>_Password" id="o<?php echo $t_02_user_list->RowIndex ?>_Password" value="<?php echo ew_HtmlEncode($t_02_user->Password->OldValue) ?>">
 </td>

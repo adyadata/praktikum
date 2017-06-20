@@ -749,7 +749,7 @@ class cpendaftaran_view extends cpendaftaran {
 		if ($this->UseSelectLimit) {
 			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderByList())));
 			} else {
 				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 			}
@@ -795,6 +795,11 @@ class cpendaftaran_view extends cpendaftaran {
 		if ($this->AuditTrailOnView) $this->WriteAuditTrailOnView($row);
 		$this->kodedaftar_mahasiswa->setDbValue($rs->fields('kodedaftar_mahasiswa'));
 		$this->nim_mahasiswa->setDbValue($rs->fields('nim_mahasiswa'));
+		if (array_key_exists('EV__nim_mahasiswa', $rs->fields)) {
+			$this->nim_mahasiswa->VirtualValue = $rs->fields('EV__nim_mahasiswa'); // Set up virtual field value
+		} else {
+			$this->nim_mahasiswa->VirtualValue = ""; // Clear value
+		}
 		$this->nama_mahasiswa->setDbValue($rs->fields('nama_mahasiswa'));
 		$this->kelas_mahasiswa->setDbValue($rs->fields('kelas_mahasiswa'));
 		$this->semester_mahasiswa->setDbValue($rs->fields('semester_mahasiswa'));
@@ -874,7 +879,30 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 		// nim_mahasiswa
-		$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+		if ($this->nim_mahasiswa->VirtualValue <> "") {
+			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->VirtualValue;
+		} else {
+		if (strval($this->nim_mahasiswa->CurrentValue) <> "") {
+			$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
+		$sWhereWrk = "";
+		$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+			}
+		} else {
+			$this->nim_mahasiswa->ViewValue = NULL;
+		}
+		}
 		$this->nim_mahasiswa->ViewCustomAttributes = "";
 
 		// nama_mahasiswa
@@ -1466,6 +1494,7 @@ fpendaftaranview.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
+fpendaftaranview.Lists["x_nim_mahasiswa"] = {"LinkField":"x_NIM","Ajax":true,"AutoFill":false,"DisplayFields":["x_Nama","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"t_02_user"};
 fpendaftaranview.Lists["x_kelas_mahasiswa"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpendaftaranview.Lists["x_kelas_mahasiswa"].Options = <?php echo json_encode($pendaftaran->kelas_mahasiswa->Options()) ?>;
 
