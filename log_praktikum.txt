@@ -32,3 +32,14 @@ nim_mahasiswa			nim
 2:44 AM 6/20/2017
 - relasi antara tabel pendaftaran dan tabel t_02_user => pendaftaran.nim_mahasiswa = t_02_user.nim
 - dicoba untuk mengubah penggunaan field UserID ke field NIM untuk pengaturan userID di tabel userlevels dan tabel userlevelpermissions
+
+
+10:29 AM 6/20/2017
+- alur program untuk user baru ::
+	- registrasi
+	- login
+	- pendaftaran
+	
+	
+10:32 AM 6/20/2017
+- otomasi KODE DAFTAR MAHASISWA;
