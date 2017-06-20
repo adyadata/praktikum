@@ -517,10 +517,8 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->kelas_mahasiswa->OldValue = $this->kelas_mahasiswa->CurrentValue;
 		$this->semester_mahasiswa->CurrentValue = NULL;
 		$this->semester_mahasiswa->OldValue = $this->semester_mahasiswa->CurrentValue;
-		$this->tgl_daftar_mahasiswa->CurrentValue = NULL;
-		$this->tgl_daftar_mahasiswa->OldValue = $this->tgl_daftar_mahasiswa->CurrentValue;
-		$this->jam_daftar_mahasiswa->CurrentValue = NULL;
-		$this->jam_daftar_mahasiswa->OldValue = $this->jam_daftar_mahasiswa->CurrentValue;
+		$this->tgl_daftar_mahasiswa->CurrentValue = ew_CurrentDate();
+		$this->jam_daftar_mahasiswa->CurrentValue = ew_CurrentTime();
 		$this->total_biaya->CurrentValue = NULL;
 		$this->total_biaya->OldValue = $this->total_biaya->CurrentValue;
 		$this->foto->CurrentValue = NULL;
@@ -649,11 +647,6 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->Row_Selected($row);
 		$this->kodedaftar_mahasiswa->setDbValue($rs->fields('kodedaftar_mahasiswa'));
 		$this->nim_mahasiswa->setDbValue($rs->fields('nim_mahasiswa'));
-		if (array_key_exists('EV__nim_mahasiswa', $rs->fields)) {
-			$this->nim_mahasiswa->VirtualValue = $rs->fields('EV__nim_mahasiswa'); // Set up virtual field value
-		} else {
-			$this->nim_mahasiswa->VirtualValue = ""; // Clear value
-		}
 		$this->nama_mahasiswa->setDbValue($rs->fields('nama_mahasiswa'));
 		$this->kelas_mahasiswa->setDbValue($rs->fields('kelas_mahasiswa'));
 		$this->semester_mahasiswa->setDbValue($rs->fields('semester_mahasiswa'));
@@ -750,30 +743,7 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 		// nim_mahasiswa
-		if ($this->nim_mahasiswa->VirtualValue <> "") {
-			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->VirtualValue;
-		} else {
-		if (strval($this->nim_mahasiswa->CurrentValue) <> "") {
-			$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
-		$sWhereWrk = "";
-		$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
-		ew_AddFilter($sWhereWrk, $sFilterWrk);
-		$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = $rswrk->fields('DispFld');
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
-				$rswrk->Close();
-			} else {
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
-			}
-		} else {
-			$this->nim_mahasiswa->ViewValue = NULL;
-		}
-		}
+		$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
 		$this->nim_mahasiswa->ViewCustomAttributes = "";
 
 		// nama_mahasiswa
@@ -918,30 +888,10 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->kodedaftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->kodedaftar_mahasiswa->FldCaption());
 
 			// nim_mahasiswa
+			$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
 			$this->nim_mahasiswa->EditCustomAttributes = "";
-			if (trim(strval($this->nim_mahasiswa->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `t_02_user`";
-			$sWhereWrk = "";
-			$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			if (!$GLOBALS["pendaftaran"]->UserIDAllow("add")) $sWhereWrk = $GLOBALS["t_02_user"]->AddUserIDFilter($sWhereWrk);
-			$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
-			} else {
-				$this->nim_mahasiswa->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->nim_mahasiswa->EditValue = $arwrk;
+			$this->nim_mahasiswa->EditValue = ew_HtmlEncode($this->nim_mahasiswa->CurrentValue);
+			$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
 
 			// nama_mahasiswa
 			$this->nama_mahasiswa->EditAttrs["class"] = "form-control";
@@ -960,18 +910,9 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->semester_mahasiswa->PlaceHolder = ew_RemoveHtml($this->semester_mahasiswa->FldCaption());
 
 			// tgl_daftar_mahasiswa
-			$this->tgl_daftar_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_mahasiswa->EditCustomAttributes = "";
-			$this->tgl_daftar_mahasiswa->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl_daftar_mahasiswa->CurrentValue, 8));
-			$this->tgl_daftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_mahasiswa->FldCaption());
-
 			// jam_daftar_mahasiswa
-			$this->jam_daftar_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_mahasiswa->EditCustomAttributes = "";
-			$this->jam_daftar_mahasiswa->EditValue = ew_HtmlEncode($this->jam_daftar_mahasiswa->CurrentValue);
-			$this->jam_daftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->jam_daftar_mahasiswa->FldCaption());
-
 			// total_biaya
+
 			$this->total_biaya->EditAttrs["class"] = "form-control";
 			$this->total_biaya->EditCustomAttributes = "";
 			$this->total_biaya->EditValue = ew_HtmlEncode($this->total_biaya->CurrentValue);
@@ -1106,20 +1047,14 @@ class cpendaftaran_add extends cpendaftaran {
 		if (!$this->kodedaftar_mahasiswa->FldIsDetailKey && !is_null($this->kodedaftar_mahasiswa->FormValue) && $this->kodedaftar_mahasiswa->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->kodedaftar_mahasiswa->FldCaption(), $this->kodedaftar_mahasiswa->ReqErrMsg));
 		}
+		if (!ew_CheckInteger($this->nim_mahasiswa->FormValue)) {
+			ew_AddMessage($gsFormError, $this->nim_mahasiswa->FldErrMsg());
+		}
 		if (!ew_CheckInteger($this->semester_mahasiswa->FormValue)) {
 			ew_AddMessage($gsFormError, $this->semester_mahasiswa->FldErrMsg());
 		}
-		if (!ew_CheckDateDef($this->tgl_daftar_mahasiswa->FormValue)) {
-			ew_AddMessage($gsFormError, $this->tgl_daftar_mahasiswa->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->jam_daftar_mahasiswa->FormValue)) {
-			ew_AddMessage($gsFormError, $this->jam_daftar_mahasiswa->FldErrMsg());
-		}
 		if (!ew_CheckNumber($this->total_biaya->FormValue)) {
 			ew_AddMessage($gsFormError, $this->total_biaya->FldErrMsg());
-		}
-		if (!ew_CheckDateDef($this->tgl->FormValue)) {
-			ew_AddMessage($gsFormError, $this->tgl->FldErrMsg());
 		}
 
 		// Validate detail grid
@@ -1172,10 +1107,12 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->semester_mahasiswa->SetDbValueDef($rsnew, $this->semester_mahasiswa->CurrentValue, NULL, FALSE);
 
 		// tgl_daftar_mahasiswa
-		$this->tgl_daftar_mahasiswa->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl_daftar_mahasiswa->CurrentValue, 0), NULL, FALSE);
+		$this->tgl_daftar_mahasiswa->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
+		$rsnew['tgl_daftar_mahasiswa'] = &$this->tgl_daftar_mahasiswa->DbValue;
 
 		// jam_daftar_mahasiswa
-		$this->jam_daftar_mahasiswa->SetDbValueDef($rsnew, $this->jam_daftar_mahasiswa->CurrentValue, NULL, FALSE);
+		$this->jam_daftar_mahasiswa->SetDbValueDef($rsnew, ew_CurrentTime(), NULL);
+		$rsnew['jam_daftar_mahasiswa'] = &$this->jam_daftar_mahasiswa->DbValue;
 
 		// total_biaya
 		$this->total_biaya->SetDbValueDef($rsnew, $this->total_biaya->CurrentValue, NULL, FALSE);
@@ -1320,19 +1257,6 @@ class cpendaftaran_add extends cpendaftaran {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
-		case "x_nim_mahasiswa":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `NIM` AS `LinkFld`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
-			$sWhereWrk = "{filter}";
-			$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
-			if (!$GLOBALS["pendaftaran"]->UserIDAllow("add")) $sWhereWrk = $GLOBALS["t_02_user"]->AddUserIDFilter($sWhereWrk);
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`NIM` = {filter_value}', "t0" => "3", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
 		}
 	}
 
@@ -1455,21 +1379,15 @@ fpendaftaranadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_kodedaftar_mahasiswa");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pendaftaran->kodedaftar_mahasiswa->FldCaption(), $pendaftaran->kodedaftar_mahasiswa->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_nim_mahasiswa");
+			if (elm && !ew_CheckInteger(elm.value))
+				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->nim_mahasiswa->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_semester_mahasiswa");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->semester_mahasiswa->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_tgl_daftar_mahasiswa");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->tgl_daftar_mahasiswa->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_jam_daftar_mahasiswa");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->jam_daftar_mahasiswa->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_total_biaya");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->total_biaya->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_tgl");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->tgl->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1503,7 +1421,6 @@ fpendaftaranadd.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-fpendaftaranadd.Lists["x_nim_mahasiswa"] = {"LinkField":"x_NIM","Ajax":true,"AutoFill":false,"DisplayFields":["x_Nama","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"t_02_user"};
 fpendaftaranadd.Lists["x_kelas_mahasiswa"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpendaftaranadd.Lists["x_kelas_mahasiswa"].Options = <?php echo json_encode($pendaftaran->kelas_mahasiswa->Options()) ?>;
 
@@ -1549,12 +1466,7 @@ $pendaftaran_add->ShowMessage();
 		<label id="elh_pendaftaran_nim_mahasiswa" for="x_nim_mahasiswa" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->nim_mahasiswa->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->nim_mahasiswa->CellAttributes() ?>>
 <span id="el_pendaftaran_nim_mahasiswa">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x_nim_mahasiswa"><?php echo (strval($pendaftaran->nim_mahasiswa->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $pendaftaran->nim_mahasiswa->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($pendaftaran->nim_mahasiswa->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x_nim_mahasiswa',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $pendaftaran->nim_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x_nim_mahasiswa" id="x_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->CurrentValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
-<input type="hidden" name="s_x_nim_mahasiswa" id="s_x_nim_mahasiswa" value="<?php echo $pendaftaran->nim_mahasiswa->LookupFilterQuery() ?>">
+<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x_nim_mahasiswa" id="x_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
 </span>
 <?php echo $pendaftaran->nim_mahasiswa->CustomMsg ?></div></div>
 	</div>
@@ -1592,26 +1504,6 @@ $pendaftaran_add->ShowMessage();
 <?php echo $pendaftaran->semester_mahasiswa->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-<?php if ($pendaftaran->tgl_daftar_mahasiswa->Visible) { // tgl_daftar_mahasiswa ?>
-	<div id="r_tgl_daftar_mahasiswa" class="form-group">
-		<label id="elh_pendaftaran_tgl_daftar_mahasiswa" for="x_tgl_daftar_mahasiswa" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tgl_daftar_mahasiswa->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->tgl_daftar_mahasiswa->CellAttributes() ?>>
-<span id="el_pendaftaran_tgl_daftar_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_tgl_daftar_mahasiswa" name="x_tgl_daftar_mahasiswa" id="x_tgl_daftar_mahasiswa" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tgl_daftar_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tgl_daftar_mahasiswa->EditValue ?>"<?php echo $pendaftaran->tgl_daftar_mahasiswa->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->tgl_daftar_mahasiswa->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->jam_daftar_mahasiswa->Visible) { // jam_daftar_mahasiswa ?>
-	<div id="r_jam_daftar_mahasiswa" class="form-group">
-		<label id="elh_pendaftaran_jam_daftar_mahasiswa" for="x_jam_daftar_mahasiswa" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->jam_daftar_mahasiswa->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->jam_daftar_mahasiswa->CellAttributes() ?>>
-<span id="el_pendaftaran_jam_daftar_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_jam_daftar_mahasiswa" name="x_jam_daftar_mahasiswa" id="x_jam_daftar_mahasiswa" placeholder="<?php echo ew_HtmlEncode($pendaftaran->jam_daftar_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->jam_daftar_mahasiswa->EditValue ?>"<?php echo $pendaftaran->jam_daftar_mahasiswa->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->jam_daftar_mahasiswa->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
 <?php if ($pendaftaran->total_biaya->Visible) { // total_biaya ?>
 	<div id="r_total_biaya" class="form-group">
 		<label id="elh_pendaftaran_total_biaya" for="x_total_biaya" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->total_biaya->FldCaption() ?></label>
@@ -1624,7 +1516,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->foto->Visible) { // foto ?>
 	<div id="r_foto" class="form-group">
-		<label id="elh_pendaftaran_foto" for="x_foto" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->foto->FldCaption() ?></label>
+		<label id="elh_pendaftaran_foto" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->foto->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->foto->CellAttributes() ?>>
 <span id="el_pendaftaran_foto">
 <input type="text" data-table="pendaftaran" data-field="x_foto" name="x_foto" id="x_foto" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->foto->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->foto->EditValue ?>"<?php echo $pendaftaran->foto->EditAttributes() ?>>
@@ -1634,7 +1526,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->alamat->Visible) { // alamat ?>
 	<div id="r_alamat" class="form-group">
-		<label id="elh_pendaftaran_alamat" for="x_alamat" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->alamat->FldCaption() ?></label>
+		<label id="elh_pendaftaran_alamat" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->alamat->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->alamat->CellAttributes() ?>>
 <span id="el_pendaftaran_alamat">
 <input type="text" data-table="pendaftaran" data-field="x_alamat" name="x_alamat" id="x_alamat" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->alamat->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->alamat->EditValue ?>"<?php echo $pendaftaran->alamat->EditAttributes() ?>>
@@ -1644,7 +1536,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->tlp->Visible) { // tlp ?>
 	<div id="r_tlp" class="form-group">
-		<label id="elh_pendaftaran_tlp" for="x_tlp" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tlp->FldCaption() ?></label>
+		<label id="elh_pendaftaran_tlp" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tlp->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->tlp->CellAttributes() ?>>
 <span id="el_pendaftaran_tlp">
 <input type="text" data-table="pendaftaran" data-field="x_tlp" name="x_tlp" id="x_tlp" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tlp->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tlp->EditValue ?>"<?php echo $pendaftaran->tlp->EditAttributes() ?>>
@@ -1654,7 +1546,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->tempat->Visible) { // tempat ?>
 	<div id="r_tempat" class="form-group">
-		<label id="elh_pendaftaran_tempat" for="x_tempat" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tempat->FldCaption() ?></label>
+		<label id="elh_pendaftaran_tempat" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tempat->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->tempat->CellAttributes() ?>>
 <span id="el_pendaftaran_tempat">
 <input type="text" data-table="pendaftaran" data-field="x_tempat" name="x_tempat" id="x_tempat" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tempat->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tempat->EditValue ?>"<?php echo $pendaftaran->tempat->EditAttributes() ?>>
@@ -1664,7 +1556,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->tgl->Visible) { // tgl ?>
 	<div id="r_tgl" class="form-group">
-		<label id="elh_pendaftaran_tgl" for="x_tgl" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tgl->FldCaption() ?></label>
+		<label id="elh_pendaftaran_tgl" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tgl->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->tgl->CellAttributes() ?>>
 <span id="el_pendaftaran_tgl">
 <input type="text" data-table="pendaftaran" data-field="x_tgl" name="x_tgl" id="x_tgl" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tgl->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tgl->EditValue ?>"<?php echo $pendaftaran->tgl->EditAttributes() ?>>
@@ -1674,7 +1566,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->qrcode->Visible) { // qrcode ?>
 	<div id="r_qrcode" class="form-group">
-		<label id="elh_pendaftaran_qrcode" for="x_qrcode" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->qrcode->FldCaption() ?></label>
+		<label id="elh_pendaftaran_qrcode" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->qrcode->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->qrcode->CellAttributes() ?>>
 <span id="el_pendaftaran_qrcode">
 <input type="text" data-table="pendaftaran" data-field="x_qrcode" name="x_qrcode" id="x_qrcode" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->qrcode->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->qrcode->EditValue ?>"<?php echo $pendaftaran->qrcode->EditAttributes() ?>>
@@ -1684,7 +1576,7 @@ $pendaftaran_add->ShowMessage();
 <?php } ?>
 <?php if ($pendaftaran->code->Visible) { // code ?>
 	<div id="r_code" class="form-group">
-		<label id="elh_pendaftaran_code" for="x_code" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->code->FldCaption() ?></label>
+		<label id="elh_pendaftaran_code" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->code->FldCaption() ?></label>
 		<div class="col-sm-10"><div<?php echo $pendaftaran->code->CellAttributes() ?>>
 <span id="el_pendaftaran_code">
 <input type="text" data-table="pendaftaran" data-field="x_code" name="x_code" id="x_code" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->code->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->code->EditValue ?>"<?php echo $pendaftaran->code->EditAttributes() ?>>

@@ -389,16 +389,7 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->nama_mahasiswa->SetVisibility();
 		$this->kelas_mahasiswa->SetVisibility();
 		$this->semester_mahasiswa->SetVisibility();
-		$this->tgl_daftar_mahasiswa->SetVisibility();
-		$this->jam_daftar_mahasiswa->SetVisibility();
 		$this->total_biaya->SetVisibility();
-		$this->foto->SetVisibility();
-		$this->alamat->SetVisibility();
-		$this->tlp->SetVisibility();
-		$this->tempat->SetVisibility();
-		$this->tgl->SetVisibility();
-		$this->qrcode->SetVisibility();
-		$this->code->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -749,7 +740,7 @@ class cpendaftaran_view extends cpendaftaran {
 		if ($this->UseSelectLimit) {
 			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderByList())));
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
 			} else {
 				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 			}
@@ -795,11 +786,6 @@ class cpendaftaran_view extends cpendaftaran {
 		if ($this->AuditTrailOnView) $this->WriteAuditTrailOnView($row);
 		$this->kodedaftar_mahasiswa->setDbValue($rs->fields('kodedaftar_mahasiswa'));
 		$this->nim_mahasiswa->setDbValue($rs->fields('nim_mahasiswa'));
-		if (array_key_exists('EV__nim_mahasiswa', $rs->fields)) {
-			$this->nim_mahasiswa->VirtualValue = $rs->fields('EV__nim_mahasiswa'); // Set up virtual field value
-		} else {
-			$this->nim_mahasiswa->VirtualValue = ""; // Clear value
-		}
 		$this->nama_mahasiswa->setDbValue($rs->fields('nama_mahasiswa'));
 		$this->kelas_mahasiswa->setDbValue($rs->fields('kelas_mahasiswa'));
 		$this->semester_mahasiswa->setDbValue($rs->fields('semester_mahasiswa'));
@@ -879,30 +865,7 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 		// nim_mahasiswa
-		if ($this->nim_mahasiswa->VirtualValue <> "") {
-			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->VirtualValue;
-		} else {
-		if (strval($this->nim_mahasiswa->CurrentValue) <> "") {
-			$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
-		$sWhereWrk = "";
-		$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
-		ew_AddFilter($sWhereWrk, $sFilterWrk);
-		$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = $rswrk->fields('DispFld');
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
-				$rswrk->Close();
-			} else {
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
-			}
-		} else {
-			$this->nim_mahasiswa->ViewValue = NULL;
-		}
-		}
+		$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
 		$this->nim_mahasiswa->ViewCustomAttributes = "";
 
 		// nama_mahasiswa
@@ -989,55 +952,10 @@ class cpendaftaran_view extends cpendaftaran {
 			$this->semester_mahasiswa->HrefValue = "";
 			$this->semester_mahasiswa->TooltipValue = "";
 
-			// tgl_daftar_mahasiswa
-			$this->tgl_daftar_mahasiswa->LinkCustomAttributes = "";
-			$this->tgl_daftar_mahasiswa->HrefValue = "";
-			$this->tgl_daftar_mahasiswa->TooltipValue = "";
-
-			// jam_daftar_mahasiswa
-			$this->jam_daftar_mahasiswa->LinkCustomAttributes = "";
-			$this->jam_daftar_mahasiswa->HrefValue = "";
-			$this->jam_daftar_mahasiswa->TooltipValue = "";
-
 			// total_biaya
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
 			$this->total_biaya->TooltipValue = "";
-
-			// foto
-			$this->foto->LinkCustomAttributes = "";
-			$this->foto->HrefValue = "";
-			$this->foto->TooltipValue = "";
-
-			// alamat
-			$this->alamat->LinkCustomAttributes = "";
-			$this->alamat->HrefValue = "";
-			$this->alamat->TooltipValue = "";
-
-			// tlp
-			$this->tlp->LinkCustomAttributes = "";
-			$this->tlp->HrefValue = "";
-			$this->tlp->TooltipValue = "";
-
-			// tempat
-			$this->tempat->LinkCustomAttributes = "";
-			$this->tempat->HrefValue = "";
-			$this->tempat->TooltipValue = "";
-
-			// tgl
-			$this->tgl->LinkCustomAttributes = "";
-			$this->tgl->HrefValue = "";
-			$this->tgl->TooltipValue = "";
-
-			// qrcode
-			$this->qrcode->LinkCustomAttributes = "";
-			$this->qrcode->HrefValue = "";
-			$this->qrcode->TooltipValue = "";
-
-			// code
-			$this->code->LinkCustomAttributes = "";
-			$this->code->HrefValue = "";
-			$this->code->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1494,7 +1412,6 @@ fpendaftaranview.ValidateRequired = false;
 <?php } ?>
 
 // Dynamic selection lists
-fpendaftaranview.Lists["x_nim_mahasiswa"] = {"LinkField":"x_NIM","Ajax":true,"AutoFill":false,"DisplayFields":["x_Nama","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"t_02_user"};
 fpendaftaranview.Lists["x_kelas_mahasiswa"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpendaftaranview.Lists["x_kelas_mahasiswa"].Options = <?php echo json_encode($pendaftaran->kelas_mahasiswa->Options()) ?>;
 
@@ -1640,28 +1557,6 @@ $pendaftaran_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
-<?php if ($pendaftaran->tgl_daftar_mahasiswa->Visible) { // tgl_daftar_mahasiswa ?>
-	<tr id="r_tgl_daftar_mahasiswa">
-		<td><span id="elh_pendaftaran_tgl_daftar_mahasiswa"><?php echo $pendaftaran->tgl_daftar_mahasiswa->FldCaption() ?></span></td>
-		<td data-name="tgl_daftar_mahasiswa"<?php echo $pendaftaran->tgl_daftar_mahasiswa->CellAttributes() ?>>
-<span id="el_pendaftaran_tgl_daftar_mahasiswa">
-<span<?php echo $pendaftaran->tgl_daftar_mahasiswa->ViewAttributes() ?>>
-<?php echo $pendaftaran->tgl_daftar_mahasiswa->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->jam_daftar_mahasiswa->Visible) { // jam_daftar_mahasiswa ?>
-	<tr id="r_jam_daftar_mahasiswa">
-		<td><span id="elh_pendaftaran_jam_daftar_mahasiswa"><?php echo $pendaftaran->jam_daftar_mahasiswa->FldCaption() ?></span></td>
-		<td data-name="jam_daftar_mahasiswa"<?php echo $pendaftaran->jam_daftar_mahasiswa->CellAttributes() ?>>
-<span id="el_pendaftaran_jam_daftar_mahasiswa">
-<span<?php echo $pendaftaran->jam_daftar_mahasiswa->ViewAttributes() ?>>
-<?php echo $pendaftaran->jam_daftar_mahasiswa->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($pendaftaran->total_biaya->Visible) { // total_biaya ?>
 	<tr id="r_total_biaya">
 		<td><span id="elh_pendaftaran_total_biaya"><?php echo $pendaftaran->total_biaya->FldCaption() ?></span></td>
@@ -1669,83 +1564,6 @@ $pendaftaran_view->ShowMessage();
 <span id="el_pendaftaran_total_biaya">
 <span<?php echo $pendaftaran->total_biaya->ViewAttributes() ?>>
 <?php echo $pendaftaran->total_biaya->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->foto->Visible) { // foto ?>
-	<tr id="r_foto">
-		<td><span id="elh_pendaftaran_foto"><?php echo $pendaftaran->foto->FldCaption() ?></span></td>
-		<td data-name="foto"<?php echo $pendaftaran->foto->CellAttributes() ?>>
-<span id="el_pendaftaran_foto">
-<span<?php echo $pendaftaran->foto->ViewAttributes() ?>>
-<?php echo $pendaftaran->foto->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->alamat->Visible) { // alamat ?>
-	<tr id="r_alamat">
-		<td><span id="elh_pendaftaran_alamat"><?php echo $pendaftaran->alamat->FldCaption() ?></span></td>
-		<td data-name="alamat"<?php echo $pendaftaran->alamat->CellAttributes() ?>>
-<span id="el_pendaftaran_alamat">
-<span<?php echo $pendaftaran->alamat->ViewAttributes() ?>>
-<?php echo $pendaftaran->alamat->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->tlp->Visible) { // tlp ?>
-	<tr id="r_tlp">
-		<td><span id="elh_pendaftaran_tlp"><?php echo $pendaftaran->tlp->FldCaption() ?></span></td>
-		<td data-name="tlp"<?php echo $pendaftaran->tlp->CellAttributes() ?>>
-<span id="el_pendaftaran_tlp">
-<span<?php echo $pendaftaran->tlp->ViewAttributes() ?>>
-<?php echo $pendaftaran->tlp->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->tempat->Visible) { // tempat ?>
-	<tr id="r_tempat">
-		<td><span id="elh_pendaftaran_tempat"><?php echo $pendaftaran->tempat->FldCaption() ?></span></td>
-		<td data-name="tempat"<?php echo $pendaftaran->tempat->CellAttributes() ?>>
-<span id="el_pendaftaran_tempat">
-<span<?php echo $pendaftaran->tempat->ViewAttributes() ?>>
-<?php echo $pendaftaran->tempat->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->tgl->Visible) { // tgl ?>
-	<tr id="r_tgl">
-		<td><span id="elh_pendaftaran_tgl"><?php echo $pendaftaran->tgl->FldCaption() ?></span></td>
-		<td data-name="tgl"<?php echo $pendaftaran->tgl->CellAttributes() ?>>
-<span id="el_pendaftaran_tgl">
-<span<?php echo $pendaftaran->tgl->ViewAttributes() ?>>
-<?php echo $pendaftaran->tgl->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->qrcode->Visible) { // qrcode ?>
-	<tr id="r_qrcode">
-		<td><span id="elh_pendaftaran_qrcode"><?php echo $pendaftaran->qrcode->FldCaption() ?></span></td>
-		<td data-name="qrcode"<?php echo $pendaftaran->qrcode->CellAttributes() ?>>
-<span id="el_pendaftaran_qrcode">
-<span<?php echo $pendaftaran->qrcode->ViewAttributes() ?>>
-<?php echo $pendaftaran->qrcode->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pendaftaran->code->Visible) { // code ?>
-	<tr id="r_code">
-		<td><span id="elh_pendaftaran_code"><?php echo $pendaftaran->code->FldCaption() ?></span></td>
-		<td data-name="code"<?php echo $pendaftaran->code->CellAttributes() ?>>
-<span id="el_pendaftaran_code">
-<span<?php echo $pendaftaran->code->ViewAttributes() ?>>
-<?php echo $pendaftaran->code->ViewValue ?></span>
 </span>
 </td>
 	</tr>

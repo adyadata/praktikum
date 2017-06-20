@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<configuration date="2017/06/20" author="e.World Technology Ltd.">
-  <project id="{47E9807F-0BA5-4478-84CF-DB02752CE563}" file="D:\xampp\htdocs\praktikum\praktikum.pmp" name="praktikum" product="PHPMaker" version="13.0" datetime="2017/06/20 04:17:17" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;0,&quot;Default&quot;,0">
+<configuration date="2017/06/21" author="e.World Technology Ltd.">
+  <project id="{47E9807F-0BA5-4478-84CF-DB02752CE563}" file="D:\xampp\htdocs\praktikum\praktikum.pmp" name="praktikum" product="PHPMaker" version="13.0" datetime="2017/06/21 01:53:46" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;0,&quot;Default&quot;,0">
     <table id="absensi2" name="absensi2" caption="Absensi" userlevel="-2,&quot;Anonymous&quot;,0;0,&quot;Default&quot;,0" priv="1" />
     <table id="accounting_debit_kredit" name="accounting_debit_kredit" caption="accounting debit kredit" userlevel="-2,&quot;Anonymous&quot;,0;0,&quot;Default&quot;,0" priv="1" />
     <table id="detail_pendaftaran" name="detail_pendaftaran" caption="Detail" userlevel="-2,&quot;Anonymous&quot;,0;0,&quot;Default&quot;,0" priv="1" />

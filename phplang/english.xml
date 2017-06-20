@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<ew-language date="2017/6/20" version="13.0.0" id="en" name="English" desc="English" author="e.World Technology Ltd.">
+<ew-language date="2017/6/21" version="13.0.0" id="en" name="English" desc="English" author="e.World Technology Ltd.">
   <!-- 
 	*** Important Notes:
 	1. Language ID should follow: https://developers.google.com/recaptcha/docs/language,
@@ -867,23 +867,23 @@
     <table id="pendaftaran">
       <phrase id="tblcaption" value="Pendaftaran" />
       <field id="kodedaftar_mahasiswa">
-        <phrase id="fldcaption" value="kodedaftar mahasiswa" />
+        <phrase id="fldcaption" value="Kode Daftar" />
       </field>
       <field id="nim_mahasiswa">
-        <phrase id="fldcaption" value="nim mahasiswa" />
+        <phrase id="fldcaption" value="NIM" />
       </field>
       <field id="nama_mahasiswa">
-        <phrase id="fldcaption" value="nama mahasiswa" />
+        <phrase id="fldcaption" value="Nama" />
       </field>
       <field id="kelas_mahasiswa">
-        <phrase id="fldcaption" value="kelas mahasiswa" />
+        <phrase id="fldcaption" value="Kelas" />
         <phrase id="fldtagvalue1" value="Pagi" />
         <phrase id="fldtagcaption1" value="Pagi" />
         <phrase id="fldtagvalue2" value="Sore" />
         <phrase id="fldtagcaption2" value="Sore" />
       </field>
       <field id="semester_mahasiswa">
-        <phrase id="fldcaption" value="semester mahasiswa" />
+        <phrase id="fldcaption" value="Semester" />
       </field>
       <field id="tgl_daftar_mahasiswa">
         <phrase id="fldcaption" value="tgl daftar mahasiswa" />

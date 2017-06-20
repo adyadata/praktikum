@@ -65,10 +65,8 @@ class cpendaftaran extends cTable {
 		$this->fields['kodedaftar_mahasiswa'] = &$this->kodedaftar_mahasiswa;
 
 		// nim_mahasiswa
-		$this->nim_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_nim_mahasiswa', 'nim_mahasiswa', '`nim_mahasiswa`', '`nim_mahasiswa`', 3, -1, FALSE, '`EV__nim_mahasiswa`', TRUE, TRUE, TRUE, 'FORMATTED TEXT', 'SELECT');
+		$this->nim_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_nim_mahasiswa', 'nim_mahasiswa', '`nim_mahasiswa`', '`nim_mahasiswa`', 3, -1, FALSE, '`nim_mahasiswa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->nim_mahasiswa->Sortable = TRUE; // Allow sort
-		$this->nim_mahasiswa->UsePleaseSelect = TRUE; // Use PleaseSelect by default
-		$this->nim_mahasiswa->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->nim_mahasiswa->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['nim_mahasiswa'] = &$this->nim_mahasiswa;
 
@@ -90,13 +88,13 @@ class cpendaftaran extends cTable {
 		$this->fields['semester_mahasiswa'] = &$this->semester_mahasiswa;
 
 		// tgl_daftar_mahasiswa
-		$this->tgl_daftar_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_tgl_daftar_mahasiswa', 'tgl_daftar_mahasiswa', '`tgl_daftar_mahasiswa`', ew_CastDateFieldForLike('`tgl_daftar_mahasiswa`', 0, "DB"), 133, 0, FALSE, '`tgl_daftar_mahasiswa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->tgl_daftar_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_tgl_daftar_mahasiswa', 'tgl_daftar_mahasiswa', '`tgl_daftar_mahasiswa`', ew_CastDateFieldForLike('`tgl_daftar_mahasiswa`', 0, "DB"), 133, 0, FALSE, '`tgl_daftar_mahasiswa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->tgl_daftar_mahasiswa->Sortable = TRUE; // Allow sort
 		$this->tgl_daftar_mahasiswa->FldDefaultErrMsg = str_replace("%s", $GLOBALS["EW_DATE_FORMAT"], $Language->Phrase("IncorrectDate"));
 		$this->fields['tgl_daftar_mahasiswa'] = &$this->tgl_daftar_mahasiswa;
 
 		// jam_daftar_mahasiswa
-		$this->jam_daftar_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_jam_daftar_mahasiswa', 'jam_daftar_mahasiswa', '`jam_daftar_mahasiswa`', ew_CastDateFieldForLike('`jam_daftar_mahasiswa`', 4, "DB"), 134, 4, FALSE, '`jam_daftar_mahasiswa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->jam_daftar_mahasiswa = new cField('pendaftaran', 'pendaftaran', 'x_jam_daftar_mahasiswa', 'jam_daftar_mahasiswa', '`jam_daftar_mahasiswa`', ew_CastDateFieldForLike('`jam_daftar_mahasiswa`', 4, "DB"), 134, 4, FALSE, '`jam_daftar_mahasiswa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->jam_daftar_mahasiswa->Sortable = TRUE; // Allow sort
 		$this->jam_daftar_mahasiswa->FldDefaultErrMsg = str_replace("%s", $GLOBALS["EW_TIME_SEPARATOR"], $Language->Phrase("IncorrectTime"));
 		$this->fields['jam_daftar_mahasiswa'] = &$this->jam_daftar_mahasiswa;
@@ -108,38 +106,38 @@ class cpendaftaran extends cTable {
 		$this->fields['total_biaya'] = &$this->total_biaya;
 
 		// foto
-		$this->foto = new cField('pendaftaran', 'pendaftaran', 'x_foto', 'foto', '`foto`', '`foto`', 200, -1, FALSE, '`foto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->foto = new cField('pendaftaran', 'pendaftaran', 'x_foto', 'foto', '`foto`', '`foto`', 200, -1, FALSE, '`foto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->foto->Sortable = TRUE; // Allow sort
 		$this->fields['foto'] = &$this->foto;
 
 		// alamat
-		$this->alamat = new cField('pendaftaran', 'pendaftaran', 'x_alamat', 'alamat', '`alamat`', '`alamat`', 200, -1, FALSE, '`alamat`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->alamat = new cField('pendaftaran', 'pendaftaran', 'x_alamat', 'alamat', '`alamat`', '`alamat`', 200, -1, FALSE, '`alamat`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->alamat->Sortable = TRUE; // Allow sort
 		$this->fields['alamat'] = &$this->alamat;
 
 		// tlp
-		$this->tlp = new cField('pendaftaran', 'pendaftaran', 'x_tlp', 'tlp', '`tlp`', '`tlp`', 200, -1, FALSE, '`tlp`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->tlp = new cField('pendaftaran', 'pendaftaran', 'x_tlp', 'tlp', '`tlp`', '`tlp`', 200, -1, FALSE, '`tlp`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->tlp->Sortable = TRUE; // Allow sort
 		$this->fields['tlp'] = &$this->tlp;
 
 		// tempat
-		$this->tempat = new cField('pendaftaran', 'pendaftaran', 'x_tempat', 'tempat', '`tempat`', '`tempat`', 200, -1, FALSE, '`tempat`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->tempat = new cField('pendaftaran', 'pendaftaran', 'x_tempat', 'tempat', '`tempat`', '`tempat`', 200, -1, FALSE, '`tempat`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->tempat->Sortable = TRUE; // Allow sort
 		$this->fields['tempat'] = &$this->tempat;
 
 		// tgl
-		$this->tgl = new cField('pendaftaran', 'pendaftaran', 'x_tgl', 'tgl', '`tgl`', ew_CastDateFieldForLike('`tgl`', 0, "DB"), 133, 0, FALSE, '`tgl`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->tgl = new cField('pendaftaran', 'pendaftaran', 'x_tgl', 'tgl', '`tgl`', ew_CastDateFieldForLike('`tgl`', 0, "DB"), 133, 0, FALSE, '`tgl`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->tgl->Sortable = TRUE; // Allow sort
 		$this->tgl->FldDefaultErrMsg = str_replace("%s", $GLOBALS["EW_DATE_FORMAT"], $Language->Phrase("IncorrectDate"));
 		$this->fields['tgl'] = &$this->tgl;
 
 		// qrcode
-		$this->qrcode = new cField('pendaftaran', 'pendaftaran', 'x_qrcode', 'qrcode', '`qrcode`', '`qrcode`', 200, -1, FALSE, '`qrcode`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->qrcode = new cField('pendaftaran', 'pendaftaran', 'x_qrcode', 'qrcode', '`qrcode`', '`qrcode`', 200, -1, FALSE, '`qrcode`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->qrcode->Sortable = TRUE; // Allow sort
 		$this->fields['qrcode'] = &$this->qrcode;
 
 		// code
-		$this->code = new cField('pendaftaran', 'pendaftaran', 'x_code', 'code', '`code`', '`code`', 200, -1, FALSE, '`code`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->code = new cField('pendaftaran', 'pendaftaran', 'x_code', 'code', '`code`', '`code`', 200, -1, FALSE, '`code`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
 		$this->code->Sortable = TRUE; // Allow sort
 		$this->fields['code'] = &$this->code;
 	}
@@ -173,31 +171,9 @@ class cpendaftaran extends cTable {
 			} else {
 				$this->setSessionOrderBy($sSortField . " " . $sThisSort); // Save to Session
 			}
-			$sSortFieldList = ($ofld->FldVirtualExpression <> "") ? $ofld->FldVirtualExpression : $sSortField;
-			if ($ctrl) {
-				$sOrderByList = $this->getSessionOrderByList();
-				if (strpos($sOrderByList, $sSortFieldList . " " . $sLastSort) !== FALSE) {
-					$sOrderByList = str_replace($sSortFieldList . " " . $sLastSort, $sSortFieldList . " " . $sThisSort, $sOrderByList);
-				} else {
-					if ($sOrderByList <> "") $sOrderByList .= ", ";
-					$sOrderByList .= $sSortFieldList . " " . $sThisSort;
-				}
-				$this->setSessionOrderByList($sOrderByList); // Save to Session
-			} else {
-				$this->setSessionOrderByList($sSortFieldList . " " . $sThisSort); // Save to Session
-			}
 		} else {
 			if (!$ctrl) $ofld->setSort("");
 		}
-	}
-
-	// Session ORDER BY for List page
-	function getSessionOrderByList() {
-		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST];
-	}
-
-	function setSessionOrderByList($v) {
-		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
 	}
 
 	// Current detail table name
@@ -251,28 +227,11 @@ class cpendaftaran extends cTable {
 	function setSqlSelect($v) {
 		$this->_SqlSelect = $v;
 	}
-	var $_SqlSelectList = "";
-
-	function getSqlSelectList() { // Select for List page
-		$select = "";
-		$select = "SELECT * FROM (" .
-			"SELECT *, (SELECT `Nama` FROM `t_02_user` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`NIM` = `pendaftaran`.`nim_mahasiswa` LIMIT 1) AS `EV__nim_mahasiswa` FROM `pendaftaran`" .
-			") `EW_TMP_TABLE`";
-		return ($this->_SqlSelectList <> "") ? $this->_SqlSelectList : $select;
-	}
-
-	function SqlSelectList() { // For backward compatibility
-		return $this->getSqlSelectList();
-	}
-
-	function setSqlSelectList($v) {
-		$this->_SqlSelectList = $v;
-	}
 	var $_SqlWhere = "";
 
 	function getSqlWhere() { // Where
 		$sWhere = ($this->_SqlWhere <> "") ? $this->_SqlWhere : "";
-		$this->TableFilter = (CurrentUserLevel() >= 0 ? "nim_mahasiswa = ".$_SESSION["praktikum_nim"] : "");
+		$this->TableFilter = (CurrentUserLevel() >= 0 ? "nim_mahasiswa = ".CurrentUserInfo("NIM") : "");
 		ew_AddFilter($sWhere, $this->TableFilter);
 		return $sWhere;
 	}
@@ -379,38 +338,15 @@ class cpendaftaran extends cTable {
 		ew_AddFilter($sFilter, $this->CurrentFilter);
 		$sFilter = $this->ApplyUserIDFilters($sFilter);
 		$this->Recordset_Selecting($sFilter);
-		if ($this->UseVirtualFields()) {
-			$sSort = $this->getSessionOrderByList();
-			return ew_BuildSelectSql($this->getSqlSelectList(), $this->getSqlWhere(), $this->getSqlGroupBy(),
-				$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
-		} else {
-			$sSort = $this->getSessionOrderBy();
-			return ew_BuildSelectSql($this->getSqlSelect(), $this->getSqlWhere(), $this->getSqlGroupBy(),
-				$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
-		}
+		$sSort = $this->getSessionOrderBy();
+		return ew_BuildSelectSql($this->getSqlSelect(), $this->getSqlWhere(), $this->getSqlGroupBy(),
+			$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
 	}
 
 	// Get ORDER BY clause
 	function GetOrderBy() {
-		$sSort = ($this->UseVirtualFields()) ? $this->getSessionOrderByList() : $this->getSessionOrderBy();
+		$sSort = $this->getSessionOrderBy();
 		return ew_BuildSelectSql("", "", "", "", $this->getSqlOrderBy(), "", $sSort);
-	}
-
-	// Check if virtual fields is used in SQL
-	function UseVirtualFields() {
-		$sWhere = $this->getSessionWhere();
-		$sOrderBy = $this->getSessionOrderByList();
-		if ($sWhere <> "")
-			$sWhere = " " . str_replace(array("(",")"), array("",""), $sWhere) . " ";
-		if ($sOrderBy <> "")
-			$sOrderBy = " " . str_replace(array("(",")"), array("",""), $sOrderBy) . " ";
-		if ($this->nim_mahasiswa->AdvancedSearch->SearchValue <> "" ||
-			$this->nim_mahasiswa->AdvancedSearch->SearchValue2 <> "" ||
-			strpos($sWhere, " " . $this->nim_mahasiswa->FldVirtualExpression . " ") !== FALSE)
-			return TRUE;
-		if (strpos($sOrderBy, " " . $this->nim_mahasiswa->FldVirtualExpression . " ") !== FALSE)
-			return TRUE;
-		return FALSE;
 	}
 
 	// Try to get record count
@@ -784,30 +720,7 @@ class cpendaftaran extends cTable {
 		$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
 
 		// nim_mahasiswa
-		if ($this->nim_mahasiswa->VirtualValue <> "") {
-			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->VirtualValue;
-		} else {
-		if (strval($this->nim_mahasiswa->CurrentValue) <> "") {
-			$sFilterWrk = "`NIM`" . ew_SearchString("=", $this->nim_mahasiswa->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `NIM`, `Nama` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `t_02_user`";
-		$sWhereWrk = "";
-		$this->nim_mahasiswa->LookupFilters = array("dx1" => '`Nama`');
-		ew_AddFilter($sWhereWrk, $sFilterWrk);
-		$this->Lookup_Selecting($this->nim_mahasiswa, $sWhereWrk); // Call Lookup selecting
-		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = $rswrk->fields('DispFld');
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->DisplayValue($arwrk);
-				$rswrk->Close();
-			} else {
-				$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
-			}
-		} else {
-			$this->nim_mahasiswa->ViewValue = NULL;
-		}
-		}
+		$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
 		$this->nim_mahasiswa->ViewCustomAttributes = "";
 
 		// nama_mahasiswa
@@ -964,6 +877,8 @@ class cpendaftaran extends cTable {
 		// nim_mahasiswa
 		$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
 		$this->nim_mahasiswa->EditCustomAttributes = "";
+		$this->nim_mahasiswa->EditValue = $this->nim_mahasiswa->CurrentValue;
+		$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
 
 		// nama_mahasiswa
 		$this->nama_mahasiswa->EditAttrs["class"] = "form-control";
@@ -982,18 +897,9 @@ class cpendaftaran extends cTable {
 		$this->semester_mahasiswa->PlaceHolder = ew_RemoveHtml($this->semester_mahasiswa->FldCaption());
 
 		// tgl_daftar_mahasiswa
-		$this->tgl_daftar_mahasiswa->EditAttrs["class"] = "form-control";
-		$this->tgl_daftar_mahasiswa->EditCustomAttributes = "";
-		$this->tgl_daftar_mahasiswa->EditValue = ew_FormatDateTime($this->tgl_daftar_mahasiswa->CurrentValue, 8);
-		$this->tgl_daftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_mahasiswa->FldCaption());
-
 		// jam_daftar_mahasiswa
-		$this->jam_daftar_mahasiswa->EditAttrs["class"] = "form-control";
-		$this->jam_daftar_mahasiswa->EditCustomAttributes = "";
-		$this->jam_daftar_mahasiswa->EditValue = $this->jam_daftar_mahasiswa->CurrentValue;
-		$this->jam_daftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->jam_daftar_mahasiswa->FldCaption());
-
 		// total_biaya
+
 		$this->total_biaya->EditAttrs["class"] = "form-control";
 		$this->total_biaya->EditCustomAttributes = "";
 		$this->total_biaya->EditValue = $this->total_biaya->CurrentValue;
@@ -1003,44 +909,31 @@ class cpendaftaran extends cTable {
 		// foto
 		$this->foto->EditAttrs["class"] = "form-control";
 		$this->foto->EditCustomAttributes = "";
-		$this->foto->EditValue = $this->foto->CurrentValue;
-		$this->foto->PlaceHolder = ew_RemoveHtml($this->foto->FldCaption());
 
 		// alamat
 		$this->alamat->EditAttrs["class"] = "form-control";
 		$this->alamat->EditCustomAttributes = "";
-		$this->alamat->EditValue = $this->alamat->CurrentValue;
-		$this->alamat->PlaceHolder = ew_RemoveHtml($this->alamat->FldCaption());
 
 		// tlp
 		$this->tlp->EditAttrs["class"] = "form-control";
 		$this->tlp->EditCustomAttributes = "";
-		$this->tlp->EditValue = $this->tlp->CurrentValue;
-		$this->tlp->PlaceHolder = ew_RemoveHtml($this->tlp->FldCaption());
 
 		// tempat
 		$this->tempat->EditAttrs["class"] = "form-control";
 		$this->tempat->EditCustomAttributes = "";
-		$this->tempat->EditValue = $this->tempat->CurrentValue;
-		$this->tempat->PlaceHolder = ew_RemoveHtml($this->tempat->FldCaption());
 
 		// tgl
 		$this->tgl->EditAttrs["class"] = "form-control";
 		$this->tgl->EditCustomAttributes = "";
-		$this->tgl->EditValue = ew_FormatDateTime($this->tgl->CurrentValue, 8);
-		$this->tgl->PlaceHolder = ew_RemoveHtml($this->tgl->FldCaption());
+		$this->tgl->CurrentValue = ew_FormatDateTime($this->tgl->CurrentValue, 8);
 
 		// qrcode
 		$this->qrcode->EditAttrs["class"] = "form-control";
 		$this->qrcode->EditCustomAttributes = "";
-		$this->qrcode->EditValue = $this->qrcode->CurrentValue;
-		$this->qrcode->PlaceHolder = ew_RemoveHtml($this->qrcode->FldCaption());
 
 		// code
 		$this->code->EditAttrs["class"] = "form-control";
 		$this->code->EditCustomAttributes = "";
-		$this->code->EditValue = $this->code->CurrentValue;
-		$this->code->PlaceHolder = ew_RemoveHtml($this->code->FldCaption());
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -1074,16 +967,7 @@ class cpendaftaran extends cTable {
 					if ($this->nama_mahasiswa->Exportable) $Doc->ExportCaption($this->nama_mahasiswa);
 					if ($this->kelas_mahasiswa->Exportable) $Doc->ExportCaption($this->kelas_mahasiswa);
 					if ($this->semester_mahasiswa->Exportable) $Doc->ExportCaption($this->semester_mahasiswa);
-					if ($this->tgl_daftar_mahasiswa->Exportable) $Doc->ExportCaption($this->tgl_daftar_mahasiswa);
-					if ($this->jam_daftar_mahasiswa->Exportable) $Doc->ExportCaption($this->jam_daftar_mahasiswa);
 					if ($this->total_biaya->Exportable) $Doc->ExportCaption($this->total_biaya);
-					if ($this->foto->Exportable) $Doc->ExportCaption($this->foto);
-					if ($this->alamat->Exportable) $Doc->ExportCaption($this->alamat);
-					if ($this->tlp->Exportable) $Doc->ExportCaption($this->tlp);
-					if ($this->tempat->Exportable) $Doc->ExportCaption($this->tempat);
-					if ($this->tgl->Exportable) $Doc->ExportCaption($this->tgl);
-					if ($this->qrcode->Exportable) $Doc->ExportCaption($this->qrcode);
-					if ($this->code->Exportable) $Doc->ExportCaption($this->code);
 				} else {
 					if ($this->kodedaftar_mahasiswa->Exportable) $Doc->ExportCaption($this->kodedaftar_mahasiswa);
 					if ($this->nim_mahasiswa->Exportable) $Doc->ExportCaption($this->nim_mahasiswa);
@@ -1136,16 +1020,7 @@ class cpendaftaran extends cTable {
 						if ($this->nama_mahasiswa->Exportable) $Doc->ExportField($this->nama_mahasiswa);
 						if ($this->kelas_mahasiswa->Exportable) $Doc->ExportField($this->kelas_mahasiswa);
 						if ($this->semester_mahasiswa->Exportable) $Doc->ExportField($this->semester_mahasiswa);
-						if ($this->tgl_daftar_mahasiswa->Exportable) $Doc->ExportField($this->tgl_daftar_mahasiswa);
-						if ($this->jam_daftar_mahasiswa->Exportable) $Doc->ExportField($this->jam_daftar_mahasiswa);
 						if ($this->total_biaya->Exportable) $Doc->ExportField($this->total_biaya);
-						if ($this->foto->Exportable) $Doc->ExportField($this->foto);
-						if ($this->alamat->Exportable) $Doc->ExportField($this->alamat);
-						if ($this->tlp->Exportable) $Doc->ExportField($this->tlp);
-						if ($this->tempat->Exportable) $Doc->ExportField($this->tempat);
-						if ($this->tgl->Exportable) $Doc->ExportField($this->tgl);
-						if ($this->qrcode->Exportable) $Doc->ExportField($this->qrcode);
-						if ($this->code->Exportable) $Doc->ExportField($this->code);
 					} else {
 						if ($this->kodedaftar_mahasiswa->Exportable) $Doc->ExportField($this->kodedaftar_mahasiswa);
 						if ($this->nim_mahasiswa->Exportable) $Doc->ExportField($this->nim_mahasiswa);
@@ -1371,6 +1246,9 @@ class cpendaftaran extends cTable {
 		// Enter your code here
 		// To cancel, set return value to FALSE
 
+		$rsnew["kodedaftar_mahasiswa"] = GetNextKodeDaftar();
+		$rsnew["nim_mahasiswa"]  = CurrentUserInfo("NIM"); //$_SESSION["praktikum_nim"];
+		$rsnew["nama_mahasiswa"] = CurrentUserInfo("Nama"); //$_SESSION["praktikum_nama_mahasiswa"];
 		return TRUE;
 	}
 
@@ -1474,8 +1352,27 @@ class cpendaftaran extends cTable {
 	function Row_Rendered() {
 
 		// To view properties of field class, use:
-		//var_dump($this-><FieldName>); 
+		//var_dump($this-><FieldName>);
+		// Kondisi saat form Tambah sedang terbuka (tidak dalam mode konfirmasi)
 
+		if (CurrentPageID() == "add" && $this->CurrentAction != "F") {
+			$this->kodedaftar_mahasiswa->CurrentValue = GetNextKodeDaftar(); // trik
+			$this->kodedaftar_mahasiswa->EditValue = $this->kodedaftar_mahasiswa->CurrentValue; // tampilkan
+			$this->kodedaftar_mahasiswa->ReadOnly = TRUE; // supaya tidak bisa diubah
+			$this->nim_mahasiswa->CurrentValue = CurrentUserInfo("NIM"); //$_SESSION["praktikum_nim"];
+			$this->nim_mahasiswa->EditValue = $this->nim_mahasiswa->CurrentValue;
+			$this->nim_mahasiswa->ReadOnly = TRUE;
+			$this->nama_mahasiswa->CurrentValue = CurrentUserInfo("Nama"); //$_SESSION["praktikum_nama_mahasiswa"];
+			$this->nama_mahasiswa->EditValue = $this->nama_mahasiswa->CurrentValue;
+			$this->nama_mahasiswa->ReadOnly = TRUE;
+		}
+
+		// Kondisi saat form Tambah sedang dalam mode konfirmasi
+		if ($this->CurrentAction == "add" && $this->CurrentAction=="F") {
+			$this->kodedaftar_mahasiswa->ViewValue = $this->kodedaftar_mahasiswa->CurrentValue; // ambil dari mode sebelumnya
+			$this->nim_mahasiswa->ViewValue = $this->nim_mahasiswa->CurrentValue;
+			$this->nama_mahasiswa->ViewValue = $this->nama_mahasiswa->CurrentValue;
+		}
 	}
 
 	// User ID Filtering event
