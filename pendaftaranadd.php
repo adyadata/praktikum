@@ -294,13 +294,6 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->SetVisibility();
 		$this->jam_daftar_mahasiswa->SetVisibility();
 		$this->total_biaya->SetVisibility();
-		$this->foto->SetVisibility();
-		$this->alamat->SetVisibility();
-		$this->tlp->SetVisibility();
-		$this->tempat->SetVisibility();
-		$this->tgl->SetVisibility();
-		$this->qrcode->SetVisibility();
-		$this->code->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -521,20 +514,6 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->jam_daftar_mahasiswa->CurrentValue = ew_CurrentTime();
 		$this->total_biaya->CurrentValue = NULL;
 		$this->total_biaya->OldValue = $this->total_biaya->CurrentValue;
-		$this->foto->CurrentValue = NULL;
-		$this->foto->OldValue = $this->foto->CurrentValue;
-		$this->alamat->CurrentValue = NULL;
-		$this->alamat->OldValue = $this->alamat->CurrentValue;
-		$this->tlp->CurrentValue = NULL;
-		$this->tlp->OldValue = $this->tlp->CurrentValue;
-		$this->tempat->CurrentValue = NULL;
-		$this->tempat->OldValue = $this->tempat->CurrentValue;
-		$this->tgl->CurrentValue = NULL;
-		$this->tgl->OldValue = $this->tgl->CurrentValue;
-		$this->qrcode->CurrentValue = NULL;
-		$this->qrcode->OldValue = $this->qrcode->CurrentValue;
-		$this->code->CurrentValue = NULL;
-		$this->code->OldValue = $this->code->CurrentValue;
 	}
 
 	// Load form values
@@ -568,28 +547,6 @@ class cpendaftaran_add extends cpendaftaran {
 		if (!$this->total_biaya->FldIsDetailKey) {
 			$this->total_biaya->setFormValue($objForm->GetValue("x_total_biaya"));
 		}
-		if (!$this->foto->FldIsDetailKey) {
-			$this->foto->setFormValue($objForm->GetValue("x_foto"));
-		}
-		if (!$this->alamat->FldIsDetailKey) {
-			$this->alamat->setFormValue($objForm->GetValue("x_alamat"));
-		}
-		if (!$this->tlp->FldIsDetailKey) {
-			$this->tlp->setFormValue($objForm->GetValue("x_tlp"));
-		}
-		if (!$this->tempat->FldIsDetailKey) {
-			$this->tempat->setFormValue($objForm->GetValue("x_tempat"));
-		}
-		if (!$this->tgl->FldIsDetailKey) {
-			$this->tgl->setFormValue($objForm->GetValue("x_tgl"));
-			$this->tgl->CurrentValue = ew_UnFormatDateTime($this->tgl->CurrentValue, 0);
-		}
-		if (!$this->qrcode->FldIsDetailKey) {
-			$this->qrcode->setFormValue($objForm->GetValue("x_qrcode"));
-		}
-		if (!$this->code->FldIsDetailKey) {
-			$this->code->setFormValue($objForm->GetValue("x_code"));
-		}
 	}
 
 	// Restore form values
@@ -606,14 +563,6 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->jam_daftar_mahasiswa->CurrentValue = $this->jam_daftar_mahasiswa->FormValue;
 		$this->jam_daftar_mahasiswa->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_mahasiswa->CurrentValue, 4);
 		$this->total_biaya->CurrentValue = $this->total_biaya->FormValue;
-		$this->foto->CurrentValue = $this->foto->FormValue;
-		$this->alamat->CurrentValue = $this->alamat->FormValue;
-		$this->tlp->CurrentValue = $this->tlp->FormValue;
-		$this->tempat->CurrentValue = $this->tempat->FormValue;
-		$this->tgl->CurrentValue = $this->tgl->FormValue;
-		$this->tgl->CurrentValue = ew_UnFormatDateTime($this->tgl->CurrentValue, 0);
-		$this->qrcode->CurrentValue = $this->qrcode->FormValue;
-		$this->code->CurrentValue = $this->code->FormValue;
 	}
 
 	// Load row based on key values
@@ -844,41 +793,6 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
 			$this->total_biaya->TooltipValue = "";
-
-			// foto
-			$this->foto->LinkCustomAttributes = "";
-			$this->foto->HrefValue = "";
-			$this->foto->TooltipValue = "";
-
-			// alamat
-			$this->alamat->LinkCustomAttributes = "";
-			$this->alamat->HrefValue = "";
-			$this->alamat->TooltipValue = "";
-
-			// tlp
-			$this->tlp->LinkCustomAttributes = "";
-			$this->tlp->HrefValue = "";
-			$this->tlp->TooltipValue = "";
-
-			// tempat
-			$this->tempat->LinkCustomAttributes = "";
-			$this->tempat->HrefValue = "";
-			$this->tempat->TooltipValue = "";
-
-			// tgl
-			$this->tgl->LinkCustomAttributes = "";
-			$this->tgl->HrefValue = "";
-			$this->tgl->TooltipValue = "";
-
-			// qrcode
-			$this->qrcode->LinkCustomAttributes = "";
-			$this->qrcode->HrefValue = "";
-			$this->qrcode->TooltipValue = "";
-
-			// code
-			$this->code->LinkCustomAttributes = "";
-			$this->code->HrefValue = "";
-			$this->code->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
 			// kodedaftar_mahasiswa
@@ -919,48 +833,6 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->total_biaya->PlaceHolder = ew_RemoveHtml($this->total_biaya->FldCaption());
 			if (strval($this->total_biaya->EditValue) <> "" && is_numeric($this->total_biaya->EditValue)) $this->total_biaya->EditValue = ew_FormatNumber($this->total_biaya->EditValue, -2, -1, -2, 0);
 
-			// foto
-			$this->foto->EditAttrs["class"] = "form-control";
-			$this->foto->EditCustomAttributes = "";
-			$this->foto->EditValue = ew_HtmlEncode($this->foto->CurrentValue);
-			$this->foto->PlaceHolder = ew_RemoveHtml($this->foto->FldCaption());
-
-			// alamat
-			$this->alamat->EditAttrs["class"] = "form-control";
-			$this->alamat->EditCustomAttributes = "";
-			$this->alamat->EditValue = ew_HtmlEncode($this->alamat->CurrentValue);
-			$this->alamat->PlaceHolder = ew_RemoveHtml($this->alamat->FldCaption());
-
-			// tlp
-			$this->tlp->EditAttrs["class"] = "form-control";
-			$this->tlp->EditCustomAttributes = "";
-			$this->tlp->EditValue = ew_HtmlEncode($this->tlp->CurrentValue);
-			$this->tlp->PlaceHolder = ew_RemoveHtml($this->tlp->FldCaption());
-
-			// tempat
-			$this->tempat->EditAttrs["class"] = "form-control";
-			$this->tempat->EditCustomAttributes = "";
-			$this->tempat->EditValue = ew_HtmlEncode($this->tempat->CurrentValue);
-			$this->tempat->PlaceHolder = ew_RemoveHtml($this->tempat->FldCaption());
-
-			// tgl
-			$this->tgl->EditAttrs["class"] = "form-control";
-			$this->tgl->EditCustomAttributes = "";
-			$this->tgl->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl->CurrentValue, 8));
-			$this->tgl->PlaceHolder = ew_RemoveHtml($this->tgl->FldCaption());
-
-			// qrcode
-			$this->qrcode->EditAttrs["class"] = "form-control";
-			$this->qrcode->EditCustomAttributes = "";
-			$this->qrcode->EditValue = ew_HtmlEncode($this->qrcode->CurrentValue);
-			$this->qrcode->PlaceHolder = ew_RemoveHtml($this->qrcode->FldCaption());
-
-			// code
-			$this->code->EditAttrs["class"] = "form-control";
-			$this->code->EditCustomAttributes = "";
-			$this->code->EditValue = ew_HtmlEncode($this->code->CurrentValue);
-			$this->code->PlaceHolder = ew_RemoveHtml($this->code->FldCaption());
-
 			// Add refer script
 			// kodedaftar_mahasiswa
 
@@ -994,34 +866,6 @@ class cpendaftaran_add extends cpendaftaran {
 			// total_biaya
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
-
-			// foto
-			$this->foto->LinkCustomAttributes = "";
-			$this->foto->HrefValue = "";
-
-			// alamat
-			$this->alamat->LinkCustomAttributes = "";
-			$this->alamat->HrefValue = "";
-
-			// tlp
-			$this->tlp->LinkCustomAttributes = "";
-			$this->tlp->HrefValue = "";
-
-			// tempat
-			$this->tempat->LinkCustomAttributes = "";
-			$this->tempat->HrefValue = "";
-
-			// tgl
-			$this->tgl->LinkCustomAttributes = "";
-			$this->tgl->HrefValue = "";
-
-			// qrcode
-			$this->qrcode->LinkCustomAttributes = "";
-			$this->qrcode->HrefValue = "";
-
-			// code
-			$this->code->LinkCustomAttributes = "";
-			$this->code->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD ||
 			$this->RowType == EW_ROWTYPE_EDIT ||
@@ -1116,27 +960,6 @@ class cpendaftaran_add extends cpendaftaran {
 
 		// total_biaya
 		$this->total_biaya->SetDbValueDef($rsnew, $this->total_biaya->CurrentValue, NULL, FALSE);
-
-		// foto
-		$this->foto->SetDbValueDef($rsnew, $this->foto->CurrentValue, NULL, FALSE);
-
-		// alamat
-		$this->alamat->SetDbValueDef($rsnew, $this->alamat->CurrentValue, NULL, FALSE);
-
-		// tlp
-		$this->tlp->SetDbValueDef($rsnew, $this->tlp->CurrentValue, NULL, FALSE);
-
-		// tempat
-		$this->tempat->SetDbValueDef($rsnew, $this->tempat->CurrentValue, NULL, FALSE);
-
-		// tgl
-		$this->tgl->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl->CurrentValue, 0), NULL, FALSE);
-
-		// qrcode
-		$this->qrcode->SetDbValueDef($rsnew, $this->qrcode->CurrentValue, NULL, FALSE);
-
-		// code
-		$this->code->SetDbValueDef($rsnew, $this->code->CurrentValue, NULL, FALSE);
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -1512,76 +1335,6 @@ $pendaftaran_add->ShowMessage();
 <input type="text" data-table="pendaftaran" data-field="x_total_biaya" name="x_total_biaya" id="x_total_biaya" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->total_biaya->EditValue ?>"<?php echo $pendaftaran->total_biaya->EditAttributes() ?>>
 </span>
 <?php echo $pendaftaran->total_biaya->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->foto->Visible) { // foto ?>
-	<div id="r_foto" class="form-group">
-		<label id="elh_pendaftaran_foto" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->foto->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->foto->CellAttributes() ?>>
-<span id="el_pendaftaran_foto">
-<input type="text" data-table="pendaftaran" data-field="x_foto" name="x_foto" id="x_foto" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->foto->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->foto->EditValue ?>"<?php echo $pendaftaran->foto->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->foto->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->alamat->Visible) { // alamat ?>
-	<div id="r_alamat" class="form-group">
-		<label id="elh_pendaftaran_alamat" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->alamat->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->alamat->CellAttributes() ?>>
-<span id="el_pendaftaran_alamat">
-<input type="text" data-table="pendaftaran" data-field="x_alamat" name="x_alamat" id="x_alamat" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->alamat->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->alamat->EditValue ?>"<?php echo $pendaftaran->alamat->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->alamat->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->tlp->Visible) { // tlp ?>
-	<div id="r_tlp" class="form-group">
-		<label id="elh_pendaftaran_tlp" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tlp->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->tlp->CellAttributes() ?>>
-<span id="el_pendaftaran_tlp">
-<input type="text" data-table="pendaftaran" data-field="x_tlp" name="x_tlp" id="x_tlp" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tlp->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tlp->EditValue ?>"<?php echo $pendaftaran->tlp->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->tlp->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->tempat->Visible) { // tempat ?>
-	<div id="r_tempat" class="form-group">
-		<label id="elh_pendaftaran_tempat" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tempat->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->tempat->CellAttributes() ?>>
-<span id="el_pendaftaran_tempat">
-<input type="text" data-table="pendaftaran" data-field="x_tempat" name="x_tempat" id="x_tempat" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tempat->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tempat->EditValue ?>"<?php echo $pendaftaran->tempat->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->tempat->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->tgl->Visible) { // tgl ?>
-	<div id="r_tgl" class="form-group">
-		<label id="elh_pendaftaran_tgl" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->tgl->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->tgl->CellAttributes() ?>>
-<span id="el_pendaftaran_tgl">
-<input type="text" data-table="pendaftaran" data-field="x_tgl" name="x_tgl" id="x_tgl" placeholder="<?php echo ew_HtmlEncode($pendaftaran->tgl->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->tgl->EditValue ?>"<?php echo $pendaftaran->tgl->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->tgl->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->qrcode->Visible) { // qrcode ?>
-	<div id="r_qrcode" class="form-group">
-		<label id="elh_pendaftaran_qrcode" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->qrcode->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->qrcode->CellAttributes() ?>>
-<span id="el_pendaftaran_qrcode">
-<input type="text" data-table="pendaftaran" data-field="x_qrcode" name="x_qrcode" id="x_qrcode" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->qrcode->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->qrcode->EditValue ?>"<?php echo $pendaftaran->qrcode->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->qrcode->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pendaftaran->code->Visible) { // code ?>
-	<div id="r_code" class="form-group">
-		<label id="elh_pendaftaran_code" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->code->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $pendaftaran->code->CellAttributes() ?>>
-<span id="el_pendaftaran_code">
-<input type="text" data-table="pendaftaran" data-field="x_code" name="x_code" id="x_code" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($pendaftaran->code->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->code->EditValue ?>"<?php echo $pendaftaran->code->EditAttributes() ?>>
-</span>
-<?php echo $pendaftaran->code->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div>
