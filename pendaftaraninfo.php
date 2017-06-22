@@ -106,7 +106,7 @@ class cpendaftaran extends cTable {
 		$this->fields['total_biaya'] = &$this->total_biaya;
 
 		// foto
-		$this->foto = new cField('pendaftaran', 'pendaftaran', 'x_foto', 'foto', '`foto`', '`foto`', 200, -1, FALSE, '`foto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'HIDDEN');
+		$this->foto = new cField('pendaftaran', 'pendaftaran', 'x_foto', 'foto', '`foto`', '`foto`', 200, -1, TRUE, '`foto`', FALSE, FALSE, FALSE, 'IMAGE', 'FILE');
 		$this->foto->Sortable = TRUE; // Allow sort
 		$this->fields['foto'] = &$this->foto;
 
@@ -682,7 +682,7 @@ class cpendaftaran extends cTable {
 		$this->tgl_daftar_mahasiswa->setDbValue($rs->fields('tgl_daftar_mahasiswa'));
 		$this->jam_daftar_mahasiswa->setDbValue($rs->fields('jam_daftar_mahasiswa'));
 		$this->total_biaya->setDbValue($rs->fields('total_biaya'));
-		$this->foto->setDbValue($rs->fields('foto'));
+		$this->foto->Upload->DbValue = $rs->fields('foto');
 		$this->alamat->setDbValue($rs->fields('alamat'));
 		$this->tlp->setDbValue($rs->fields('tlp'));
 		$this->tempat->setDbValue($rs->fields('tempat'));
@@ -754,7 +754,12 @@ class cpendaftaran extends cTable {
 		$this->total_biaya->ViewCustomAttributes = "";
 
 		// foto
-		$this->foto->ViewValue = $this->foto->CurrentValue;
+		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageAlt = $this->foto->FldAlt();
+			$this->foto->ViewValue = $this->foto->Upload->DbValue;
+		} else {
+			$this->foto->ViewValue = "";
+		}
 		$this->foto->ViewCustomAttributes = "";
 
 		// alamat
@@ -824,8 +829,21 @@ class cpendaftaran extends cTable {
 
 		// foto
 		$this->foto->LinkCustomAttributes = "";
-		$this->foto->HrefValue = "";
+		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->HrefValue = ew_GetFileUploadUrl($this->foto, $this->foto->Upload->DbValue); // Add prefix/suffix
+			$this->foto->LinkAttrs["target"] = ""; // Add target
+			if ($this->Export <> "") $this->foto->HrefValue = ew_ConvertFullUrl($this->foto->HrefValue);
+		} else {
+			$this->foto->HrefValue = "";
+		}
+		$this->foto->HrefValue2 = $this->foto->UploadPath . $this->foto->Upload->DbValue;
 		$this->foto->TooltipValue = "";
+		if ($this->foto->UseColorbox) {
+			if (ew_Empty($this->foto->TooltipValue))
+				$this->foto->LinkAttrs["title"] = $Language->Phrase("ViewImageGallery");
+			$this->foto->LinkAttrs["data-rel"] = "pendaftaran_x_foto";
+			ew_AppendClass($this->foto->LinkAttrs["class"], "ewLightbox");
+		}
 
 		// alamat
 		$this->alamat->LinkCustomAttributes = "";
@@ -909,6 +927,14 @@ class cpendaftaran extends cTable {
 		// foto
 		$this->foto->EditAttrs["class"] = "form-control";
 		$this->foto->EditCustomAttributes = "";
+		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageAlt = $this->foto->FldAlt();
+			$this->foto->EditValue = $this->foto->Upload->DbValue;
+		} else {
+			$this->foto->EditValue = "";
+		}
+		if (!ew_Empty($this->foto->CurrentValue))
+			$this->foto->Upload->FileName = $this->foto->CurrentValue;
 
 		// alamat
 		$this->alamat->EditAttrs["class"] = "form-control";
@@ -968,6 +994,7 @@ class cpendaftaran extends cTable {
 					if ($this->kelas_mahasiswa->Exportable) $Doc->ExportCaption($this->kelas_mahasiswa);
 					if ($this->semester_mahasiswa->Exportable) $Doc->ExportCaption($this->semester_mahasiswa);
 					if ($this->total_biaya->Exportable) $Doc->ExportCaption($this->total_biaya);
+					if ($this->foto->Exportable) $Doc->ExportCaption($this->foto);
 				} else {
 					if ($this->kodedaftar_mahasiswa->Exportable) $Doc->ExportCaption($this->kodedaftar_mahasiswa);
 					if ($this->nim_mahasiswa->Exportable) $Doc->ExportCaption($this->nim_mahasiswa);
@@ -1021,6 +1048,7 @@ class cpendaftaran extends cTable {
 						if ($this->kelas_mahasiswa->Exportable) $Doc->ExportField($this->kelas_mahasiswa);
 						if ($this->semester_mahasiswa->Exportable) $Doc->ExportField($this->semester_mahasiswa);
 						if ($this->total_biaya->Exportable) $Doc->ExportField($this->total_biaya);
+						if ($this->foto->Exportable) $Doc->ExportField($this->foto);
 					} else {
 						if ($this->kodedaftar_mahasiswa->Exportable) $Doc->ExportField($this->kodedaftar_mahasiswa);
 						if ($this->nim_mahasiswa->Exportable) $Doc->ExportField($this->nim_mahasiswa);

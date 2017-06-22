@@ -44,12 +44,6 @@ fdetail_pendaftarangrid.Validate = function() {
 			elm = this.GetElements("x" + infix + "_biaya_bayar");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->biaya_bayar->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_tgl_daftar_detail");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->tgl_daftar_detail->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_jam_daftar_detail");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->jam_daftar_detail->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -65,8 +59,6 @@ fdetail_pendaftarangrid.EmptyRow = function(infix) {
 	if (ew_ValueChanged(fobj, infix, "fk_kodedaftar", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "fk_jenis_praktikum", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "biaya_bayar", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "tgl_daftar_detail", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "jam_daftar_detail", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "status_praktikum", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "id_kelompok", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "id_jam_prak", false)) return false;
@@ -191,15 +183,6 @@ $detail_pendaftaran_grid->RenderListOptions();
 // Render list options (header, left)
 $detail_pendaftaran_grid->ListOptions->Render("header", "left");
 ?>
-<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->id_detailpendaftaran) == "") { ?>
-		<th data-name="id_detailpendaftaran"><div id="elh_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_detailpendaftaran"><div><div id="elh_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->id_detailpendaftaran->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->id_detailpendaftaran->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
 <?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->fk_kodedaftar) == "") { ?>
 		<th data-name="fk_kodedaftar"><div id="elh_detail_pendaftaran_fk_kodedaftar" class="detail_pendaftaran_fk_kodedaftar"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->fk_kodedaftar->FldCaption() ?></div></div></th>
@@ -224,24 +207,6 @@ $detail_pendaftaran_grid->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="biaya_bayar"><div><div id="elh_detail_pendaftaran_biaya_bayar" class="detail_pendaftaran_biaya_bayar">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->biaya_bayar->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->biaya_bayar->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->biaya_bayar->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
-<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->tgl_daftar_detail) == "") { ?>
-		<th data-name="tgl_daftar_detail"><div id="elh_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->tgl_daftar_detail->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="tgl_daftar_detail"><div><div id="elh_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->tgl_daftar_detail->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->tgl_daftar_detail->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->tgl_daftar_detail->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
-<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->jam_daftar_detail) == "") { ?>
-		<th data-name="jam_daftar_detail"><div id="elh_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->jam_daftar_detail->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="jam_daftar_detail"><div><div id="elh_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->jam_daftar_detail->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->jam_daftar_detail->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->jam_daftar_detail->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -435,33 +400,6 @@ while ($detail_pendaftaran_grid->RecCnt < $detail_pendaftaran_grid->StopRec) {
 // Render list options (body, left)
 $detail_pendaftaran_grid->ListOptions->Render("body", "left", $detail_pendaftaran_grid->RowCnt);
 ?>
-	<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<td data-name="id_detailpendaftaran"<?php echo $detail_pendaftaran->id_detailpendaftaran->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_id_detailpendaftaran" class="form-group detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->id_detailpendaftaran->EditValue ?></p></span>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->CurrentValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->id_detailpendaftaran->ListViewValue() ?></span>
-</span>
-<?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->FormValue) ?>">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-<?php } else { ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->FormValue) ?>">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-<?php } ?>
-<?php } ?>
-<a id="<?php echo $detail_pendaftaran_grid->PageObjName . "_row_" . $detail_pendaftaran_grid->RowCnt ?>"></a></td>
-	<?php } ?>
 	<?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 		<td data-name="fk_kodedaftar"<?php echo $detail_pendaftaran->fk_kodedaftar->CellAttributes() ?>>
 <?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
@@ -504,8 +442,15 @@ $detail_pendaftaran_grid->ListOptions->Render("body", "left", $detail_pendaftara
 <input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_fk_kodedaftar" id="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->OldValue) ?>">
 <?php } ?>
 <?php } ?>
-</td>
+<a id="<?php echo $detail_pendaftaran_grid->PageObjName . "_row_" . $detail_pendaftaran_grid->RowCnt ?>"></a></td>
 	<?php } ?>
+<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
+<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->CurrentValue) ?>">
+<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
+<?php } ?>
+<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT || $detail_pendaftaran->CurrentMode == "edit") { ?>
+<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->CurrentValue) ?>">
+<?php } ?>
 	<?php if ($detail_pendaftaran->fk_jenis_praktikum->Visible) { // fk_jenis_praktikum ?>
 		<td data-name="fk_jenis_praktikum"<?php echo $detail_pendaftaran->fk_jenis_praktikum->CellAttributes() ?>>
 <?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
@@ -568,62 +513,6 @@ $detail_pendaftaran_grid->ListOptions->Render("body", "left", $detail_pendaftara
 <?php } else { ?>
 <input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" id="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->FormValue) ?>">
 <input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" id="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->OldValue) ?>">
-<?php } ?>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<td data-name="tgl_daftar_detail"<?php echo $detail_pendaftaran->tgl_daftar_detail->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail">
-<span<?php echo $detail_pendaftaran->tgl_daftar_detail->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->tgl_daftar_detail->ListViewValue() ?></span>
-</span>
-<?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->FormValue) ?>">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-<?php } else { ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->FormValue) ?>">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-<?php } ?>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<td data-name="jam_daftar_detail"<?php echo $detail_pendaftaran->jam_daftar_detail->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detail_pendaftaran_grid->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail">
-<span<?php echo $detail_pendaftaran->jam_daftar_detail->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->jam_daftar_detail->ListViewValue() ?></span>
-</span>
-<?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->FormValue) ?>">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
-<?php } else { ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="fdetail_pendaftarangrid$x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->FormValue) ?>">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="fdetail_pendaftarangrid$o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
 <?php } ?>
 <?php } ?>
 </td>
@@ -1001,19 +890,6 @@ fdetail_pendaftarangrid.UpdateOpts(<?php echo $detail_pendaftaran_grid->RowIndex
 // Render list options (body, left)
 $detail_pendaftaran_grid->ListOptions->Render("body", "left", $detail_pendaftaran_grid->RowIndex);
 ?>
-	<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<td data-name="id_detailpendaftaran">
-<?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
-<?php } else { ?>
-<span id="el$rowindex$_detail_pendaftaran_id_detailpendaftaran" class="form-group detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->id_detailpendaftaran->ViewValue ?></p></span>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->FormValue) ?>">
-<?php } ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-</td>
-	<?php } ?>
 	<?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 		<td data-name="fk_kodedaftar">
 <?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
@@ -1073,38 +949,6 @@ $detail_pendaftaran_grid->ListOptions->Render("body", "left", $detail_pendaftara
 <input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->FormValue) ?>">
 <?php } ?>
 <input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<td data-name="tgl_daftar_detail">
-<?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
-<span id="el$rowindex$_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<?php } else { ?>
-<span id="el$rowindex$_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<span<?php echo $detail_pendaftaran->tgl_daftar_detail->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->tgl_daftar_detail->ViewValue ?></p></span>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->FormValue) ?>">
-<?php } ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<td data-name="jam_daftar_detail">
-<?php if ($detail_pendaftaran->CurrentAction <> "F") { ?>
-<span id="el$rowindex$_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<?php } else { ?>
-<span id="el$rowindex$_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<span<?php echo $detail_pendaftaran->jam_daftar_detail->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->jam_daftar_detail->ViewValue ?></p></span>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->FormValue) ?>">
-<?php } ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" id="o<?php echo $detail_pendaftaran_grid->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->status_praktikum->Visible) { // status_praktikum ?>

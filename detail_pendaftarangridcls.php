@@ -312,13 +312,9 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 
 		// Set up list options
 		$this->SetupListOptions();
-		$this->id_detailpendaftaran->SetVisibility();
-		$this->id_detailpendaftaran->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 		$this->fk_kodedaftar->SetVisibility();
 		$this->fk_jenis_praktikum->SetVisibility();
 		$this->biaya_bayar->SetVisibility();
-		$this->tgl_daftar_detail->SetVisibility();
-		$this->jam_daftar_detail->SetVisibility();
 		$this->status_praktikum->SetVisibility();
 		$this->id_kelompok->SetVisibility();
 		$this->id_jam_prak->SetVisibility();
@@ -821,10 +817,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			return FALSE;
 		if ($objForm->HasValue("x_biaya_bayar") && $objForm->HasValue("o_biaya_bayar") && $this->biaya_bayar->CurrentValue <> $this->biaya_bayar->OldValue)
 			return FALSE;
-		if ($objForm->HasValue("x_tgl_daftar_detail") && $objForm->HasValue("o_tgl_daftar_detail") && $this->tgl_daftar_detail->CurrentValue <> $this->tgl_daftar_detail->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_jam_daftar_detail") && $objForm->HasValue("o_jam_daftar_detail") && $this->jam_daftar_detail->CurrentValue <> $this->jam_daftar_detail->OldValue)
-			return FALSE;
 		if ($objForm->HasValue("x_status_praktikum") && $objForm->HasValue("o_status_praktikum") && $this->status_praktikum->CurrentValue <> $this->status_praktikum->OldValue)
 			return FALSE;
 		if ($objForm->HasValue("x_id_kelompok") && $objForm->HasValue("o_id_kelompok") && $this->id_kelompok->CurrentValue <> $this->id_kelompok->OldValue)
@@ -1200,18 +1192,12 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 
 	// Load default values
 	function LoadDefaultValues() {
-		$this->id_detailpendaftaran->CurrentValue = NULL;
-		$this->id_detailpendaftaran->OldValue = $this->id_detailpendaftaran->CurrentValue;
 		$this->fk_kodedaftar->CurrentValue = NULL;
 		$this->fk_kodedaftar->OldValue = $this->fk_kodedaftar->CurrentValue;
 		$this->fk_jenis_praktikum->CurrentValue = NULL;
 		$this->fk_jenis_praktikum->OldValue = $this->fk_jenis_praktikum->CurrentValue;
 		$this->biaya_bayar->CurrentValue = NULL;
 		$this->biaya_bayar->OldValue = $this->biaya_bayar->CurrentValue;
-		$this->tgl_daftar_detail->CurrentValue = NULL;
-		$this->tgl_daftar_detail->OldValue = $this->tgl_daftar_detail->CurrentValue;
-		$this->jam_daftar_detail->CurrentValue = NULL;
-		$this->jam_daftar_detail->OldValue = $this->jam_daftar_detail->CurrentValue;
 		$this->status_praktikum->CurrentValue = NULL;
 		$this->status_praktikum->OldValue = $this->status_praktikum->CurrentValue;
 		$this->id_kelompok->CurrentValue = NULL;
@@ -1238,8 +1224,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 		// Load from form
 		global $objForm;
 		$objForm->FormName = $this->FormName;
-		if (!$this->id_detailpendaftaran->FldIsDetailKey && $this->CurrentAction <> "gridadd" && $this->CurrentAction <> "add")
-			$this->id_detailpendaftaran->setFormValue($objForm->GetValue("x_id_detailpendaftaran"));
 		if (!$this->fk_kodedaftar->FldIsDetailKey) {
 			$this->fk_kodedaftar->setFormValue($objForm->GetValue("x_fk_kodedaftar"));
 		}
@@ -1252,16 +1236,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->biaya_bayar->setFormValue($objForm->GetValue("x_biaya_bayar"));
 		}
 		$this->biaya_bayar->setOldValue($objForm->GetValue("o_biaya_bayar"));
-		if (!$this->tgl_daftar_detail->FldIsDetailKey) {
-			$this->tgl_daftar_detail->setFormValue($objForm->GetValue("x_tgl_daftar_detail"));
-			$this->tgl_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0);
-		}
-		$this->tgl_daftar_detail->setOldValue($objForm->GetValue("o_tgl_daftar_detail"));
-		if (!$this->jam_daftar_detail->FldIsDetailKey) {
-			$this->jam_daftar_detail->setFormValue($objForm->GetValue("x_jam_daftar_detail"));
-			$this->jam_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_detail->CurrentValue, 4);
-		}
-		$this->jam_daftar_detail->setOldValue($objForm->GetValue("o_jam_daftar_detail"));
 		if (!$this->status_praktikum->FldIsDetailKey) {
 			$this->status_praktikum->setFormValue($objForm->GetValue("x_status_praktikum"));
 		}
@@ -1298,6 +1272,8 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->persetujuan->setFormValue($objForm->GetValue("x_persetujuan"));
 		}
 		$this->persetujuan->setOldValue($objForm->GetValue("o_persetujuan"));
+		if (!$this->id_detailpendaftaran->FldIsDetailKey && $this->CurrentAction <> "gridadd" && $this->CurrentAction <> "add")
+			$this->id_detailpendaftaran->setFormValue($objForm->GetValue("x_id_detailpendaftaran"));
 	}
 
 	// Restore form values
@@ -1308,10 +1284,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 		$this->fk_kodedaftar->CurrentValue = $this->fk_kodedaftar->FormValue;
 		$this->fk_jenis_praktikum->CurrentValue = $this->fk_jenis_praktikum->FormValue;
 		$this->biaya_bayar->CurrentValue = $this->biaya_bayar->FormValue;
-		$this->tgl_daftar_detail->CurrentValue = $this->tgl_daftar_detail->FormValue;
-		$this->tgl_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0);
-		$this->jam_daftar_detail->CurrentValue = $this->jam_daftar_detail->FormValue;
-		$this->jam_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_detail->CurrentValue, 4);
 		$this->status_praktikum->CurrentValue = $this->status_praktikum->FormValue;
 		$this->id_kelompok->CurrentValue = $this->id_kelompok->FormValue;
 		$this->id_jam_prak->CurrentValue = $this->id_jam_prak->FormValue;
@@ -1729,11 +1701,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 		}
 		$this->persetujuan->ViewCustomAttributes = "";
 
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-			$this->id_detailpendaftaran->TooltipValue = "";
-
 			// fk_kodedaftar
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
@@ -1748,16 +1715,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->biaya_bayar->LinkCustomAttributes = "";
 			$this->biaya_bayar->HrefValue = "";
 			$this->biaya_bayar->TooltipValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-			$this->tgl_daftar_detail->TooltipValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
-			$this->jam_daftar_detail->TooltipValue = "";
 
 			// status_praktikum
 			$this->status_praktikum->LinkCustomAttributes = "";
@@ -1805,9 +1762,7 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->persetujuan->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
-			// id_detailpendaftaran
 			// fk_kodedaftar
-
 			$this->fk_kodedaftar->EditAttrs["class"] = "form-control";
 			$this->fk_kodedaftar->EditCustomAttributes = "";
 			if ($this->fk_kodedaftar->getSessionValue() <> "") {
@@ -1856,18 +1811,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->biaya_bayar->EditValue = ew_FormatNumber($this->biaya_bayar->EditValue, -2, -1, -2, 0);
 			$this->biaya_bayar->OldValue = $this->biaya_bayar->EditValue;
 			}
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_detail->EditCustomAttributes = "";
-			$this->tgl_daftar_detail->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl_daftar_detail->CurrentValue, 8));
-			$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_detail->EditCustomAttributes = "";
-			$this->jam_daftar_detail->EditValue = ew_HtmlEncode($this->jam_daftar_detail->CurrentValue);
-			$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
 
 			// status_praktikum
 			$this->status_praktikum->EditCustomAttributes = "";
@@ -2011,12 +1954,8 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->persetujuan->EditValue = $this->persetujuan->Options(FALSE);
 
 			// Add refer script
-			// id_detailpendaftaran
-
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-
 			// fk_kodedaftar
+
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
 
@@ -2027,14 +1966,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			// biaya_bayar
 			$this->biaya_bayar->LinkCustomAttributes = "";
 			$this->biaya_bayar->HrefValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
 
 			// status_praktikum
 			$this->status_praktikum->LinkCustomAttributes = "";
@@ -2072,12 +2003,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->persetujuan->LinkCustomAttributes = "";
 			$this->persetujuan->HrefValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
-
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->EditAttrs["class"] = "form-control";
-			$this->id_detailpendaftaran->EditCustomAttributes = "";
-			$this->id_detailpendaftaran->EditValue = $this->id_detailpendaftaran->CurrentValue;
-			$this->id_detailpendaftaran->ViewCustomAttributes = "";
 
 			// fk_kodedaftar
 			$this->fk_kodedaftar->EditAttrs["class"] = "form-control";
@@ -2128,18 +2053,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->biaya_bayar->EditValue = ew_FormatNumber($this->biaya_bayar->EditValue, -2, -1, -2, 0);
 			$this->biaya_bayar->OldValue = $this->biaya_bayar->EditValue;
 			}
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_detail->EditCustomAttributes = "";
-			$this->tgl_daftar_detail->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl_daftar_detail->CurrentValue, 8));
-			$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_detail->EditCustomAttributes = "";
-			$this->jam_daftar_detail->EditValue = ew_HtmlEncode($this->jam_daftar_detail->CurrentValue);
-			$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
 
 			// status_praktikum
 			$this->status_praktikum->EditCustomAttributes = "";
@@ -2283,12 +2196,8 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->persetujuan->EditValue = $this->persetujuan->Options(FALSE);
 
 			// Edit refer script
-			// id_detailpendaftaran
-
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-
 			// fk_kodedaftar
+
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
 
@@ -2299,14 +2208,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			// biaya_bayar
 			$this->biaya_bayar->LinkCustomAttributes = "";
 			$this->biaya_bayar->HrefValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
 
 			// status_praktikum
 			$this->status_praktikum->LinkCustomAttributes = "";
@@ -2364,12 +2265,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			return ($gsFormError == "");
 		if (!ew_CheckNumber($this->biaya_bayar->FormValue)) {
 			ew_AddMessage($gsFormError, $this->biaya_bayar->FldErrMsg());
-		}
-		if (!ew_CheckDateDef($this->tgl_daftar_detail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->tgl_daftar_detail->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->jam_daftar_detail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->jam_daftar_detail->FldErrMsg());
 		}
 
 		// Return validate result
@@ -2498,12 +2393,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			// biaya_bayar
 			$this->biaya_bayar->SetDbValueDef($rsnew, $this->biaya_bayar->CurrentValue, NULL, $this->biaya_bayar->ReadOnly);
 
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0), NULL, $this->tgl_daftar_detail->ReadOnly);
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->SetDbValueDef($rsnew, $this->jam_daftar_detail->CurrentValue, NULL, $this->jam_daftar_detail->ReadOnly);
-
 			// status_praktikum
 			$this->status_praktikum->SetDbValueDef($rsnew, $this->status_praktikum->CurrentValue, NULL, $this->status_praktikum->ReadOnly);
 
@@ -2590,12 +2479,6 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 
 		// biaya_bayar
 		$this->biaya_bayar->SetDbValueDef($rsnew, $this->biaya_bayar->CurrentValue, NULL, FALSE);
-
-		// tgl_daftar_detail
-		$this->tgl_daftar_detail->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0), NULL, FALSE);
-
-		// jam_daftar_detail
-		$this->jam_daftar_detail->SetDbValueDef($rsnew, $this->jam_daftar_detail->CurrentValue, NULL, FALSE);
 
 		// status_praktikum
 		$this->status_praktikum->SetDbValueDef($rsnew, $this->status_praktikum->CurrentValue, NULL, FALSE);

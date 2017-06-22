@@ -363,9 +363,6 @@ class cpendaftaran_list extends cpendaftaran {
 			$Security->UserID_Loaded();
 		}
 
-		// Create form object
-		$objForm = new cFormObj();
-
 		// Get export parameters
 		$custom = "";
 		if (@$_GET["export"] <> "") {
@@ -420,6 +417,7 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->kelas_mahasiswa->SetVisibility();
 		$this->semester_mahasiswa->SetVisibility();
 		$this->total_biaya->SetVisibility();
+		$this->foto->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -590,71 +588,6 @@ class cpendaftaran_list extends cpendaftaran {
 			if ($this->Export == "")
 				$this->SetupBreadcrumb();
 
-			// Check QueryString parameters
-			if (@$_GET["a"] <> "") {
-				$this->CurrentAction = $_GET["a"];
-
-				// Clear inline mode
-				if ($this->CurrentAction == "cancel")
-					$this->ClearInlineMode();
-
-				// Switch to grid edit mode
-				if ($this->CurrentAction == "gridedit")
-					$this->GridEditMode();
-
-				// Switch to inline edit mode
-				if ($this->CurrentAction == "edit")
-					$this->InlineEditMode();
-
-				// Switch to inline add mode
-				if ($this->CurrentAction == "add" || $this->CurrentAction == "copy")
-					$this->InlineAddMode();
-
-				// Switch to grid add mode
-				if ($this->CurrentAction == "gridadd")
-					$this->GridAddMode();
-			} else {
-				if (@$_POST["a_list"] <> "") {
-					$this->CurrentAction = $_POST["a_list"]; // Get action
-
-					// Grid Update
-					if (($this->CurrentAction == "gridupdate" || $this->CurrentAction == "gridoverwrite") && @$_SESSION[EW_SESSION_INLINE_MODE] == "gridedit") {
-						if ($this->ValidateGridForm()) {
-							$bGridUpdate = $this->GridUpdate();
-						} else {
-							$bGridUpdate = FALSE;
-							$this->setFailureMessage($gsFormError);
-						}
-						if (!$bGridUpdate) {
-							$this->EventCancelled = TRUE;
-							$this->CurrentAction = "gridedit"; // Stay in Grid Edit mode
-						}
-					}
-
-					// Inline Update
-					if (($this->CurrentAction == "update" || $this->CurrentAction == "overwrite") && @$_SESSION[EW_SESSION_INLINE_MODE] == "edit")
-						$this->InlineUpdate();
-
-					// Insert Inline
-					if ($this->CurrentAction == "insert" && @$_SESSION[EW_SESSION_INLINE_MODE] == "add")
-						$this->InlineInsert();
-
-					// Grid Insert
-					if ($this->CurrentAction == "gridinsert" && @$_SESSION[EW_SESSION_INLINE_MODE] == "gridadd") {
-						if ($this->ValidateGridForm()) {
-							$bGridInsert = $this->GridInsert();
-						} else {
-							$bGridInsert = FALSE;
-							$this->setFailureMessage($gsFormError);
-						}
-						if (!$bGridInsert) {
-							$this->EventCancelled = TRUE;
-							$this->CurrentAction = "gridadd"; // Stay in Grid Add mode
-						}
-					}
-				}
-			}
-
 			// Hide list options
 			if ($this->Export <> "") {
 				$this->ListOptions->HideAllOptions(array("sequence"));
@@ -676,14 +609,6 @@ class cpendaftaran_list extends cpendaftaran {
 			if ($this->Export <> "") {
 				foreach ($this->OtherOptions as &$option)
 					$option->HideAllOptions();
-			}
-
-			// Show grid delete link for grid add / grid edit
-			if ($this->AllowAddDeleteRow) {
-				if ($this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit") {
-					$item = $this->ListOptions->GetItem("griddelete");
-					if ($item) $item->Visible = TRUE;
-				}
 			}
 
 			// Get default search criteria
@@ -814,235 +739,6 @@ class cpendaftaran_list extends cpendaftaran {
 		}
 	}
 
-	//  Exit inline mode
-	function ClearInlineMode() {
-		$this->setKey("kodedaftar_mahasiswa", ""); // Clear inline edit key
-		$this->total_biaya->FormValue = ""; // Clear form value
-		$this->LastAction = $this->CurrentAction; // Save last action
-		$this->CurrentAction = ""; // Clear action
-		$_SESSION[EW_SESSION_INLINE_MODE] = ""; // Clear inline mode
-	}
-
-	// Switch to Grid Add mode
-	function GridAddMode() {
-		$_SESSION[EW_SESSION_INLINE_MODE] = "gridadd"; // Enabled grid add
-	}
-
-	// Switch to Grid Edit mode
-	function GridEditMode() {
-		$_SESSION[EW_SESSION_INLINE_MODE] = "gridedit"; // Enable grid edit
-	}
-
-	// Switch to Inline Edit mode
-	function InlineEditMode() {
-		global $Security, $Language;
-		if (!$Security->CanEdit())
-			$this->Page_Terminate("login.php"); // Go to login page
-		$bInlineEdit = TRUE;
-		if (@$_GET["kodedaftar_mahasiswa"] <> "") {
-			$this->kodedaftar_mahasiswa->setQueryStringValue($_GET["kodedaftar_mahasiswa"]);
-		} else {
-			$bInlineEdit = FALSE;
-		}
-		if ($bInlineEdit) {
-			if ($this->LoadRow()) {
-				$this->setKey("kodedaftar_mahasiswa", $this->kodedaftar_mahasiswa->CurrentValue); // Set up inline edit key
-				$_SESSION[EW_SESSION_INLINE_MODE] = "edit"; // Enable inline edit
-			}
-		}
-	}
-
-	// Perform update to Inline Edit record
-	function InlineUpdate() {
-		global $Language, $objForm, $gsFormError;
-		$objForm->Index = 1; 
-		$this->LoadFormValues(); // Get form values
-
-		// Validate form
-		$bInlineUpdate = TRUE;
-		if (!$this->ValidateForm()) {	
-			$bInlineUpdate = FALSE; // Form error, reset action
-			$this->setFailureMessage($gsFormError);
-		} else {
-			$bInlineUpdate = FALSE;
-			$rowkey = strval($objForm->GetValue($this->FormKeyName));
-			if ($this->SetupKeyValues($rowkey)) { // Set up key values
-				if ($this->CheckInlineEditKey()) { // Check key
-					$this->SendEmail = TRUE; // Send email on update success
-					$bInlineUpdate = $this->EditRow(); // Update record
-				} else {
-					$bInlineUpdate = FALSE;
-				}
-			}
-		}
-		if ($bInlineUpdate) { // Update success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up success message
-			$this->ClearInlineMode(); // Clear inline edit mode
-		} else {
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("UpdateFailed")); // Set update failed message
-			$this->EventCancelled = TRUE; // Cancel event
-			$this->CurrentAction = "edit"; // Stay in edit mode
-		}
-	}
-
-	// Check Inline Edit key
-	function CheckInlineEditKey() {
-
-		//CheckInlineEditKey = True
-		if (strval($this->getKey("kodedaftar_mahasiswa")) <> strval($this->kodedaftar_mahasiswa->CurrentValue))
-			return FALSE;
-		return TRUE;
-	}
-
-	// Switch to Inline Add mode
-	function InlineAddMode() {
-		global $Security, $Language;
-		if (!$Security->CanAdd())
-			$this->Page_Terminate("login.php"); // Return to login page
-		if ($this->CurrentAction == "copy") {
-			if (@$_GET["kodedaftar_mahasiswa"] <> "") {
-				$this->kodedaftar_mahasiswa->setQueryStringValue($_GET["kodedaftar_mahasiswa"]);
-				$this->setKey("kodedaftar_mahasiswa", $this->kodedaftar_mahasiswa->CurrentValue); // Set up key
-			} else {
-				$this->setKey("kodedaftar_mahasiswa", ""); // Clear key
-				$this->CurrentAction = "add";
-			}
-		}
-		$_SESSION[EW_SESSION_INLINE_MODE] = "add"; // Enable inline add
-	}
-
-	// Perform update to Inline Add/Copy record
-	function InlineInsert() {
-		global $Language, $objForm, $gsFormError;
-		$this->LoadOldRecord(); // Load old recordset
-		$objForm->Index = 0;
-		$this->LoadFormValues(); // Get form values
-
-		// Validate form
-		if (!$this->ValidateForm()) {
-			$this->setFailureMessage($gsFormError); // Set validation error message
-			$this->EventCancelled = TRUE; // Set event cancelled
-			$this->CurrentAction = "add"; // Stay in add mode
-			return;
-		}
-		$this->SendEmail = TRUE; // Send email on add success
-		if ($this->AddRow($this->OldRecordset)) { // Add record
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up add success message
-			$this->ClearInlineMode(); // Clear inline add mode
-		} else { // Add failed
-			$this->EventCancelled = TRUE; // Set event cancelled
-			$this->CurrentAction = "add"; // Stay in add mode
-		}
-	}
-
-	// Perform update to grid
-	function GridUpdate() {
-		global $Language, $objForm, $gsFormError;
-		$bGridUpdate = TRUE;
-
-		// Get old recordset
-		$this->CurrentFilter = $this->BuildKeyFilter();
-		if ($this->CurrentFilter == "")
-			$this->CurrentFilter = "0=1";
-		$sSql = $this->SQL();
-		$conn = &$this->Connection();
-		if ($rs = $conn->Execute($sSql)) {
-			$rsold = $rs->GetRows();
-			$rs->Close();
-		}
-
-		// Call Grid Updating event
-		if (!$this->Grid_Updating($rsold)) {
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("GridEditCancelled")); // Set grid edit cancelled message
-			return FALSE;
-		}
-
-		// Begin transaction
-		$conn->BeginTrans();
-		if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateBegin")); // Batch update begin
-		$sKey = "";
-
-		// Update row index and get row key
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Update all rows based on key
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-			$objForm->Index = $rowindex;
-			$rowkey = strval($objForm->GetValue($this->FormKeyName));
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-
-			// Load all values and keys
-			if ($rowaction <> "insertdelete") { // Skip insert then deleted rows
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "" || $rowaction == "edit" || $rowaction == "delete") {
-					$bGridUpdate = $this->SetupKeyValues($rowkey); // Set up key values
-				} else {
-					$bGridUpdate = TRUE;
-				}
-
-				// Skip empty row
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// No action required
-				// Validate form and insert/update/delete record
-
-				} elseif ($bGridUpdate) {
-					if ($rowaction == "delete") {
-						$this->CurrentFilter = $this->KeyFilter();
-						$bGridUpdate = $this->DeleteRows(); // Delete this row
-					} else if (!$this->ValidateForm()) {
-						$bGridUpdate = FALSE; // Form error, reset action
-						$this->setFailureMessage($gsFormError);
-					} else {
-						if ($rowaction == "insert") {
-							$bGridUpdate = $this->AddRow(); // Insert this row
-						} else {
-							if ($rowkey <> "") {
-								$this->SendEmail = FALSE; // Do not send email on update success
-								$bGridUpdate = $this->EditRow(); // Update this row
-							}
-						} // End update
-					}
-				}
-				if ($bGridUpdate) {
-					if ($sKey <> "") $sKey .= ", ";
-					$sKey .= $rowkey;
-				} else {
-					break;
-				}
-			}
-		}
-		if ($bGridUpdate) {
-			$conn->CommitTrans(); // Commit transaction
-
-			// Get new recordset
-			if ($rs = $conn->Execute($sSql)) {
-				$rsnew = $rs->GetRows();
-				$rs->Close();
-			}
-
-			// Call Grid_Updated event
-			$this->Grid_Updated($rsold, $rsnew);
-			if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateSuccess")); // Batch update success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up update success message
-			$this->ClearInlineMode(); // Clear inline edit mode
-		} else {
-			$conn->RollbackTrans(); // Rollback transaction
-			if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateRollback")); // Batch update rollback
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("UpdateFailed")); // Set update failed message
-		}
-		return $bGridUpdate;
-	}
-
 	// Build filter for all keys
 	function BuildKeyFilter() {
 		global $objForm;
@@ -1077,186 +773,6 @@ class cpendaftaran_list extends cpendaftaran {
 			$this->kodedaftar_mahasiswa->setFormValue($arrKeyFlds[0]);
 		}
 		return TRUE;
-	}
-
-	// Perform Grid Add
-	function GridInsert() {
-		global $Language, $objForm, $gsFormError;
-		$rowindex = 1;
-		$bGridInsert = FALSE;
-		$conn = &$this->Connection();
-
-		// Call Grid Inserting event
-		if (!$this->Grid_Inserting()) {
-			if ($this->getFailureMessage() == "") {
-				$this->setFailureMessage($Language->Phrase("GridAddCancelled")); // Set grid add cancelled message
-			}
-			return FALSE;
-		}
-
-		// Begin transaction
-		$conn->BeginTrans();
-
-		// Init key filter
-		$sWrkFilter = "";
-		$addcnt = 0;
-		if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertBegin")); // Batch insert begin
-		$sKey = "";
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Insert all rows
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "" && $rowaction <> "insert")
-				continue; // Skip
-			$this->LoadFormValues(); // Get form values
-			if (!$this->EmptyRow()) {
-				$addcnt++;
-				$this->SendEmail = FALSE; // Do not send email on insert success
-
-				// Validate form
-				if (!$this->ValidateForm()) {
-					$bGridInsert = FALSE; // Form error, reset action
-					$this->setFailureMessage($gsFormError);
-				} else {
-					$bGridInsert = $this->AddRow($this->OldRecordset); // Insert this row
-				}
-				if ($bGridInsert) {
-					if ($sKey <> "") $sKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-					$sKey .= $this->kodedaftar_mahasiswa->CurrentValue;
-
-					// Add filter for this record
-					$sFilter = $this->KeyFilter();
-					if ($sWrkFilter <> "") $sWrkFilter .= " OR ";
-					$sWrkFilter .= $sFilter;
-				} else {
-					break;
-				}
-			}
-		}
-		if ($addcnt == 0) { // No record inserted
-			$this->setFailureMessage($Language->Phrase("NoAddRecord"));
-			$bGridInsert = FALSE;
-		}
-		if ($bGridInsert) {
-			$conn->CommitTrans(); // Commit transaction
-
-			// Get new recordset
-			$this->CurrentFilter = $sWrkFilter;
-			$sSql = $this->SQL();
-			if ($rs = $conn->Execute($sSql)) {
-				$rsnew = $rs->GetRows();
-				$rs->Close();
-			}
-
-			// Call Grid_Inserted event
-			$this->Grid_Inserted($rsnew);
-			if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertSuccess")); // Batch insert success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("InsertSuccess")); // Set up insert success message
-			$this->ClearInlineMode(); // Clear grid add mode
-		} else {
-			$conn->RollbackTrans(); // Rollback transaction
-			if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertRollback")); // Batch insert rollback
-			if ($this->getFailureMessage() == "") {
-				$this->setFailureMessage($Language->Phrase("InsertFailed")); // Set insert failed message
-			}
-		}
-		return $bGridInsert;
-	}
-
-	// Check if empty row
-	function EmptyRow() {
-		global $objForm;
-		if ($objForm->HasValue("x_kodedaftar_mahasiswa") && $objForm->HasValue("o_kodedaftar_mahasiswa") && $this->kodedaftar_mahasiswa->CurrentValue <> $this->kodedaftar_mahasiswa->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_nim_mahasiswa") && $objForm->HasValue("o_nim_mahasiswa") && $this->nim_mahasiswa->CurrentValue <> $this->nim_mahasiswa->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_nama_mahasiswa") && $objForm->HasValue("o_nama_mahasiswa") && $this->nama_mahasiswa->CurrentValue <> $this->nama_mahasiswa->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_kelas_mahasiswa") && $objForm->HasValue("o_kelas_mahasiswa") && $this->kelas_mahasiswa->CurrentValue <> $this->kelas_mahasiswa->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_semester_mahasiswa") && $objForm->HasValue("o_semester_mahasiswa") && $this->semester_mahasiswa->CurrentValue <> $this->semester_mahasiswa->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_total_biaya") && $objForm->HasValue("o_total_biaya") && $this->total_biaya->CurrentValue <> $this->total_biaya->OldValue)
-			return FALSE;
-		return TRUE;
-	}
-
-	// Validate grid form
-	function ValidateGridForm() {
-		global $objForm;
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Validate all records
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "delete" && $rowaction <> "insertdelete") {
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// Ignore
-				} else if (!$this->ValidateForm()) {
-					return FALSE;
-				}
-			}
-		}
-		return TRUE;
-	}
-
-	// Get all form values of the grid
-	function GetGridFormValues() {
-		global $objForm;
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-		$rows = array();
-
-		// Loop through all records
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "delete" && $rowaction <> "insertdelete") {
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// Ignore
-				} else {
-					$rows[] = $this->GetFieldValues("FormValue"); // Return row as array
-				}
-			}
-		}
-		return $rows; // Return as array of array
-	}
-
-	// Restore form values for current row
-	function RestoreCurrentRowFormValues($idx) {
-		global $objForm;
-
-		// Get row based on current index
-		$objForm->Index = $idx;
-		$this->LoadFormValues(); // Load form values
 	}
 
 	// Get list of filters
@@ -1551,13 +1067,10 @@ class cpendaftaran_list extends cpendaftaran {
 	function BasicSearchSQL($arKeywords, $type) {
 		$sWhere = "";
 		$this->BuildBasicSearchSQL($sWhere, $this->kodedaftar_mahasiswa, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->nim_mahasiswa, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->nama_mahasiswa, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->foto, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->alamat, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->tlp, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->tempat, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->qrcode, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->code, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->kelas_mahasiswa, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->semester_mahasiswa, $arKeywords, $type);
 		return $sWhere;
 	}
 
@@ -1801,6 +1314,7 @@ class cpendaftaran_list extends cpendaftaran {
 			$this->UpdateSort($this->kelas_mahasiswa, $bCtrl); // kelas_mahasiswa
 			$this->UpdateSort($this->semester_mahasiswa, $bCtrl); // semester_mahasiswa
 			$this->UpdateSort($this->total_biaya, $bCtrl); // total_biaya
+			$this->UpdateSort($this->foto, $bCtrl); // foto
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1839,6 +1353,7 @@ class cpendaftaran_list extends cpendaftaran {
 				$this->kelas_mahasiswa->setSort("");
 				$this->semester_mahasiswa->setSort("");
 				$this->total_biaya->setSort("");
+				$this->foto->setSort("");
 			}
 
 			// Reset start position
@@ -1850,14 +1365,6 @@ class cpendaftaran_list extends cpendaftaran {
 	// Set up list options
 	function SetupListOptions() {
 		global $Security, $Language;
-
-		// "griddelete"
-		if ($this->AllowAddDeleteRow) {
-			$item = &$this->ListOptions->Add("griddelete");
-			$item->CssStyle = "white-space: nowrap;";
-			$item->OnLeft = TRUE;
-			$item->Visible = FALSE; // Default hidden
-		}
 
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
@@ -1951,66 +1458,9 @@ class cpendaftaran_list extends cpendaftaran {
 		global $Security, $Language, $objForm;
 		$this->ListOptions->LoadDefault();
 
-		// Set up row action and key
-		if (is_numeric($this->RowIndex) && $this->CurrentMode <> "view") {
-			$objForm->Index = $this->RowIndex;
-			$ActionName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormActionName);
-			$OldKeyName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormOldKeyName);
-			$KeyName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormKeyName);
-			$BlankRowName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormBlankRowName);
-			if ($this->RowAction <> "")
-				$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $ActionName . "\" id=\"" . $ActionName . "\" value=\"" . $this->RowAction . "\">";
-			if ($this->RowAction == "delete") {
-				$rowkey = $objForm->GetValue($this->FormKeyName);
-				$this->SetupKeyValues($rowkey);
-			}
-			if ($this->RowAction == "insert" && $this->CurrentAction == "F" && $this->EmptyRow())
-				$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $BlankRowName . "\" id=\"" . $BlankRowName . "\" value=\"1\">";
-		}
-
-		// "delete"
-		if ($this->AllowAddDeleteRow) {
-			if ($this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit") {
-				$option = &$this->ListOptions;
-				$option->UseButtonGroup = TRUE; // Use button group for grid delete button
-				$option->UseImageAndText = TRUE; // Use image and text for grid delete button
-				$oListOpt = &$option->Items["griddelete"];
-				if (!$Security->CanDelete() && is_numeric($this->RowIndex) && ($this->RowAction == "" || $this->RowAction == "edit")) { // Do not allow delete existing record
-					$oListOpt->Body = "&nbsp;";
-				} else {
-					$oListOpt->Body = "<a class=\"ewGridLink ewGridDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" onclick=\"return ew_DeleteGridRow(this, " . $this->RowIndex . ");\">" . $Language->Phrase("DeleteLink") . "</a>";
-				}
-			}
-		}
-
 		// "sequence"
 		$oListOpt = &$this->ListOptions->Items["sequence"];
 		$oListOpt->Body = ew_FormatSeqNo($this->RecCnt);
-
-		// "copy"
-		$oListOpt = &$this->ListOptions->Items["copy"];
-		if (($this->CurrentAction == "add" || $this->CurrentAction == "copy") && $this->RowType == EW_ROWTYPE_ADD) { // Inline Add/Copy
-			$this->ListOptions->CustomItem = "copy"; // Show copy column only
-			$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-			$oListOpt->Body = "<div" . (($oListOpt->OnLeft) ? " style=\"text-align: right\"" : "") . ">" .
-				"<a class=\"ewGridLink ewInlineInsert\" title=\"" . ew_HtmlTitle($Language->Phrase("InsertLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InsertLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . $this->PageName() . "');\">" . $Language->Phrase("InsertLink") . "</a>&nbsp;" .
-				"<a class=\"ewGridLink ewInlineCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("CancelLink") . "</a>" .
-				"<input type=\"hidden\" name=\"a_list\" id=\"a_list\" value=\"insert\"></div>";
-			return;
-		}
-
-		// "edit"
-		$oListOpt = &$this->ListOptions->Items["edit"];
-		if ($this->CurrentAction == "edit" && $this->RowType == EW_ROWTYPE_EDIT) { // Inline-Edit
-			$this->ListOptions->CustomItem = "edit"; // Show edit column only
-			$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-				$oListOpt->Body = "<div" . (($oListOpt->OnLeft) ? " style=\"text-align: right\"" : "") . ">" .
-					"<a class=\"ewGridLink ewInlineUpdate\" title=\"" . ew_HtmlTitle($Language->Phrase("UpdateLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("UpdateLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . ew_GetHashUrl($this->PageName(), $this->PageObjName . "_row_" . $this->RowCnt) . "');\">" . $Language->Phrase("UpdateLink") . "</a>&nbsp;" .
-					"<a class=\"ewGridLink ewInlineCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("CancelLink") . "</a>" .
-					"<input type=\"hidden\" name=\"a_list\" id=\"a_list\" value=\"update\"></div>";
-			$oListOpt->Body .= "<input type=\"hidden\" name=\"k" . $this->RowIndex . "_key\" id=\"k" . $this->RowIndex . "_key\" value=\"" . ew_HtmlEncode($this->kodedaftar_mahasiswa->CurrentValue) . "\">";
-			return;
-		}
 
 		// "view"
 		$oListOpt = &$this->ListOptions->Items["view"];
@@ -2026,7 +1476,6 @@ class cpendaftaran_list extends cpendaftaran {
 		$editcaption = ew_HtmlTitle($Language->Phrase("EditLink"));
 		if ($Security->CanEdit()) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
-			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" href=\"" . ew_HtmlEncode(ew_GetHashUrl($this->InlineEditUrl, $this->PageObjName . "_row_" . $this->RowCnt)) . "\">" . $Language->Phrase("InlineEditLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
 		}
@@ -2036,7 +1485,6 @@ class cpendaftaran_list extends cpendaftaran {
 		$copycaption = ew_HtmlTitle($Language->Phrase("CopyLink"));
 		if ($Security->CanAdd()) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . $copycaption . "\" data-caption=\"" . $copycaption . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
-			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineCopyUrl) . "\">" . $Language->Phrase("InlineCopyLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
 		}
@@ -2129,9 +1577,6 @@ class cpendaftaran_list extends cpendaftaran {
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
 		$oListOpt->Body = "<input type=\"checkbox\" name=\"key_m[]\" value=\"" . ew_HtmlEncode($this->kodedaftar_mahasiswa->CurrentValue) . "\" onclick='ew_ClickMultiCheckbox(event);'>";
-		if ($this->CurrentAction == "gridedit" && is_numeric($this->RowIndex)) {
-			$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $KeyName . "\" id=\"" . $KeyName . "\" value=\"" . $this->kodedaftar_mahasiswa->CurrentValue . "\">";
-		}
 		$this->RenderListOptionsExt();
 
 		// Call ListOptions_Rendered event
@@ -2149,14 +1594,6 @@ class cpendaftaran_list extends cpendaftaran {
 		$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "" && $Security->CanAdd());
-
-		// Inline Add
-		$item = &$option->Add("inlineadd");
-		$item->Body = "<a class=\"ewAddEdit ewInlineAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineAddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineAddLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineAddUrl) . "\">" .$Language->Phrase("InlineAddLink") . "</a>";
-		$item->Visible = ($this->InlineAddUrl <> "" && $Security->CanAdd());
-		$item = &$option->Add("gridadd");
-		$item->Body = "<a class=\"ewAddEdit ewGridAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("GridAddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridAddLink")) . "\" href=\"" . ew_HtmlEncode($this->GridAddUrl) . "\">" . $Language->Phrase("GridAddLink") . "</a>";
-		$item->Visible = ($this->GridAddUrl <> "" && $Security->CanAdd());
 		$option = $options["detail"];
 		$DetailTableLink = "";
 		$item = &$option->Add("detailadd_detail_pendaftaran");
@@ -2184,12 +1621,6 @@ class cpendaftaran_list extends cpendaftaran {
 					$item->Visible = FALSE;
 			}
 		}
-
-		// Add grid edit
-		$option = $options["addedit"];
-		$item = &$option->Add("gridedit");
-		$item->Body = "<a class=\"ewAddEdit ewGridEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("GridEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GridEditUrl) . "\">" . $Language->Phrase("GridEditLink") . "</a>";
-		$item->Visible = ($this->GridEditUrl <> "" && $Security->CanEdit());
 		$option = $options["action"];
 
 		// Add multi delete
@@ -2232,7 +1663,6 @@ class cpendaftaran_list extends cpendaftaran {
 	function RenderOtherOptions() {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
-		if ($this->CurrentAction <> "gridadd" && $this->CurrentAction <> "gridedit") { // Not grid add/edit mode
 			$option = &$options["action"];
 
 			// Set up list action buttons
@@ -2254,56 +1684,6 @@ class cpendaftaran_list extends cpendaftaran {
 				$option = &$options["action"];
 				$option->HideAllOptions();
 			}
-		} else { // Grid add/edit mode
-
-			// Hide all options first
-			foreach ($options as &$option)
-				$option->HideAllOptions();
-			if ($this->CurrentAction == "gridadd") {
-				if ($this->AllowAddDeleteRow) {
-
-					// Add add blank row
-					$option = &$options["addedit"];
-					$option->UseDropDownButton = FALSE;
-					$option->UseImageAndText = TRUE;
-					$item = &$option->Add("addblankrow");
-					$item->Body = "<a class=\"ewAddEdit ewAddBlankRow\" title=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" href=\"javascript:void(0);\" onclick=\"ew_AddGridRow(this);\">" . $Language->Phrase("AddBlankRow") . "</a>";
-					$item->Visible = $Security->CanAdd();
-				}
-				$option = &$options["action"];
-				$option->UseDropDownButton = FALSE;
-				$option->UseImageAndText = TRUE;
-
-				// Add grid insert
-				$item = &$option->Add("gridinsert");
-				$item->Body = "<a class=\"ewAction ewGridInsert\" title=\"" . ew_HtmlTitle($Language->Phrase("GridInsertLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridInsertLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . $this->PageName() . "');\">" . $Language->Phrase("GridInsertLink") . "</a>";
-
-				// Add grid cancel
-				$item = &$option->Add("gridcancel");
-				$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-				$item->Body = "<a class=\"ewAction ewGridCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("GridCancelLink") . "</a>";
-			}
-			if ($this->CurrentAction == "gridedit") {
-				if ($this->AllowAddDeleteRow) {
-
-					// Add add blank row
-					$option = &$options["addedit"];
-					$option->UseDropDownButton = FALSE;
-					$option->UseImageAndText = TRUE;
-					$item = &$option->Add("addblankrow");
-					$item->Body = "<a class=\"ewAddEdit ewAddBlankRow\" title=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" href=\"javascript:void(0);\" onclick=\"ew_AddGridRow(this);\">" . $Language->Phrase("AddBlankRow") . "</a>";
-					$item->Visible = $Security->CanAdd();
-				}
-				$option = &$options["action"];
-				$option->UseDropDownButton = FALSE;
-				$option->UseImageAndText = TRUE;
-					$item = &$option->Add("gridsave");
-					$item->Body = "<a class=\"ewAction ewGridSave\" title=\"" . ew_HtmlTitle($Language->Phrase("GridSaveLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridSaveLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . $this->PageName() . "');\">" . $Language->Phrase("GridSaveLink") . "</a>";
-					$item = &$option->Add("gridcancel");
-					$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-					$item->Body = "<a class=\"ewAction ewGridCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("GridCancelLink") . "</a>";
-			}
-		}
 	}
 
 	// Process list action
@@ -2468,22 +1848,6 @@ class cpendaftaran_list extends cpendaftaran {
 		}
 	}
 
-	// Load default values
-	function LoadDefaultValues() {
-		$this->kodedaftar_mahasiswa->CurrentValue = NULL;
-		$this->kodedaftar_mahasiswa->OldValue = $this->kodedaftar_mahasiswa->CurrentValue;
-		$this->nim_mahasiswa->CurrentValue = NULL;
-		$this->nim_mahasiswa->OldValue = $this->nim_mahasiswa->CurrentValue;
-		$this->nama_mahasiswa->CurrentValue = NULL;
-		$this->nama_mahasiswa->OldValue = $this->nama_mahasiswa->CurrentValue;
-		$this->kelas_mahasiswa->CurrentValue = NULL;
-		$this->kelas_mahasiswa->OldValue = $this->kelas_mahasiswa->CurrentValue;
-		$this->semester_mahasiswa->CurrentValue = NULL;
-		$this->semester_mahasiswa->OldValue = $this->semester_mahasiswa->CurrentValue;
-		$this->total_biaya->CurrentValue = NULL;
-		$this->total_biaya->OldValue = $this->total_biaya->CurrentValue;
-	}
-
 	// Load basic search values
 	function LoadBasicSearchValues() {
 		$this->BasicSearch->Keyword = @$_GET[EW_TABLE_BASIC_SEARCH];
@@ -2573,48 +1937,6 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->code->AdvancedSearch->SearchOperator = @$_GET["z_code"];
 	}
 
-	// Load form values
-	function LoadFormValues() {
-
-		// Load from form
-		global $objForm;
-		if (!$this->kodedaftar_mahasiswa->FldIsDetailKey) {
-			$this->kodedaftar_mahasiswa->setFormValue($objForm->GetValue("x_kodedaftar_mahasiswa"));
-		}
-		$this->kodedaftar_mahasiswa->setOldValue($objForm->GetValue("o_kodedaftar_mahasiswa"));
-		if (!$this->nim_mahasiswa->FldIsDetailKey) {
-			$this->nim_mahasiswa->setFormValue($objForm->GetValue("x_nim_mahasiswa"));
-		}
-		$this->nim_mahasiswa->setOldValue($objForm->GetValue("o_nim_mahasiswa"));
-		if (!$this->nama_mahasiswa->FldIsDetailKey) {
-			$this->nama_mahasiswa->setFormValue($objForm->GetValue("x_nama_mahasiswa"));
-		}
-		$this->nama_mahasiswa->setOldValue($objForm->GetValue("o_nama_mahasiswa"));
-		if (!$this->kelas_mahasiswa->FldIsDetailKey) {
-			$this->kelas_mahasiswa->setFormValue($objForm->GetValue("x_kelas_mahasiswa"));
-		}
-		$this->kelas_mahasiswa->setOldValue($objForm->GetValue("o_kelas_mahasiswa"));
-		if (!$this->semester_mahasiswa->FldIsDetailKey) {
-			$this->semester_mahasiswa->setFormValue($objForm->GetValue("x_semester_mahasiswa"));
-		}
-		$this->semester_mahasiswa->setOldValue($objForm->GetValue("o_semester_mahasiswa"));
-		if (!$this->total_biaya->FldIsDetailKey) {
-			$this->total_biaya->setFormValue($objForm->GetValue("x_total_biaya"));
-		}
-		$this->total_biaya->setOldValue($objForm->GetValue("o_total_biaya"));
-	}
-
-	// Restore form values
-	function RestoreFormValues() {
-		global $objForm;
-		$this->kodedaftar_mahasiswa->CurrentValue = $this->kodedaftar_mahasiswa->FormValue;
-		$this->nim_mahasiswa->CurrentValue = $this->nim_mahasiswa->FormValue;
-		$this->nama_mahasiswa->CurrentValue = $this->nama_mahasiswa->FormValue;
-		$this->kelas_mahasiswa->CurrentValue = $this->kelas_mahasiswa->FormValue;
-		$this->semester_mahasiswa->CurrentValue = $this->semester_mahasiswa->FormValue;
-		$this->total_biaya->CurrentValue = $this->total_biaya->FormValue;
-	}
-
 	// Load recordset
 	function LoadRecordset($offset = -1, $rowcnt = -1) {
 
@@ -2678,7 +2000,8 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->setDbValue($rs->fields('tgl_daftar_mahasiswa'));
 		$this->jam_daftar_mahasiswa->setDbValue($rs->fields('jam_daftar_mahasiswa'));
 		$this->total_biaya->setDbValue($rs->fields('total_biaya'));
-		$this->foto->setDbValue($rs->fields('foto'));
+		$this->foto->Upload->DbValue = $rs->fields('foto');
+		$this->foto->CurrentValue = $this->foto->Upload->DbValue;
 		$this->alamat->setDbValue($rs->fields('alamat'));
 		$this->tlp->setDbValue($rs->fields('tlp'));
 		$this->tempat->setDbValue($rs->fields('tempat'));
@@ -2699,7 +2022,7 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->DbValue = $row['tgl_daftar_mahasiswa'];
 		$this->jam_daftar_mahasiswa->DbValue = $row['jam_daftar_mahasiswa'];
 		$this->total_biaya->DbValue = $row['total_biaya'];
-		$this->foto->DbValue = $row['foto'];
+		$this->foto->Upload->DbValue = $row['foto'];
 		$this->alamat->DbValue = $row['alamat'];
 		$this->tlp->DbValue = $row['tlp'];
 		$this->tempat->DbValue = $row['tempat'];
@@ -2808,7 +2131,12 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->total_biaya->ViewCustomAttributes = "";
 
 		// foto
-		$this->foto->ViewValue = $this->foto->CurrentValue;
+		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageAlt = $this->foto->FldAlt();
+			$this->foto->ViewValue = $this->foto->Upload->DbValue;
+		} else {
+			$this->foto->ViewValue = "";
+		}
 		$this->foto->ViewCustomAttributes = "";
 
 		// alamat
@@ -2865,136 +2193,24 @@ class cpendaftaran_list extends cpendaftaran {
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
 			$this->total_biaya->TooltipValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
-			// kodedaftar_mahasiswa
-			$this->kodedaftar_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->kodedaftar_mahasiswa->EditCustomAttributes = "";
-			$this->kodedaftar_mahasiswa->EditValue = ew_HtmlEncode($this->kodedaftar_mahasiswa->CurrentValue);
-			$this->kodedaftar_mahasiswa->PlaceHolder = ew_RemoveHtml($this->kodedaftar_mahasiswa->FldCaption());
-
-			// nim_mahasiswa
-			$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->nim_mahasiswa->EditCustomAttributes = "";
-			$this->nim_mahasiswa->EditValue = ew_HtmlEncode($this->nim_mahasiswa->CurrentValue);
-			$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
-
-			// nama_mahasiswa
-			$this->nama_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->nama_mahasiswa->EditCustomAttributes = "";
-			$this->nama_mahasiswa->EditValue = ew_HtmlEncode($this->nama_mahasiswa->CurrentValue);
-			$this->nama_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nama_mahasiswa->FldCaption());
-
-			// kelas_mahasiswa
-			$this->kelas_mahasiswa->EditCustomAttributes = "";
-			$this->kelas_mahasiswa->EditValue = $this->kelas_mahasiswa->Options(FALSE);
-
-			// semester_mahasiswa
-			$this->semester_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->semester_mahasiswa->EditCustomAttributes = "";
-			$this->semester_mahasiswa->EditValue = ew_HtmlEncode($this->semester_mahasiswa->CurrentValue);
-			$this->semester_mahasiswa->PlaceHolder = ew_RemoveHtml($this->semester_mahasiswa->FldCaption());
-
-			// total_biaya
-			$this->total_biaya->EditAttrs["class"] = "form-control";
-			$this->total_biaya->EditCustomAttributes = "";
-			$this->total_biaya->EditValue = ew_HtmlEncode($this->total_biaya->CurrentValue);
-			$this->total_biaya->PlaceHolder = ew_RemoveHtml($this->total_biaya->FldCaption());
-			if (strval($this->total_biaya->EditValue) <> "" && is_numeric($this->total_biaya->EditValue)) {
-			$this->total_biaya->EditValue = ew_FormatNumber($this->total_biaya->EditValue, -2, -1, -2, 0);
-			$this->total_biaya->OldValue = $this->total_biaya->EditValue;
+			// foto
+			$this->foto->LinkCustomAttributes = "";
+			if (!ew_Empty($this->foto->Upload->DbValue)) {
+				$this->foto->HrefValue = ew_GetFileUploadUrl($this->foto, $this->foto->Upload->DbValue); // Add prefix/suffix
+				$this->foto->LinkAttrs["target"] = ""; // Add target
+				if ($this->Export <> "") $this->foto->HrefValue = ew_ConvertFullUrl($this->foto->HrefValue);
+			} else {
+				$this->foto->HrefValue = "";
 			}
-
-			// Add refer script
-			// kodedaftar_mahasiswa
-
-			$this->kodedaftar_mahasiswa->LinkCustomAttributes = "";
-			$this->kodedaftar_mahasiswa->HrefValue = "";
-
-			// nim_mahasiswa
-			$this->nim_mahasiswa->LinkCustomAttributes = "";
-			$this->nim_mahasiswa->HrefValue = "";
-
-			// nama_mahasiswa
-			$this->nama_mahasiswa->LinkCustomAttributes = "";
-			$this->nama_mahasiswa->HrefValue = "";
-
-			// kelas_mahasiswa
-			$this->kelas_mahasiswa->LinkCustomAttributes = "";
-			$this->kelas_mahasiswa->HrefValue = "";
-
-			// semester_mahasiswa
-			$this->semester_mahasiswa->LinkCustomAttributes = "";
-			$this->semester_mahasiswa->HrefValue = "";
-
-			// total_biaya
-			$this->total_biaya->LinkCustomAttributes = "";
-			$this->total_biaya->HrefValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
-
-			// kodedaftar_mahasiswa
-			$this->kodedaftar_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->kodedaftar_mahasiswa->EditCustomAttributes = "";
-			$this->kodedaftar_mahasiswa->EditValue = $this->kodedaftar_mahasiswa->CurrentValue;
-			$this->kodedaftar_mahasiswa->ViewCustomAttributes = "";
-
-			// nim_mahasiswa
-			$this->nim_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->nim_mahasiswa->EditCustomAttributes = "";
-			$this->nim_mahasiswa->EditValue = ew_HtmlEncode($this->nim_mahasiswa->CurrentValue);
-			$this->nim_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nim_mahasiswa->FldCaption());
-
-			// nama_mahasiswa
-			$this->nama_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->nama_mahasiswa->EditCustomAttributes = "";
-			$this->nama_mahasiswa->EditValue = ew_HtmlEncode($this->nama_mahasiswa->CurrentValue);
-			$this->nama_mahasiswa->PlaceHolder = ew_RemoveHtml($this->nama_mahasiswa->FldCaption());
-
-			// kelas_mahasiswa
-			$this->kelas_mahasiswa->EditCustomAttributes = "";
-			$this->kelas_mahasiswa->EditValue = $this->kelas_mahasiswa->Options(FALSE);
-
-			// semester_mahasiswa
-			$this->semester_mahasiswa->EditAttrs["class"] = "form-control";
-			$this->semester_mahasiswa->EditCustomAttributes = "";
-			$this->semester_mahasiswa->EditValue = ew_HtmlEncode($this->semester_mahasiswa->CurrentValue);
-			$this->semester_mahasiswa->PlaceHolder = ew_RemoveHtml($this->semester_mahasiswa->FldCaption());
-
-			// total_biaya
-			$this->total_biaya->EditAttrs["class"] = "form-control";
-			$this->total_biaya->EditCustomAttributes = "";
-			$this->total_biaya->EditValue = ew_HtmlEncode($this->total_biaya->CurrentValue);
-			$this->total_biaya->PlaceHolder = ew_RemoveHtml($this->total_biaya->FldCaption());
-			if (strval($this->total_biaya->EditValue) <> "" && is_numeric($this->total_biaya->EditValue)) {
-			$this->total_biaya->EditValue = ew_FormatNumber($this->total_biaya->EditValue, -2, -1, -2, 0);
-			$this->total_biaya->OldValue = $this->total_biaya->EditValue;
+			$this->foto->HrefValue2 = $this->foto->UploadPath . $this->foto->Upload->DbValue;
+			$this->foto->TooltipValue = "";
+			if ($this->foto->UseColorbox) {
+				if (ew_Empty($this->foto->TooltipValue))
+					$this->foto->LinkAttrs["title"] = $Language->Phrase("ViewImageGallery");
+				$this->foto->LinkAttrs["data-rel"] = "pendaftaran_x" . $this->RowCnt . "_foto";
+				ew_AppendClass($this->foto->LinkAttrs["class"], "ewLightbox");
 			}
-
-			// Edit refer script
-			// kodedaftar_mahasiswa
-
-			$this->kodedaftar_mahasiswa->LinkCustomAttributes = "";
-			$this->kodedaftar_mahasiswa->HrefValue = "";
-
-			// nim_mahasiswa
-			$this->nim_mahasiswa->LinkCustomAttributes = "";
-			$this->nim_mahasiswa->HrefValue = "";
-
-			// nama_mahasiswa
-			$this->nama_mahasiswa->LinkCustomAttributes = "";
-			$this->nama_mahasiswa->HrefValue = "";
-
-			// kelas_mahasiswa
-			$this->kelas_mahasiswa->LinkCustomAttributes = "";
-			$this->kelas_mahasiswa->HrefValue = "";
-
-			// semester_mahasiswa
-			$this->semester_mahasiswa->LinkCustomAttributes = "";
-			$this->semester_mahasiswa->HrefValue = "";
-
-			// total_biaya
-			$this->total_biaya->LinkCustomAttributes = "";
-			$this->total_biaya->HrefValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_SEARCH) { // Search row
 
 			// kodedaftar_mahasiswa
@@ -3030,6 +2246,12 @@ class cpendaftaran_list extends cpendaftaran {
 			$this->total_biaya->EditCustomAttributes = "";
 			$this->total_biaya->EditValue = ew_HtmlEncode($this->total_biaya->AdvancedSearch->SearchValue);
 			$this->total_biaya->PlaceHolder = ew_RemoveHtml($this->total_biaya->FldCaption());
+
+			// foto
+			$this->foto->EditAttrs["class"] = "form-control";
+			$this->foto->EditCustomAttributes = "";
+			$this->foto->EditValue = ew_HtmlEncode($this->foto->AdvancedSearch->SearchValue);
+			$this->foto->PlaceHolder = ew_RemoveHtml($this->foto->FldCaption());
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD ||
 			$this->RowType == EW_ROWTYPE_EDIT ||
@@ -3063,272 +2285,6 @@ class cpendaftaran_list extends cpendaftaran {
 			ew_AddMessage($gsSearchError, $sFormCustomError);
 		}
 		return $ValidateSearch;
-	}
-
-	// Validate form
-	function ValidateForm() {
-		global $Language, $gsFormError;
-
-		// Initialize form error message
-		$gsFormError = "";
-
-		// Check if validation required
-		if (!EW_SERVER_VALIDATE)
-			return ($gsFormError == "");
-		if (!$this->kodedaftar_mahasiswa->FldIsDetailKey && !is_null($this->kodedaftar_mahasiswa->FormValue) && $this->kodedaftar_mahasiswa->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->kodedaftar_mahasiswa->FldCaption(), $this->kodedaftar_mahasiswa->ReqErrMsg));
-		}
-		if (!ew_CheckInteger($this->nim_mahasiswa->FormValue)) {
-			ew_AddMessage($gsFormError, $this->nim_mahasiswa->FldErrMsg());
-		}
-		if (!ew_CheckInteger($this->semester_mahasiswa->FormValue)) {
-			ew_AddMessage($gsFormError, $this->semester_mahasiswa->FldErrMsg());
-		}
-		if (!ew_CheckNumber($this->total_biaya->FormValue)) {
-			ew_AddMessage($gsFormError, $this->total_biaya->FldErrMsg());
-		}
-
-		// Return validate result
-		$ValidateForm = ($gsFormError == "");
-
-		// Call Form_CustomValidate event
-		$sFormCustomError = "";
-		$ValidateForm = $ValidateForm && $this->Form_CustomValidate($sFormCustomError);
-		if ($sFormCustomError <> "") {
-			ew_AddMessage($gsFormError, $sFormCustomError);
-		}
-		return $ValidateForm;
-	}
-
-	//
-	// Delete records based on current filter
-	//
-	function DeleteRows() {
-		global $Language, $Security;
-		if (!$Security->CanDelete()) {
-			$this->setFailureMessage($Language->Phrase("NoDeletePermission")); // No delete permission
-			return FALSE;
-		}
-		$DeleteRows = TRUE;
-		$sSql = $this->SQL();
-		$conn = &$this->Connection();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE) {
-			return FALSE;
-		} elseif ($rs->EOF) {
-			$this->setFailureMessage($Language->Phrase("NoRecord")); // No record found
-			$rs->Close();
-			return FALSE;
-
-		//} else {
-		//	$this->LoadRowValues($rs); // Load row values
-
-		}
-		$rows = ($rs) ? $rs->GetRows() : array();
-		if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteBegin")); // Batch delete begin
-
-		// Clone old rows
-		$rsold = $rows;
-		if ($rs)
-			$rs->Close();
-
-		// Call row deleting event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$DeleteRows = $this->Row_Deleting($row);
-				if (!$DeleteRows) break;
-			}
-		}
-		if ($DeleteRows) {
-			$sKey = "";
-			foreach ($rsold as $row) {
-				$sThisKey = "";
-				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-				$sThisKey .= $row['kodedaftar_mahasiswa'];
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-				$DeleteRows = $this->Delete($row); // Delete
-				$conn->raiseErrorFn = '';
-				if ($DeleteRows === FALSE)
-					break;
-				if ($sKey <> "") $sKey .= ", ";
-				$sKey .= $sThisKey;
-			}
-		} else {
-
-			// Set up error message
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
-			} else {
-				$this->setFailureMessage($Language->Phrase("DeleteCancelled"));
-			}
-		}
-		if ($DeleteRows) {
-			if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteSuccess")); // Batch delete success
-		} else {
-		}
-
-		// Call Row Deleted event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$this->Row_Deleted($row);
-			}
-		}
-		return $DeleteRows;
-	}
-
-	// Update record based on key values
-	function EditRow() {
-		global $Security, $Language;
-		$sFilter = $this->KeyFilter();
-		$sFilter = $this->ApplyUserIDFilters($sFilter);
-		$conn = &$this->Connection();
-		$this->CurrentFilter = $sFilter;
-		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE)
-			return FALSE;
-		if ($rs->EOF) {
-			$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record message
-			$EditRow = FALSE; // Update Failed
-		} else {
-
-			// Save old values
-			$rsold = &$rs->fields;
-			$this->LoadDbValues($rsold);
-			$rsnew = array();
-
-			// kodedaftar_mahasiswa
-			// nim_mahasiswa
-
-			$this->nim_mahasiswa->SetDbValueDef($rsnew, $this->nim_mahasiswa->CurrentValue, NULL, $this->nim_mahasiswa->ReadOnly);
-
-			// nama_mahasiswa
-			$this->nama_mahasiswa->SetDbValueDef($rsnew, $this->nama_mahasiswa->CurrentValue, NULL, $this->nama_mahasiswa->ReadOnly);
-
-			// kelas_mahasiswa
-			$this->kelas_mahasiswa->SetDbValueDef($rsnew, $this->kelas_mahasiswa->CurrentValue, NULL, $this->kelas_mahasiswa->ReadOnly);
-
-			// semester_mahasiswa
-			$this->semester_mahasiswa->SetDbValueDef($rsnew, $this->semester_mahasiswa->CurrentValue, NULL, $this->semester_mahasiswa->ReadOnly);
-
-			// total_biaya
-			$this->total_biaya->SetDbValueDef($rsnew, $this->total_biaya->CurrentValue, NULL, $this->total_biaya->ReadOnly);
-
-			// Call Row Updating event
-			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
-			if ($bUpdateRow) {
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-				if (count($rsnew) > 0)
-					$EditRow = $this->Update($rsnew, "", $rsold);
-				else
-					$EditRow = TRUE; // No field to update
-				$conn->raiseErrorFn = '';
-				if ($EditRow) {
-				}
-			} else {
-				if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-					// Use the message, do nothing
-				} elseif ($this->CancelMessage <> "") {
-					$this->setFailureMessage($this->CancelMessage);
-					$this->CancelMessage = "";
-				} else {
-					$this->setFailureMessage($Language->Phrase("UpdateCancelled"));
-				}
-				$EditRow = FALSE;
-			}
-		}
-
-		// Call Row_Updated event
-		if ($EditRow)
-			$this->Row_Updated($rsold, $rsnew);
-		$rs->Close();
-		return $EditRow;
-	}
-
-	// Add record
-	function AddRow($rsold = NULL) {
-		global $Language, $Security;
-		$conn = &$this->Connection();
-
-		// Load db values from rsold
-		if ($rsold) {
-			$this->LoadDbValues($rsold);
-		}
-		$rsnew = array();
-
-		// kodedaftar_mahasiswa
-		$this->kodedaftar_mahasiswa->SetDbValueDef($rsnew, $this->kodedaftar_mahasiswa->CurrentValue, "", FALSE);
-
-		// nim_mahasiswa
-		$this->nim_mahasiswa->SetDbValueDef($rsnew, $this->nim_mahasiswa->CurrentValue, NULL, FALSE);
-
-		// nama_mahasiswa
-		$this->nama_mahasiswa->SetDbValueDef($rsnew, $this->nama_mahasiswa->CurrentValue, NULL, FALSE);
-
-		// kelas_mahasiswa
-		$this->kelas_mahasiswa->SetDbValueDef($rsnew, $this->kelas_mahasiswa->CurrentValue, NULL, FALSE);
-
-		// semester_mahasiswa
-		$this->semester_mahasiswa->SetDbValueDef($rsnew, $this->semester_mahasiswa->CurrentValue, NULL, FALSE);
-
-		// total_biaya
-		$this->total_biaya->SetDbValueDef($rsnew, $this->total_biaya->CurrentValue, NULL, FALSE);
-
-		// Call Row Inserting event
-		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
-
-		// Check if key value entered
-		if ($bInsertRow && $this->ValidateKey && strval($rsnew['kodedaftar_mahasiswa']) == "") {
-			$this->setFailureMessage($Language->Phrase("InvalidKeyValue"));
-			$bInsertRow = FALSE;
-		}
-
-		// Check for duplicate key
-		if ($bInsertRow && $this->ValidateKey) {
-			$sFilter = $this->KeyFilter();
-			$rsChk = $this->LoadRs($sFilter);
-			if ($rsChk && !$rsChk->EOF) {
-				$sKeyErrMsg = str_replace("%f", $sFilter, $Language->Phrase("DupKey"));
-				$this->setFailureMessage($sKeyErrMsg);
-				$rsChk->Close();
-				$bInsertRow = FALSE;
-			}
-		}
-		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-			$AddRow = $this->Insert($rsnew);
-			$conn->raiseErrorFn = '';
-			if ($AddRow) {
-			}
-		} else {
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
-			} else {
-				$this->setFailureMessage($Language->Phrase("InsertCancelled"));
-			}
-			$AddRow = FALSE;
-		}
-		if ($AddRow) {
-
-			// Call Row Inserted event
-			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-			$this->Row_Inserted($rs, $rsnew);
-		}
-		return $AddRow;
 	}
 
 	// Load advanced search
@@ -3610,7 +2566,6 @@ class cpendaftaran_list extends cpendaftaran {
 		$this->AddSearchQueryString($sQry, $this->tgl_daftar_mahasiswa); // tgl_daftar_mahasiswa
 		$this->AddSearchQueryString($sQry, $this->jam_daftar_mahasiswa); // jam_daftar_mahasiswa
 		$this->AddSearchQueryString($sQry, $this->total_biaya); // total_biaya
-		$this->AddSearchQueryString($sQry, $this->foto); // foto
 		$this->AddSearchQueryString($sQry, $this->alamat); // alamat
 		$this->AddSearchQueryString($sQry, $this->tlp); // tlp
 		$this->AddSearchQueryString($sQry, $this->tempat); // tempat
@@ -3821,61 +2776,6 @@ var CurrentPageID = EW_PAGE_ID = "list";
 var CurrentForm = fpendaftaranlist = new ew_Form("fpendaftaranlist", "list");
 fpendaftaranlist.FormKeyCountName = '<?php echo $pendaftaran_list->FormKeyCountName ?>';
 
-// Validate form
-fpendaftaranlist.Validate = function() {
-	if (!this.ValidateRequired)
-		return true; // Ignore validation
-	var $ = jQuery, fobj = this.GetForm(), $fobj = $(fobj);
-	if ($fobj.find("#a_confirm").val() == "F")
-		return true;
-	var elm, felm, uelm, addcnt = 0;
-	var $k = $fobj.find("#" + this.FormKeyCountName); // Get key_count
-	var rowcnt = ($k[0]) ? parseInt($k.val(), 10) : 1;
-	var startcnt = (rowcnt == 0) ? 0 : 1; // Check rowcnt == 0 => Inline-Add
-	var gridinsert = $fobj.find("#a_list").val() == "gridinsert";
-	for (var i = startcnt; i <= rowcnt; i++) {
-		var infix = ($k[0]) ? String(i) : "";
-		$fobj.data("rowindex", infix);
-		var checkrow = (gridinsert) ? !this.EmptyRow(infix) : true;
-		if (checkrow) {
-			addcnt++;
-			elm = this.GetElements("x" + infix + "_kodedaftar_mahasiswa");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pendaftaran->kodedaftar_mahasiswa->FldCaption(), $pendaftaran->kodedaftar_mahasiswa->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_nim_mahasiswa");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->nim_mahasiswa->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_semester_mahasiswa");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->semester_mahasiswa->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_total_biaya");
-			if (elm && !ew_CheckNumber(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pendaftaran->total_biaya->FldErrMsg()) ?>");
-
-			// Fire Form_CustomValidate event
-			if (!this.Form_CustomValidate(fobj))
-				return false;
-		} // End Grid Add checking
-	}
-	if (gridinsert && addcnt == 0) { // No row added
-		ew_Alert(ewLanguage.Phrase("NoAddRecord"));
-		return false;
-	}
-	return true;
-}
-
-// Check empty row
-fpendaftaranlist.EmptyRow = function(infix) {
-	var fobj = this.Form;
-	if (ew_ValueChanged(fobj, infix, "kodedaftar_mahasiswa", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "nim_mahasiswa", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "nama_mahasiswa", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "kelas_mahasiswa", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "semester_mahasiswa", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "total_biaya", false)) return false;
-	return true;
-}
-
 // Form_CustomValidate event
 fpendaftaranlist.Form_CustomValidate = 
  function(fobj) { // DO NOT CHANGE THIS LINE!
@@ -3956,13 +2856,6 @@ fpendaftaranlistsrch.Lists["x_kelas_mahasiswa"].Options = <?php echo json_encode
 </div>
 <?php } ?>
 <?php
-if ($pendaftaran->CurrentAction == "gridadd") {
-	$pendaftaran->CurrentFilter = "0=1";
-	$pendaftaran_list->StartRec = 1;
-	$pendaftaran_list->DisplayRecs = $pendaftaran->GridAddRowCount;
-	$pendaftaran_list->TotalRecs = $pendaftaran_list->DisplayRecs;
-	$pendaftaran_list->StopRec = $pendaftaran_list->DisplayRecs;
-} else {
 	$bSelectLimit = $pendaftaran_list->UseSelectLimit;
 	if ($bSelectLimit) {
 		if ($pendaftaran_list->TotalRecs <= 0)
@@ -3995,7 +2888,6 @@ if ($pendaftaran->CurrentAction == "gridadd") {
 		$searchsql = $pendaftaran_list->getSessionWhere();
 		$pendaftaran_list->WriteAuditTrailOnSearch($searchparm, $searchsql);
 	}
-}
 $pendaftaran_list->RenderOtherOptions();
 ?>
 <?php if ($Security->CanSearch()) { ?>
@@ -4135,7 +3027,7 @@ $pendaftaran_list->ShowMessage();
 <?php } ?>
 <input type="hidden" name="t" value="pendaftaran">
 <div id="gmp_pendaftaran" class="<?php if (ew_IsResponsiveLayout()) { echo "table-responsive "; } ?>ewGridMiddlePanel">
-<?php if ($pendaftaran_list->TotalRecs > 0 || $pendaftaran->CurrentAction == "add" || $pendaftaran->CurrentAction == "copy" || $pendaftaran->CurrentAction == "gridedit") { ?>
+<?php if ($pendaftaran_list->TotalRecs > 0 || $pendaftaran->CurrentAction == "gridedit") { ?>
 <table id="tbl_pendaftaranlist" class="table ewTable">
 <?php echo $pendaftaran->TableCustomInnerHtml ?>
 <thead><!-- Table header -->
@@ -4165,7 +3057,7 @@ $pendaftaran_list->ListOptions->Render("header", "left");
 		<th data-name="nim_mahasiswa"><div id="elh_pendaftaran_nim_mahasiswa" class="pendaftaran_nim_mahasiswa"><div class="ewTableHeaderCaption"><?php echo $pendaftaran->nim_mahasiswa->FldCaption() ?></div></div></th>
 	<?php } else { ?>
 		<th data-name="nim_mahasiswa"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pendaftaran->SortUrl($pendaftaran->nim_mahasiswa) ?>',2);"><div id="elh_pendaftaran_nim_mahasiswa" class="pendaftaran_nim_mahasiswa">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->nim_mahasiswa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->nim_mahasiswa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->nim_mahasiswa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->nim_mahasiswa->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->nim_mahasiswa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->nim_mahasiswa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -4183,7 +3075,7 @@ $pendaftaran_list->ListOptions->Render("header", "left");
 		<th data-name="kelas_mahasiswa"><div id="elh_pendaftaran_kelas_mahasiswa" class="pendaftaran_kelas_mahasiswa"><div class="ewTableHeaderCaption"><?php echo $pendaftaran->kelas_mahasiswa->FldCaption() ?></div></div></th>
 	<?php } else { ?>
 		<th data-name="kelas_mahasiswa"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pendaftaran->SortUrl($pendaftaran->kelas_mahasiswa) ?>',2);"><div id="elh_pendaftaran_kelas_mahasiswa" class="pendaftaran_kelas_mahasiswa">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->kelas_mahasiswa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->kelas_mahasiswa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->kelas_mahasiswa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->kelas_mahasiswa->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->kelas_mahasiswa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->kelas_mahasiswa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -4192,7 +3084,7 @@ $pendaftaran_list->ListOptions->Render("header", "left");
 		<th data-name="semester_mahasiswa"><div id="elh_pendaftaran_semester_mahasiswa" class="pendaftaran_semester_mahasiswa"><div class="ewTableHeaderCaption"><?php echo $pendaftaran->semester_mahasiswa->FldCaption() ?></div></div></th>
 	<?php } else { ?>
 		<th data-name="semester_mahasiswa"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pendaftaran->SortUrl($pendaftaran->semester_mahasiswa) ?>',2);"><div id="elh_pendaftaran_semester_mahasiswa" class="pendaftaran_semester_mahasiswa">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->semester_mahasiswa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->semester_mahasiswa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->semester_mahasiswa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->semester_mahasiswa->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->semester_mahasiswa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->semester_mahasiswa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -4205,6 +3097,15 @@ $pendaftaran_list->ListOptions->Render("header", "left");
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
+<?php if ($pendaftaran->foto->Visible) { // foto ?>
+	<?php if ($pendaftaran->SortUrl($pendaftaran->foto) == "") { ?>
+		<th data-name="foto"><div id="elh_pendaftaran_foto" class="pendaftaran_foto"><div class="ewTableHeaderCaption"><?php echo $pendaftaran->foto->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="foto"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pendaftaran->SortUrl($pendaftaran->foto) ?>',2);"><div id="elh_pendaftaran_foto" class="pendaftaran_foto">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pendaftaran->foto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pendaftaran->foto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pendaftaran->foto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+        </div></div></th>
+	<?php } ?>
+<?php } ?>		
 <?php
 
 // Render list options (header, right)
@@ -4213,98 +3114,6 @@ $pendaftaran_list->ListOptions->Render("header", "right");
 	</tr>
 </thead>
 <tbody>
-<?php
-	if ($pendaftaran->CurrentAction == "add" || $pendaftaran->CurrentAction == "copy") {
-		$pendaftaran_list->RowIndex = 0;
-		$pendaftaran_list->KeyCount = $pendaftaran_list->RowIndex;
-		if ($pendaftaran->CurrentAction == "copy" && !$pendaftaran_list->LoadRow())
-				$pendaftaran->CurrentAction = "add";
-		if ($pendaftaran->CurrentAction == "add")
-			$pendaftaran_list->LoadDefaultValues();
-		if ($pendaftaran->EventCancelled) // Insert failed
-			$pendaftaran_list->RestoreFormValues(); // Restore form values
-
-		// Set row properties
-		$pendaftaran->ResetAttrs();
-		$pendaftaran->RowAttrs = array_merge($pendaftaran->RowAttrs, array('data-rowindex'=>0, 'id'=>'r0_pendaftaran', 'data-rowtype'=>EW_ROWTYPE_ADD));
-		$pendaftaran->RowType = EW_ROWTYPE_ADD;
-
-		// Render row
-		$pendaftaran_list->RenderRow();
-
-		// Render list options
-		$pendaftaran_list->RenderListOptions();
-		$pendaftaran_list->StartRowCnt = 0;
-?>
-	<tr<?php echo $pendaftaran->RowAttributes() ?>>
-<?php
-
-// Render list options (body, left)
-$pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowCnt);
-?>
-	<?php if ($pendaftaran->kodedaftar_mahasiswa->Visible) { // kodedaftar_mahasiswa ?>
-		<td data-name="kodedaftar_mahasiswa">
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kodedaftar_mahasiswa" class="form-group pendaftaran_kodedaftar_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->kodedaftar_mahasiswa->EditValue ?>"<?php echo $pendaftaran->kodedaftar_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->nim_mahasiswa->Visible) { // nim_mahasiswa ?>
-		<td data-name="nim_mahasiswa">
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->nama_mahasiswa->Visible) { // nama_mahasiswa ?>
-		<td data-name="nama_mahasiswa">
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nama_mahasiswa" class="form-group pendaftaran_nama_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nama_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nama_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->kelas_mahasiswa->Visible) { // kelas_mahasiswa ?>
-		<td data-name="kelas_mahasiswa">
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kelas_mahasiswa" class="form-group pendaftaran_kelas_mahasiswa">
-<div id="tp_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" class="ewTemplate"><input type="radio" data-table="pendaftaran" data-field="x_kelas_mahasiswa" data-value-separator="<?php echo $pendaftaran->kelas_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="{value}"<?php echo $pendaftaran->kelas_mahasiswa->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $pendaftaran->kelas_mahasiswa->RadioButtonListHtml(FALSE, "x{$pendaftaran_list->RowIndex}_kelas_mahasiswa") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kelas_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kelas_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->semester_mahasiswa->Visible) { // semester_mahasiswa ?>
-		<td data-name="semester_mahasiswa">
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_semester_mahasiswa" class="form-group pendaftaran_semester_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->semester_mahasiswa->EditValue ?>"<?php echo $pendaftaran->semester_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->total_biaya->Visible) { // total_biaya ?>
-		<td data-name="total_biaya">
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_total_biaya" class="form-group pendaftaran_total_biaya">
-<input type="text" data-table="pendaftaran" data-field="x_total_biaya" name="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->total_biaya->EditValue ?>"<?php echo $pendaftaran->total_biaya->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_total_biaya" name="o<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="o<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" value="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->OldValue) ?>">
-</td>
-	<?php } ?>
-<?php
-
-// Render list options (body, right)
-$pendaftaran_list->ListOptions->Render("body", "right", $pendaftaran_list->RowCnt);
-?>
-<script type="text/javascript">
-fpendaftaranlist.UpdateOpts(<?php echo $pendaftaran_list->RowIndex ?>);
-</script>
-	</tr>
-<?php
-}
-?>
 <?php
 if ($pendaftaran->ExportAll && $pendaftaran->Export <> "") {
 	$pendaftaran_list->StopRec = $pendaftaran_list->TotalRecs;
@@ -4315,15 +3124,6 @@ if ($pendaftaran->ExportAll && $pendaftaran->Export <> "") {
 		$pendaftaran_list->StopRec = $pendaftaran_list->StartRec + $pendaftaran_list->DisplayRecs - 1;
 	else
 		$pendaftaran_list->StopRec = $pendaftaran_list->TotalRecs;
-}
-
-// Restore number of post back records
-if ($objForm) {
-	$objForm->Index = -1;
-	if ($objForm->HasValue($pendaftaran_list->FormKeyCountName) && ($pendaftaran->CurrentAction == "gridadd" || $pendaftaran->CurrentAction == "gridedit" || $pendaftaran->CurrentAction == "F")) {
-		$pendaftaran_list->KeyCount = $objForm->GetValue($pendaftaran_list->FormKeyCountName);
-		$pendaftaran_list->StopRec = $pendaftaran_list->StartRec + $pendaftaran_list->KeyCount - 1;
-	}
 }
 $pendaftaran_list->RecCnt = $pendaftaran_list->StartRec - 1;
 if ($pendaftaran_list->Recordset && !$pendaftaran_list->Recordset->EOF) {
@@ -4339,27 +3139,10 @@ if ($pendaftaran_list->Recordset && !$pendaftaran_list->Recordset->EOF) {
 $pendaftaran->RowType = EW_ROWTYPE_AGGREGATEINIT;
 $pendaftaran->ResetAttrs();
 $pendaftaran_list->RenderRow();
-$pendaftaran_list->EditRowCnt = 0;
-if ($pendaftaran->CurrentAction == "edit")
-	$pendaftaran_list->RowIndex = 1;
-if ($pendaftaran->CurrentAction == "gridadd")
-	$pendaftaran_list->RowIndex = 0;
-if ($pendaftaran->CurrentAction == "gridedit")
-	$pendaftaran_list->RowIndex = 0;
 while ($pendaftaran_list->RecCnt < $pendaftaran_list->StopRec) {
 	$pendaftaran_list->RecCnt++;
 	if (intval($pendaftaran_list->RecCnt) >= intval($pendaftaran_list->StartRec)) {
 		$pendaftaran_list->RowCnt++;
-		if ($pendaftaran->CurrentAction == "gridadd" || $pendaftaran->CurrentAction == "gridedit" || $pendaftaran->CurrentAction == "F") {
-			$pendaftaran_list->RowIndex++;
-			$objForm->Index = $pendaftaran_list->RowIndex;
-			if ($objForm->HasValue($pendaftaran_list->FormActionName))
-				$pendaftaran_list->RowAction = strval($objForm->GetValue($pendaftaran_list->FormActionName));
-			elseif ($pendaftaran->CurrentAction == "gridadd")
-				$pendaftaran_list->RowAction = "insert";
-			else
-				$pendaftaran_list->RowAction = "";
-		}
 
 		// Set up key count
 		$pendaftaran_list->KeyCount = $pendaftaran_list->RowIndex;
@@ -4368,37 +3151,10 @@ while ($pendaftaran_list->RecCnt < $pendaftaran_list->StopRec) {
 		$pendaftaran->ResetAttrs();
 		$pendaftaran->CssClass = "";
 		if ($pendaftaran->CurrentAction == "gridadd") {
-			$pendaftaran_list->LoadDefaultValues(); // Load default values
 		} else {
 			$pendaftaran_list->LoadRowValues($pendaftaran_list->Recordset); // Load row values
 		}
 		$pendaftaran->RowType = EW_ROWTYPE_VIEW; // Render view
-		if ($pendaftaran->CurrentAction == "gridadd") // Grid add
-			$pendaftaran->RowType = EW_ROWTYPE_ADD; // Render add
-		if ($pendaftaran->CurrentAction == "gridadd" && $pendaftaran->EventCancelled && !$objForm->HasValue("k_blankrow")) // Insert failed
-			$pendaftaran_list->RestoreCurrentRowFormValues($pendaftaran_list->RowIndex); // Restore form values
-		if ($pendaftaran->CurrentAction == "edit") {
-			if ($pendaftaran_list->CheckInlineEditKey() && $pendaftaran_list->EditRowCnt == 0) { // Inline edit
-				$pendaftaran->RowType = EW_ROWTYPE_EDIT; // Render edit
-			}
-		}
-		if ($pendaftaran->CurrentAction == "gridedit") { // Grid edit
-			if ($pendaftaran->EventCancelled) {
-				$pendaftaran_list->RestoreCurrentRowFormValues($pendaftaran_list->RowIndex); // Restore form values
-			}
-			if ($pendaftaran_list->RowAction == "insert")
-				$pendaftaran->RowType = EW_ROWTYPE_ADD; // Render add
-			else
-				$pendaftaran->RowType = EW_ROWTYPE_EDIT; // Render edit
-		}
-		if ($pendaftaran->CurrentAction == "edit" && $pendaftaran->RowType == EW_ROWTYPE_EDIT && $pendaftaran->EventCancelled) { // Update failed
-			$objForm->Index = 1;
-			$pendaftaran_list->RestoreFormValues(); // Restore form values
-		}
-		if ($pendaftaran->CurrentAction == "gridedit" && ($pendaftaran->RowType == EW_ROWTYPE_EDIT || $pendaftaran->RowType == EW_ROWTYPE_ADD) && $pendaftaran->EventCancelled) // Update failed
-			$pendaftaran_list->RestoreCurrentRowFormValues($pendaftaran_list->RowIndex); // Restore form values
-		if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) // Edit row
-			$pendaftaran_list->EditRowCnt++;
 
 		// Set up row id / data-rowindex
 		$pendaftaran->RowAttrs = array_merge($pendaftaran->RowAttrs, array('data-rowindex'=>$pendaftaran_list->RowCnt, 'id'=>'r' . $pendaftaran_list->RowCnt . '_pendaftaran', 'data-rowtype'=>$pendaftaran->RowType));
@@ -4408,9 +3164,6 @@ while ($pendaftaran_list->RecCnt < $pendaftaran_list->StopRec) {
 
 		// Render list options
 		$pendaftaran_list->RenderListOptions();
-
-		// Skip delete row / empty row for confirm page
-		if ($pendaftaran_list->RowAction <> "delete" && $pendaftaran_list->RowAction <> "insertdelete" && !($pendaftaran_list->RowAction == "insert" && $pendaftaran->CurrentAction == "F" && $pendaftaran_list->EmptyRow())) {
 ?>
 	<tr<?php echo $pendaftaran->RowAttributes() ?>>
 <?php
@@ -4420,136 +3173,59 @@ $pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowCnt
 ?>
 	<?php if ($pendaftaran->kodedaftar_mahasiswa->Visible) { // kodedaftar_mahasiswa ?>
 		<td data-name="kodedaftar_mahasiswa"<?php echo $pendaftaran->kodedaftar_mahasiswa->CellAttributes() ?>>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kodedaftar_mahasiswa" class="form-group pendaftaran_kodedaftar_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->kodedaftar_mahasiswa->EditValue ?>"<?php echo $pendaftaran->kodedaftar_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->OldValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kodedaftar_mahasiswa" class="form-group pendaftaran_kodedaftar_mahasiswa">
-<span<?php echo $pendaftaran->kodedaftar_mahasiswa->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $pendaftaran->kodedaftar_mahasiswa->EditValue ?></p></span>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->CurrentValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kodedaftar_mahasiswa" class="pendaftaran_kodedaftar_mahasiswa">
 <span<?php echo $pendaftaran->kodedaftar_mahasiswa->ViewAttributes() ?>>
 <?php echo $pendaftaran->kodedaftar_mahasiswa->ListViewValue() ?></span>
 </span>
-<?php } ?>
 <a id="<?php echo $pendaftaran_list->PageObjName . "_row_" . $pendaftaran_list->RowCnt ?>"></a></td>
 	<?php } ?>
 	<?php if ($pendaftaran->nim_mahasiswa->Visible) { // nim_mahasiswa ?>
 		<td data-name="nim_mahasiswa"<?php echo $pendaftaran->nim_mahasiswa->CellAttributes() ?>>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->OldValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nim_mahasiswa" class="pendaftaran_nim_mahasiswa">
 <span<?php echo $pendaftaran->nim_mahasiswa->ViewAttributes() ?>>
 <?php echo $pendaftaran->nim_mahasiswa->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($pendaftaran->nama_mahasiswa->Visible) { // nama_mahasiswa ?>
 		<td data-name="nama_mahasiswa"<?php echo $pendaftaran->nama_mahasiswa->CellAttributes() ?>>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nama_mahasiswa" class="form-group pendaftaran_nama_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nama_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nama_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->OldValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nama_mahasiswa" class="form-group pendaftaran_nama_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nama_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nama_mahasiswa->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_nama_mahasiswa" class="pendaftaran_nama_mahasiswa">
 <span<?php echo $pendaftaran->nama_mahasiswa->ViewAttributes() ?>>
 <?php echo $pendaftaran->nama_mahasiswa->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($pendaftaran->kelas_mahasiswa->Visible) { // kelas_mahasiswa ?>
 		<td data-name="kelas_mahasiswa"<?php echo $pendaftaran->kelas_mahasiswa->CellAttributes() ?>>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kelas_mahasiswa" class="form-group pendaftaran_kelas_mahasiswa">
-<div id="tp_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" class="ewTemplate"><input type="radio" data-table="pendaftaran" data-field="x_kelas_mahasiswa" data-value-separator="<?php echo $pendaftaran->kelas_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="{value}"<?php echo $pendaftaran->kelas_mahasiswa->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $pendaftaran->kelas_mahasiswa->RadioButtonListHtml(FALSE, "x{$pendaftaran_list->RowIndex}_kelas_mahasiswa") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kelas_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kelas_mahasiswa->OldValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kelas_mahasiswa" class="form-group pendaftaran_kelas_mahasiswa">
-<div id="tp_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" class="ewTemplate"><input type="radio" data-table="pendaftaran" data-field="x_kelas_mahasiswa" data-value-separator="<?php echo $pendaftaran->kelas_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="{value}"<?php echo $pendaftaran->kelas_mahasiswa->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $pendaftaran->kelas_mahasiswa->RadioButtonListHtml(FALSE, "x{$pendaftaran_list->RowIndex}_kelas_mahasiswa") ?>
-</div></div>
-</span>
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_kelas_mahasiswa" class="pendaftaran_kelas_mahasiswa">
 <span<?php echo $pendaftaran->kelas_mahasiswa->ViewAttributes() ?>>
 <?php echo $pendaftaran->kelas_mahasiswa->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($pendaftaran->semester_mahasiswa->Visible) { // semester_mahasiswa ?>
 		<td data-name="semester_mahasiswa"<?php echo $pendaftaran->semester_mahasiswa->CellAttributes() ?>>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_semester_mahasiswa" class="form-group pendaftaran_semester_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->semester_mahasiswa->EditValue ?>"<?php echo $pendaftaran->semester_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->OldValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_semester_mahasiswa" class="form-group pendaftaran_semester_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->semester_mahasiswa->EditValue ?>"<?php echo $pendaftaran->semester_mahasiswa->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_semester_mahasiswa" class="pendaftaran_semester_mahasiswa">
 <span<?php echo $pendaftaran->semester_mahasiswa->ViewAttributes() ?>>
 <?php echo $pendaftaran->semester_mahasiswa->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($pendaftaran->total_biaya->Visible) { // total_biaya ?>
 		<td data-name="total_biaya"<?php echo $pendaftaran->total_biaya->CellAttributes() ?>>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_total_biaya" class="form-group pendaftaran_total_biaya">
-<input type="text" data-table="pendaftaran" data-field="x_total_biaya" name="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->total_biaya->EditValue ?>"<?php echo $pendaftaran->total_biaya->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_total_biaya" name="o<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="o<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" value="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->OldValue) ?>">
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_total_biaya" class="form-group pendaftaran_total_biaya">
-<input type="text" data-table="pendaftaran" data-field="x_total_biaya" name="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->total_biaya->EditValue ?>"<?php echo $pendaftaran->total_biaya->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_total_biaya" class="pendaftaran_total_biaya">
 <span<?php echo $pendaftaran->total_biaya->ViewAttributes() ?>>
 <?php echo $pendaftaran->total_biaya->ListViewValue() ?></span>
 </span>
-<?php } ?>
+</td>
+	<?php } ?>
+	<?php if ($pendaftaran->foto->Visible) { // foto ?>
+		<td data-name="foto"<?php echo $pendaftaran->foto->CellAttributes() ?>>
+<span id="el<?php echo $pendaftaran_list->RowCnt ?>_pendaftaran_foto" class="pendaftaran_foto">
+<span>
+<?php echo ew_GetFileViewTag($pendaftaran->foto, $pendaftaran->foto->ListViewValue()) ?>
+</span>
+</span>
 </td>
 	<?php } ?>
 <?php
@@ -4558,123 +3234,14 @@ $pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowCnt
 $pendaftaran_list->ListOptions->Render("body", "right", $pendaftaran_list->RowCnt);
 ?>
 	</tr>
-<?php if ($pendaftaran->RowType == EW_ROWTYPE_ADD || $pendaftaran->RowType == EW_ROWTYPE_EDIT) { ?>
-<script type="text/javascript">
-fpendaftaranlist.UpdateOpts(<?php echo $pendaftaran_list->RowIndex ?>);
-</script>
-<?php } ?>
 <?php
 	}
-	} // End delete row checking
 	if ($pendaftaran->CurrentAction <> "gridadd")
-		if (!$pendaftaran_list->Recordset->EOF) $pendaftaran_list->Recordset->MoveNext();
-}
-?>
-<?php
-	if ($pendaftaran->CurrentAction == "gridadd" || $pendaftaran->CurrentAction == "gridedit") {
-		$pendaftaran_list->RowIndex = '$rowindex$';
-		$pendaftaran_list->LoadDefaultValues();
-
-		// Set row properties
-		$pendaftaran->ResetAttrs();
-		$pendaftaran->RowAttrs = array_merge($pendaftaran->RowAttrs, array('data-rowindex'=>$pendaftaran_list->RowIndex, 'id'=>'r0_pendaftaran', 'data-rowtype'=>EW_ROWTYPE_ADD));
-		ew_AppendClass($pendaftaran->RowAttrs["class"], "ewTemplate");
-		$pendaftaran->RowType = EW_ROWTYPE_ADD;
-
-		// Render row
-		$pendaftaran_list->RenderRow();
-
-		// Render list options
-		$pendaftaran_list->RenderListOptions();
-		$pendaftaran_list->StartRowCnt = 0;
-?>
-	<tr<?php echo $pendaftaran->RowAttributes() ?>>
-<?php
-
-// Render list options (body, left)
-$pendaftaran_list->ListOptions->Render("body", "left", $pendaftaran_list->RowIndex);
-?>
-	<?php if ($pendaftaran->kodedaftar_mahasiswa->Visible) { // kodedaftar_mahasiswa ?>
-		<td data-name="kodedaftar_mahasiswa">
-<span id="el$rowindex$_pendaftaran_kodedaftar_mahasiswa" class="form-group pendaftaran_kodedaftar_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->kodedaftar_mahasiswa->EditValue ?>"<?php echo $pendaftaran->kodedaftar_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kodedaftar_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_kodedaftar_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kodedaftar_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->nim_mahasiswa->Visible) { // nim_mahasiswa ?>
-		<td data-name="nim_mahasiswa">
-<span id="el$rowindex$_pendaftaran_nim_mahasiswa" class="form-group pendaftaran_nim_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nim_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nim_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_nim_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nim_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nim_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->nama_mahasiswa->Visible) { // nama_mahasiswa ?>
-		<td data-name="nama_mahasiswa">
-<span id="el$rowindex$_pendaftaran_nama_mahasiswa" class="form-group pendaftaran_nama_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" size="30" maxlength="100" placeholder="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->nama_mahasiswa->EditValue ?>"<?php echo $pendaftaran->nama_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_nama_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_nama_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->nama_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->kelas_mahasiswa->Visible) { // kelas_mahasiswa ?>
-		<td data-name="kelas_mahasiswa">
-<span id="el$rowindex$_pendaftaran_kelas_mahasiswa" class="form-group pendaftaran_kelas_mahasiswa">
-<div id="tp_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" class="ewTemplate"><input type="radio" data-table="pendaftaran" data-field="x_kelas_mahasiswa" data-value-separator="<?php echo $pendaftaran->kelas_mahasiswa->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="{value}"<?php echo $pendaftaran->kelas_mahasiswa->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $pendaftaran->kelas_mahasiswa->RadioButtonListHtml(FALSE, "x{$pendaftaran_list->RowIndex}_kelas_mahasiswa") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_kelas_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_kelas_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->kelas_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->semester_mahasiswa->Visible) { // semester_mahasiswa ?>
-		<td data-name="semester_mahasiswa">
-<span id="el$rowindex$_pendaftaran_semester_mahasiswa" class="form-group pendaftaran_semester_mahasiswa">
-<input type="text" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="x<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->semester_mahasiswa->EditValue ?>"<?php echo $pendaftaran->semester_mahasiswa->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_semester_mahasiswa" name="o<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" id="o<?php echo $pendaftaran_list->RowIndex ?>_semester_mahasiswa" value="<?php echo ew_HtmlEncode($pendaftaran->semester_mahasiswa->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($pendaftaran->total_biaya->Visible) { // total_biaya ?>
-		<td data-name="total_biaya">
-<span id="el$rowindex$_pendaftaran_total_biaya" class="form-group pendaftaran_total_biaya">
-<input type="text" data-table="pendaftaran" data-field="x_total_biaya" name="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="x<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->total_biaya->EditValue ?>"<?php echo $pendaftaran->total_biaya->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pendaftaran" data-field="x_total_biaya" name="o<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" id="o<?php echo $pendaftaran_list->RowIndex ?>_total_biaya" value="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->OldValue) ?>">
-</td>
-	<?php } ?>
-<?php
-
-// Render list options (body, right)
-$pendaftaran_list->ListOptions->Render("body", "right", $pendaftaran_list->RowCnt);
-?>
-<script type="text/javascript">
-fpendaftaranlist.UpdateOpts(<?php echo $pendaftaran_list->RowIndex ?>);
-</script>
-	</tr>
-<?php
+		$pendaftaran_list->Recordset->MoveNext();
 }
 ?>
 </tbody>
 </table>
-<?php } ?>
-<?php if ($pendaftaran->CurrentAction == "add" || $pendaftaran->CurrentAction == "copy") { ?>
-<input type="hidden" name="<?php echo $pendaftaran_list->FormKeyCountName ?>" id="<?php echo $pendaftaran_list->FormKeyCountName ?>" value="<?php echo $pendaftaran_list->KeyCount ?>">
-<?php } ?>
-<?php if ($pendaftaran->CurrentAction == "gridadd") { ?>
-<input type="hidden" name="a_list" id="a_list" value="gridinsert">
-<input type="hidden" name="<?php echo $pendaftaran_list->FormKeyCountName ?>" id="<?php echo $pendaftaran_list->FormKeyCountName ?>" value="<?php echo $pendaftaran_list->KeyCount ?>">
-<?php echo $pendaftaran_list->MultiSelectKey ?>
-<?php } ?>
-<?php if ($pendaftaran->CurrentAction == "edit") { ?>
-<input type="hidden" name="<?php echo $pendaftaran_list->FormKeyCountName ?>" id="<?php echo $pendaftaran_list->FormKeyCountName ?>" value="<?php echo $pendaftaran_list->KeyCount ?>">
-<?php } ?>
-<?php if ($pendaftaran->CurrentAction == "gridedit") { ?>
-<input type="hidden" name="a_list" id="a_list" value="gridupdate">
-<input type="hidden" name="<?php echo $pendaftaran_list->FormKeyCountName ?>" id="<?php echo $pendaftaran_list->FormKeyCountName ?>" value="<?php echo $pendaftaran_list->KeyCount ?>">
-<?php echo $pendaftaran_list->MultiSelectKey ?>
 <?php } ?>
 <?php if ($pendaftaran->CurrentAction == "") { ?>
 <input type="hidden" name="a_list" id="a_list" value="">

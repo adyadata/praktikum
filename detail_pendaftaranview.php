@@ -387,8 +387,6 @@ class cdetail_pendaftaran_view extends cdetail_pendaftaran {
 
 		// Setup export options
 		$this->SetupExportOptions();
-		$this->id_detailpendaftaran->SetVisibility();
-		$this->id_detailpendaftaran->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 		$this->fk_kodedaftar->SetVisibility();
 		$this->fk_jenis_praktikum->SetVisibility();
 		$this->biaya_bayar->SetVisibility();
@@ -1046,11 +1044,6 @@ class cdetail_pendaftaran_view extends cdetail_pendaftaran {
 		}
 		$this->persetujuan->ViewCustomAttributes = "";
 
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-			$this->id_detailpendaftaran->TooltipValue = "";
-
 			// fk_kodedaftar
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
@@ -1690,17 +1683,6 @@ $detail_pendaftaran_view->ShowMessage();
 <input type="hidden" name="modal" value="1">
 <?php } ?>
 <table class="table table-bordered table-striped ewViewTable">
-<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-	<tr id="r_id_detailpendaftaran">
-		<td><span id="elh_detail_pendaftaran_id_detailpendaftaran"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></span></td>
-		<td data-name="id_detailpendaftaran"<?php echo $detail_pendaftaran->id_detailpendaftaran->CellAttributes() ?>>
-<span id="el_detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 	<tr id="r_fk_kodedaftar">
 		<td><span id="elh_detail_pendaftaran_fk_kodedaftar"><?php echo $detail_pendaftaran->fk_kodedaftar->FldCaption() ?></span></td>

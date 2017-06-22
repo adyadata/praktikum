@@ -286,13 +286,9 @@ class cdetail_pendaftaran_delete extends cdetail_pendaftaran {
 			$Security->UserID_Loaded();
 		}
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_detailpendaftaran->SetVisibility();
-		$this->id_detailpendaftaran->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 		$this->fk_kodedaftar->SetVisibility();
 		$this->fk_jenis_praktikum->SetVisibility();
 		$this->biaya_bayar->SetVisibility();
-		$this->tgl_daftar_detail->SetVisibility();
-		$this->jam_daftar_detail->SetVisibility();
 		$this->status_praktikum->SetVisibility();
 		$this->id_kelompok->SetVisibility();
 		$this->id_jam_prak->SetVisibility();
@@ -797,11 +793,6 @@ class cdetail_pendaftaran_delete extends cdetail_pendaftaran {
 		}
 		$this->persetujuan->ViewCustomAttributes = "";
 
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-			$this->id_detailpendaftaran->TooltipValue = "";
-
 			// fk_kodedaftar
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
@@ -816,16 +807,6 @@ class cdetail_pendaftaran_delete extends cdetail_pendaftaran {
 			$this->biaya_bayar->LinkCustomAttributes = "";
 			$this->biaya_bayar->HrefValue = "";
 			$this->biaya_bayar->TooltipValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-			$this->tgl_daftar_detail->TooltipValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
-			$this->jam_daftar_detail->TooltipValue = "";
 
 			// status_praktikum
 			$this->status_praktikum->LinkCustomAttributes = "";
@@ -1196,9 +1177,6 @@ $detail_pendaftaran_delete->ShowMessage();
 <?php echo $detail_pendaftaran->TableCustomInnerHtml ?>
 	<thead>
 	<tr class="ewTableHeader">
-<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<th><span id="elh_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 		<th><span id="elh_detail_pendaftaran_fk_kodedaftar" class="detail_pendaftaran_fk_kodedaftar"><?php echo $detail_pendaftaran->fk_kodedaftar->FldCaption() ?></span></th>
 <?php } ?>
@@ -1207,12 +1185,6 @@ $detail_pendaftaran_delete->ShowMessage();
 <?php } ?>
 <?php if ($detail_pendaftaran->biaya_bayar->Visible) { // biaya_bayar ?>
 		<th><span id="elh_detail_pendaftaran_biaya_bayar" class="detail_pendaftaran_biaya_bayar"><?php echo $detail_pendaftaran->biaya_bayar->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<th><span id="elh_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail"><?php echo $detail_pendaftaran->tgl_daftar_detail->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<th><span id="elh_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail"><?php echo $detail_pendaftaran->jam_daftar_detail->FldCaption() ?></span></th>
 <?php } ?>
 <?php if ($detail_pendaftaran->status_praktikum->Visible) { // status_praktikum ?>
 		<th><span id="elh_detail_pendaftaran_status_praktikum" class="detail_pendaftaran_status_praktikum"><?php echo $detail_pendaftaran->status_praktikum->FldCaption() ?></span></th>
@@ -1262,14 +1234,6 @@ while (!$detail_pendaftaran_delete->Recordset->EOF) {
 	$detail_pendaftaran_delete->RenderRow();
 ?>
 	<tr<?php echo $detail_pendaftaran->RowAttributes() ?>>
-<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<td<?php echo $detail_pendaftaran->id_detailpendaftaran->CellAttributes() ?>>
-<span id="el<?php echo $detail_pendaftaran_delete->RowCnt ?>_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->id_detailpendaftaran->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 		<td<?php echo $detail_pendaftaran->fk_kodedaftar->CellAttributes() ?>>
 <span id="el<?php echo $detail_pendaftaran_delete->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="detail_pendaftaran_fk_kodedaftar">
@@ -1291,22 +1255,6 @@ while (!$detail_pendaftaran_delete->Recordset->EOF) {
 <span id="el<?php echo $detail_pendaftaran_delete->RowCnt ?>_detail_pendaftaran_biaya_bayar" class="detail_pendaftaran_biaya_bayar">
 <span<?php echo $detail_pendaftaran->biaya_bayar->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->biaya_bayar->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<td<?php echo $detail_pendaftaran->tgl_daftar_detail->CellAttributes() ?>>
-<span id="el<?php echo $detail_pendaftaran_delete->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail">
-<span<?php echo $detail_pendaftaran->tgl_daftar_detail->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->tgl_daftar_detail->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<td<?php echo $detail_pendaftaran->jam_daftar_detail->CellAttributes() ?>>
-<span id="el<?php echo $detail_pendaftaran_delete->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail">
-<span<?php echo $detail_pendaftaran->jam_daftar_detail->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->jam_daftar_detail->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

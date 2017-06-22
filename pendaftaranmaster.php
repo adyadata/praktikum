@@ -6,6 +6,7 @@
 // kelas_mahasiswa
 // semester_mahasiswa
 // total_biaya
+// foto
 
 ?>
 <?php if ($pendaftaran->Visible) { ?>
@@ -75,6 +76,18 @@
 <span id="el_pendaftaran_total_biaya">
 <span<?php echo $pendaftaran->total_biaya->ViewAttributes() ?>>
 <?php echo $pendaftaran->total_biaya->ListViewValue() ?></span>
+</span>
+</td>
+		</tr>
+<?php } ?>
+<?php if ($pendaftaran->foto->Visible) { // foto ?>
+		<tr id="r_foto">
+			<td><?php echo $pendaftaran->foto->FldCaption() ?></td>
+			<td<?php echo $pendaftaran->foto->CellAttributes() ?>>
+<span id="el_pendaftaran_foto">
+<span>
+<?php echo ew_GetFileViewTag($pendaftaran->foto, $pendaftaran->foto->ListViewValue()) ?>
+</span>
 </span>
 </td>
 		</tr>

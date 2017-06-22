@@ -366,9 +366,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			$Security->UserID_Loaded();
 		}
 
-		// Create form object
-		$objForm = new cFormObj();
-
 		// Get export parameters
 		$custom = "";
 		if (@$_GET["export"] <> "") {
@@ -417,13 +414,9 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 
 		// Setup export options
 		$this->SetupExportOptions();
-		$this->id_detailpendaftaran->SetVisibility();
-		$this->id_detailpendaftaran->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 		$this->fk_kodedaftar->SetVisibility();
 		$this->fk_jenis_praktikum->SetVisibility();
 		$this->biaya_bayar->SetVisibility();
-		$this->tgl_daftar_detail->SetVisibility();
-		$this->jam_daftar_detail->SetVisibility();
 		$this->status_praktikum->SetVisibility();
 		$this->id_kelompok->SetVisibility();
 		$this->id_jam_prak->SetVisibility();
@@ -598,71 +591,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			if ($this->Export == "")
 				$this->SetupBreadcrumb();
 
-			// Check QueryString parameters
-			if (@$_GET["a"] <> "") {
-				$this->CurrentAction = $_GET["a"];
-
-				// Clear inline mode
-				if ($this->CurrentAction == "cancel")
-					$this->ClearInlineMode();
-
-				// Switch to grid edit mode
-				if ($this->CurrentAction == "gridedit")
-					$this->GridEditMode();
-
-				// Switch to inline edit mode
-				if ($this->CurrentAction == "edit")
-					$this->InlineEditMode();
-
-				// Switch to inline add mode
-				if ($this->CurrentAction == "add" || $this->CurrentAction == "copy")
-					$this->InlineAddMode();
-
-				// Switch to grid add mode
-				if ($this->CurrentAction == "gridadd")
-					$this->GridAddMode();
-			} else {
-				if (@$_POST["a_list"] <> "") {
-					$this->CurrentAction = $_POST["a_list"]; // Get action
-
-					// Grid Update
-					if (($this->CurrentAction == "gridupdate" || $this->CurrentAction == "gridoverwrite") && @$_SESSION[EW_SESSION_INLINE_MODE] == "gridedit") {
-						if ($this->ValidateGridForm()) {
-							$bGridUpdate = $this->GridUpdate();
-						} else {
-							$bGridUpdate = FALSE;
-							$this->setFailureMessage($gsFormError);
-						}
-						if (!$bGridUpdate) {
-							$this->EventCancelled = TRUE;
-							$this->CurrentAction = "gridedit"; // Stay in Grid Edit mode
-						}
-					}
-
-					// Inline Update
-					if (($this->CurrentAction == "update" || $this->CurrentAction == "overwrite") && @$_SESSION[EW_SESSION_INLINE_MODE] == "edit")
-						$this->InlineUpdate();
-
-					// Insert Inline
-					if ($this->CurrentAction == "insert" && @$_SESSION[EW_SESSION_INLINE_MODE] == "add")
-						$this->InlineInsert();
-
-					// Grid Insert
-					if ($this->CurrentAction == "gridinsert" && @$_SESSION[EW_SESSION_INLINE_MODE] == "gridadd") {
-						if ($this->ValidateGridForm()) {
-							$bGridInsert = $this->GridInsert();
-						} else {
-							$bGridInsert = FALSE;
-							$this->setFailureMessage($gsFormError);
-						}
-						if (!$bGridInsert) {
-							$this->EventCancelled = TRUE;
-							$this->CurrentAction = "gridadd"; // Stay in Grid Add mode
-						}
-					}
-				}
-			}
-
 			// Hide list options
 			if ($this->Export <> "") {
 				$this->ListOptions->HideAllOptions(array("sequence"));
@@ -684,14 +612,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			if ($this->Export <> "") {
 				foreach ($this->OtherOptions as &$option)
 					$option->HideAllOptions();
-			}
-
-			// Show grid delete link for grid add / grid edit
-			if ($this->AllowAddDeleteRow) {
-				if ($this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit") {
-					$item = $this->ListOptions->GetItem("griddelete");
-					if ($item) $item->Visible = TRUE;
-				}
 			}
 
 			// Get default search criteria
@@ -842,235 +762,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		}
 	}
 
-	//  Exit inline mode
-	function ClearInlineMode() {
-		$this->setKey("id_detailpendaftaran", ""); // Clear inline edit key
-		$this->biaya_bayar->FormValue = ""; // Clear form value
-		$this->LastAction = $this->CurrentAction; // Save last action
-		$this->CurrentAction = ""; // Clear action
-		$_SESSION[EW_SESSION_INLINE_MODE] = ""; // Clear inline mode
-	}
-
-	// Switch to Grid Add mode
-	function GridAddMode() {
-		$_SESSION[EW_SESSION_INLINE_MODE] = "gridadd"; // Enabled grid add
-	}
-
-	// Switch to Grid Edit mode
-	function GridEditMode() {
-		$_SESSION[EW_SESSION_INLINE_MODE] = "gridedit"; // Enable grid edit
-	}
-
-	// Switch to Inline Edit mode
-	function InlineEditMode() {
-		global $Security, $Language;
-		if (!$Security->CanEdit())
-			$this->Page_Terminate("login.php"); // Go to login page
-		$bInlineEdit = TRUE;
-		if (@$_GET["id_detailpendaftaran"] <> "") {
-			$this->id_detailpendaftaran->setQueryStringValue($_GET["id_detailpendaftaran"]);
-		} else {
-			$bInlineEdit = FALSE;
-		}
-		if ($bInlineEdit) {
-			if ($this->LoadRow()) {
-				$this->setKey("id_detailpendaftaran", $this->id_detailpendaftaran->CurrentValue); // Set up inline edit key
-				$_SESSION[EW_SESSION_INLINE_MODE] = "edit"; // Enable inline edit
-			}
-		}
-	}
-
-	// Perform update to Inline Edit record
-	function InlineUpdate() {
-		global $Language, $objForm, $gsFormError;
-		$objForm->Index = 1; 
-		$this->LoadFormValues(); // Get form values
-
-		// Validate form
-		$bInlineUpdate = TRUE;
-		if (!$this->ValidateForm()) {	
-			$bInlineUpdate = FALSE; // Form error, reset action
-			$this->setFailureMessage($gsFormError);
-		} else {
-			$bInlineUpdate = FALSE;
-			$rowkey = strval($objForm->GetValue($this->FormKeyName));
-			if ($this->SetupKeyValues($rowkey)) { // Set up key values
-				if ($this->CheckInlineEditKey()) { // Check key
-					$this->SendEmail = TRUE; // Send email on update success
-					$bInlineUpdate = $this->EditRow(); // Update record
-				} else {
-					$bInlineUpdate = FALSE;
-				}
-			}
-		}
-		if ($bInlineUpdate) { // Update success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up success message
-			$this->ClearInlineMode(); // Clear inline edit mode
-		} else {
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("UpdateFailed")); // Set update failed message
-			$this->EventCancelled = TRUE; // Cancel event
-			$this->CurrentAction = "edit"; // Stay in edit mode
-		}
-	}
-
-	// Check Inline Edit key
-	function CheckInlineEditKey() {
-
-		//CheckInlineEditKey = True
-		if (strval($this->getKey("id_detailpendaftaran")) <> strval($this->id_detailpendaftaran->CurrentValue))
-			return FALSE;
-		return TRUE;
-	}
-
-	// Switch to Inline Add mode
-	function InlineAddMode() {
-		global $Security, $Language;
-		if (!$Security->CanAdd())
-			$this->Page_Terminate("login.php"); // Return to login page
-		if ($this->CurrentAction == "copy") {
-			if (@$_GET["id_detailpendaftaran"] <> "") {
-				$this->id_detailpendaftaran->setQueryStringValue($_GET["id_detailpendaftaran"]);
-				$this->setKey("id_detailpendaftaran", $this->id_detailpendaftaran->CurrentValue); // Set up key
-			} else {
-				$this->setKey("id_detailpendaftaran", ""); // Clear key
-				$this->CurrentAction = "add";
-			}
-		}
-		$_SESSION[EW_SESSION_INLINE_MODE] = "add"; // Enable inline add
-	}
-
-	// Perform update to Inline Add/Copy record
-	function InlineInsert() {
-		global $Language, $objForm, $gsFormError;
-		$this->LoadOldRecord(); // Load old recordset
-		$objForm->Index = 0;
-		$this->LoadFormValues(); // Get form values
-
-		// Validate form
-		if (!$this->ValidateForm()) {
-			$this->setFailureMessage($gsFormError); // Set validation error message
-			$this->EventCancelled = TRUE; // Set event cancelled
-			$this->CurrentAction = "add"; // Stay in add mode
-			return;
-		}
-		$this->SendEmail = TRUE; // Send email on add success
-		if ($this->AddRow($this->OldRecordset)) { // Add record
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up add success message
-			$this->ClearInlineMode(); // Clear inline add mode
-		} else { // Add failed
-			$this->EventCancelled = TRUE; // Set event cancelled
-			$this->CurrentAction = "add"; // Stay in add mode
-		}
-	}
-
-	// Perform update to grid
-	function GridUpdate() {
-		global $Language, $objForm, $gsFormError;
-		$bGridUpdate = TRUE;
-
-		// Get old recordset
-		$this->CurrentFilter = $this->BuildKeyFilter();
-		if ($this->CurrentFilter == "")
-			$this->CurrentFilter = "0=1";
-		$sSql = $this->SQL();
-		$conn = &$this->Connection();
-		if ($rs = $conn->Execute($sSql)) {
-			$rsold = $rs->GetRows();
-			$rs->Close();
-		}
-
-		// Call Grid Updating event
-		if (!$this->Grid_Updating($rsold)) {
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("GridEditCancelled")); // Set grid edit cancelled message
-			return FALSE;
-		}
-
-		// Begin transaction
-		$conn->BeginTrans();
-		if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateBegin")); // Batch update begin
-		$sKey = "";
-
-		// Update row index and get row key
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Update all rows based on key
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-			$objForm->Index = $rowindex;
-			$rowkey = strval($objForm->GetValue($this->FormKeyName));
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-
-			// Load all values and keys
-			if ($rowaction <> "insertdelete") { // Skip insert then deleted rows
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "" || $rowaction == "edit" || $rowaction == "delete") {
-					$bGridUpdate = $this->SetupKeyValues($rowkey); // Set up key values
-				} else {
-					$bGridUpdate = TRUE;
-				}
-
-				// Skip empty row
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// No action required
-				// Validate form and insert/update/delete record
-
-				} elseif ($bGridUpdate) {
-					if ($rowaction == "delete") {
-						$this->CurrentFilter = $this->KeyFilter();
-						$bGridUpdate = $this->DeleteRows(); // Delete this row
-					} else if (!$this->ValidateForm()) {
-						$bGridUpdate = FALSE; // Form error, reset action
-						$this->setFailureMessage($gsFormError);
-					} else {
-						if ($rowaction == "insert") {
-							$bGridUpdate = $this->AddRow(); // Insert this row
-						} else {
-							if ($rowkey <> "") {
-								$this->SendEmail = FALSE; // Do not send email on update success
-								$bGridUpdate = $this->EditRow(); // Update this row
-							}
-						} // End update
-					}
-				}
-				if ($bGridUpdate) {
-					if ($sKey <> "") $sKey .= ", ";
-					$sKey .= $rowkey;
-				} else {
-					break;
-				}
-			}
-		}
-		if ($bGridUpdate) {
-			$conn->CommitTrans(); // Commit transaction
-
-			// Get new recordset
-			if ($rs = $conn->Execute($sSql)) {
-				$rsnew = $rs->GetRows();
-				$rs->Close();
-			}
-
-			// Call Grid_Updated event
-			$this->Grid_Updated($rsold, $rsnew);
-			if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateSuccess")); // Batch update success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("UpdateSuccess")); // Set up update success message
-			$this->ClearInlineMode(); // Clear inline edit mode
-		} else {
-			$conn->RollbackTrans(); // Rollback transaction
-			if ($this->AuditTrailOnEdit) $this->WriteAuditTrailDummy($Language->Phrase("BatchUpdateRollback")); // Batch update rollback
-			if ($this->getFailureMessage() == "")
-				$this->setFailureMessage($Language->Phrase("UpdateFailed")); // Set update failed message
-		}
-		return $bGridUpdate;
-	}
-
 	// Build filter for all keys
 	function BuildKeyFilter() {
 		global $objForm;
@@ -1107,202 +798,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 				return FALSE;
 		}
 		return TRUE;
-	}
-
-	// Perform Grid Add
-	function GridInsert() {
-		global $Language, $objForm, $gsFormError;
-		$rowindex = 1;
-		$bGridInsert = FALSE;
-		$conn = &$this->Connection();
-
-		// Call Grid Inserting event
-		if (!$this->Grid_Inserting()) {
-			if ($this->getFailureMessage() == "") {
-				$this->setFailureMessage($Language->Phrase("GridAddCancelled")); // Set grid add cancelled message
-			}
-			return FALSE;
-		}
-
-		// Begin transaction
-		$conn->BeginTrans();
-
-		// Init key filter
-		$sWrkFilter = "";
-		$addcnt = 0;
-		if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertBegin")); // Batch insert begin
-		$sKey = "";
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Insert all rows
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "" && $rowaction <> "insert")
-				continue; // Skip
-			$this->LoadFormValues(); // Get form values
-			if (!$this->EmptyRow()) {
-				$addcnt++;
-				$this->SendEmail = FALSE; // Do not send email on insert success
-
-				// Validate form
-				if (!$this->ValidateForm()) {
-					$bGridInsert = FALSE; // Form error, reset action
-					$this->setFailureMessage($gsFormError);
-				} else {
-					$bGridInsert = $this->AddRow($this->OldRecordset); // Insert this row
-				}
-				if ($bGridInsert) {
-					if ($sKey <> "") $sKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-					$sKey .= $this->id_detailpendaftaran->CurrentValue;
-
-					// Add filter for this record
-					$sFilter = $this->KeyFilter();
-					if ($sWrkFilter <> "") $sWrkFilter .= " OR ";
-					$sWrkFilter .= $sFilter;
-				} else {
-					break;
-				}
-			}
-		}
-		if ($addcnt == 0) { // No record inserted
-			$this->setFailureMessage($Language->Phrase("NoAddRecord"));
-			$bGridInsert = FALSE;
-		}
-		if ($bGridInsert) {
-			$conn->CommitTrans(); // Commit transaction
-
-			// Get new recordset
-			$this->CurrentFilter = $sWrkFilter;
-			$sSql = $this->SQL();
-			if ($rs = $conn->Execute($sSql)) {
-				$rsnew = $rs->GetRows();
-				$rs->Close();
-			}
-
-			// Call Grid_Inserted event
-			$this->Grid_Inserted($rsnew);
-			if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertSuccess")); // Batch insert success
-			if ($this->getSuccessMessage() == "")
-				$this->setSuccessMessage($Language->Phrase("InsertSuccess")); // Set up insert success message
-			$this->ClearInlineMode(); // Clear grid add mode
-		} else {
-			$conn->RollbackTrans(); // Rollback transaction
-			if ($this->AuditTrailOnAdd) $this->WriteAuditTrailDummy($Language->Phrase("BatchInsertRollback")); // Batch insert rollback
-			if ($this->getFailureMessage() == "") {
-				$this->setFailureMessage($Language->Phrase("InsertFailed")); // Set insert failed message
-			}
-		}
-		return $bGridInsert;
-	}
-
-	// Check if empty row
-	function EmptyRow() {
-		global $objForm;
-		if ($objForm->HasValue("x_fk_kodedaftar") && $objForm->HasValue("o_fk_kodedaftar") && $this->fk_kodedaftar->CurrentValue <> $this->fk_kodedaftar->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_fk_jenis_praktikum") && $objForm->HasValue("o_fk_jenis_praktikum") && $this->fk_jenis_praktikum->CurrentValue <> $this->fk_jenis_praktikum->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_biaya_bayar") && $objForm->HasValue("o_biaya_bayar") && $this->biaya_bayar->CurrentValue <> $this->biaya_bayar->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_tgl_daftar_detail") && $objForm->HasValue("o_tgl_daftar_detail") && $this->tgl_daftar_detail->CurrentValue <> $this->tgl_daftar_detail->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_jam_daftar_detail") && $objForm->HasValue("o_jam_daftar_detail") && $this->jam_daftar_detail->CurrentValue <> $this->jam_daftar_detail->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_status_praktikum") && $objForm->HasValue("o_status_praktikum") && $this->status_praktikum->CurrentValue <> $this->status_praktikum->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_id_kelompok") && $objForm->HasValue("o_id_kelompok") && $this->id_kelompok->CurrentValue <> $this->id_kelompok->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_id_jam_prak") && $objForm->HasValue("o_id_jam_prak") && $this->id_jam_prak->CurrentValue <> $this->id_jam_prak->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_id_lab") && $objForm->HasValue("o_id_lab") && $this->id_lab->CurrentValue <> $this->id_lab->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_id_pngjar") && $objForm->HasValue("o_id_pngjar") && $this->id_pngjar->CurrentValue <> $this->id_pngjar->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_id_asisten") && $objForm->HasValue("o_id_asisten") && $this->id_asisten->CurrentValue <> $this->id_asisten->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_status_kelompok") && $objForm->HasValue("o_status_kelompok") && ew_ConvertToBool($this->status_kelompok->CurrentValue) <> ew_ConvertToBool($this->status_kelompok->OldValue))
-			return FALSE;
-		if ($objForm->HasValue("x_nilai_akhir") && $objForm->HasValue("o_nilai_akhir") && $this->nilai_akhir->CurrentValue <> $this->nilai_akhir->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_persetujuan") && $objForm->HasValue("o_persetujuan") && $this->persetujuan->CurrentValue <> $this->persetujuan->OldValue)
-			return FALSE;
-		return TRUE;
-	}
-
-	// Validate grid form
-	function ValidateGridForm() {
-		global $objForm;
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-
-		// Validate all records
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "delete" && $rowaction <> "insertdelete") {
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// Ignore
-				} else if (!$this->ValidateForm()) {
-					return FALSE;
-				}
-			}
-		}
-		return TRUE;
-	}
-
-	// Get all form values of the grid
-	function GetGridFormValues() {
-		global $objForm;
-
-		// Get row count
-		$objForm->Index = -1;
-		$rowcnt = strval($objForm->GetValue($this->FormKeyCountName));
-		if ($rowcnt == "" || !is_numeric($rowcnt))
-			$rowcnt = 0;
-		$rows = array();
-
-		// Loop through all records
-		for ($rowindex = 1; $rowindex <= $rowcnt; $rowindex++) {
-
-			// Load current row values
-			$objForm->Index = $rowindex;
-			$rowaction = strval($objForm->GetValue($this->FormActionName));
-			if ($rowaction <> "delete" && $rowaction <> "insertdelete") {
-				$this->LoadFormValues(); // Get form values
-				if ($rowaction == "insert" && $this->EmptyRow()) {
-
-					// Ignore
-				} else {
-					$rows[] = $this->GetFieldValues("FormValue"); // Return row as array
-				}
-			}
-		}
-		return $rows; // Return as array of array
-	}
-
-	// Restore form values for current row
-	function RestoreCurrentRowFormValues($idx) {
-		global $objForm;
-
-		// Get row based on current index
-		$objForm->Index = $idx;
-		$this->LoadFormValues(); // Load form values
 	}
 
 	// Get list of filters
@@ -1837,12 +1332,9 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = ew_StripSlashes(@$_GET["order"]);
 			$this->CurrentOrderType = @$_GET["ordertype"];
-			$this->UpdateSort($this->id_detailpendaftaran, $bCtrl); // id_detailpendaftaran
 			$this->UpdateSort($this->fk_kodedaftar, $bCtrl); // fk_kodedaftar
 			$this->UpdateSort($this->fk_jenis_praktikum, $bCtrl); // fk_jenis_praktikum
 			$this->UpdateSort($this->biaya_bayar, $bCtrl); // biaya_bayar
-			$this->UpdateSort($this->tgl_daftar_detail, $bCtrl); // tgl_daftar_detail
-			$this->UpdateSort($this->jam_daftar_detail, $bCtrl); // jam_daftar_detail
 			$this->UpdateSort($this->status_praktikum, $bCtrl); // status_praktikum
 			$this->UpdateSort($this->id_kelompok, $bCtrl); // id_kelompok
 			$this->UpdateSort($this->id_jam_prak, $bCtrl); // id_jam_prak
@@ -1893,12 +1385,9 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
 				$this->setSessionOrderByList($sOrderBy);
-				$this->id_detailpendaftaran->setSort("");
 				$this->fk_kodedaftar->setSort("");
 				$this->fk_jenis_praktikum->setSort("");
 				$this->biaya_bayar->setSort("");
-				$this->tgl_daftar_detail->setSort("");
-				$this->jam_daftar_detail->setSort("");
 				$this->status_praktikum->setSort("");
 				$this->id_kelompok->setSort("");
 				$this->id_jam_prak->setSort("");
@@ -1919,14 +1408,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 	// Set up list options
 	function SetupListOptions() {
 		global $Security, $Language;
-
-		// "griddelete"
-		if ($this->AllowAddDeleteRow) {
-			$item = &$this->ListOptions->Add("griddelete");
-			$item->CssStyle = "white-space: nowrap;";
-			$item->OnLeft = TRUE;
-			$item->Visible = FALSE; // Default hidden
-		}
 
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
@@ -1998,66 +1479,9 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		global $Security, $Language, $objForm;
 		$this->ListOptions->LoadDefault();
 
-		// Set up row action and key
-		if (is_numeric($this->RowIndex) && $this->CurrentMode <> "view") {
-			$objForm->Index = $this->RowIndex;
-			$ActionName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormActionName);
-			$OldKeyName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormOldKeyName);
-			$KeyName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormKeyName);
-			$BlankRowName = str_replace("k_", "k" . $this->RowIndex . "_", $this->FormBlankRowName);
-			if ($this->RowAction <> "")
-				$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $ActionName . "\" id=\"" . $ActionName . "\" value=\"" . $this->RowAction . "\">";
-			if ($this->RowAction == "delete") {
-				$rowkey = $objForm->GetValue($this->FormKeyName);
-				$this->SetupKeyValues($rowkey);
-			}
-			if ($this->RowAction == "insert" && $this->CurrentAction == "F" && $this->EmptyRow())
-				$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $BlankRowName . "\" id=\"" . $BlankRowName . "\" value=\"1\">";
-		}
-
-		// "delete"
-		if ($this->AllowAddDeleteRow) {
-			if ($this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit") {
-				$option = &$this->ListOptions;
-				$option->UseButtonGroup = TRUE; // Use button group for grid delete button
-				$option->UseImageAndText = TRUE; // Use image and text for grid delete button
-				$oListOpt = &$option->Items["griddelete"];
-				if (!$Security->CanDelete() && is_numeric($this->RowIndex) && ($this->RowAction == "" || $this->RowAction == "edit")) { // Do not allow delete existing record
-					$oListOpt->Body = "&nbsp;";
-				} else {
-					$oListOpt->Body = "<a class=\"ewGridLink ewGridDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" onclick=\"return ew_DeleteGridRow(this, " . $this->RowIndex . ");\">" . $Language->Phrase("DeleteLink") . "</a>";
-				}
-			}
-		}
-
 		// "sequence"
 		$oListOpt = &$this->ListOptions->Items["sequence"];
 		$oListOpt->Body = ew_FormatSeqNo($this->RecCnt);
-
-		// "copy"
-		$oListOpt = &$this->ListOptions->Items["copy"];
-		if (($this->CurrentAction == "add" || $this->CurrentAction == "copy") && $this->RowType == EW_ROWTYPE_ADD) { // Inline Add/Copy
-			$this->ListOptions->CustomItem = "copy"; // Show copy column only
-			$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-			$oListOpt->Body = "<div" . (($oListOpt->OnLeft) ? " style=\"text-align: right\"" : "") . ">" .
-				"<a class=\"ewGridLink ewInlineInsert\" title=\"" . ew_HtmlTitle($Language->Phrase("InsertLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InsertLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . $this->PageName() . "');\">" . $Language->Phrase("InsertLink") . "</a>&nbsp;" .
-				"<a class=\"ewGridLink ewInlineCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("CancelLink") . "</a>" .
-				"<input type=\"hidden\" name=\"a_list\" id=\"a_list\" value=\"insert\"></div>";
-			return;
-		}
-
-		// "edit"
-		$oListOpt = &$this->ListOptions->Items["edit"];
-		if ($this->CurrentAction == "edit" && $this->RowType == EW_ROWTYPE_EDIT) { // Inline-Edit
-			$this->ListOptions->CustomItem = "edit"; // Show edit column only
-			$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-				$oListOpt->Body = "<div" . (($oListOpt->OnLeft) ? " style=\"text-align: right\"" : "") . ">" .
-					"<a class=\"ewGridLink ewInlineUpdate\" title=\"" . ew_HtmlTitle($Language->Phrase("UpdateLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("UpdateLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . ew_GetHashUrl($this->PageName(), $this->PageObjName . "_row_" . $this->RowCnt) . "');\">" . $Language->Phrase("UpdateLink") . "</a>&nbsp;" .
-					"<a class=\"ewGridLink ewInlineCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("CancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("CancelLink") . "</a>" .
-					"<input type=\"hidden\" name=\"a_list\" id=\"a_list\" value=\"update\"></div>";
-			$oListOpt->Body .= "<input type=\"hidden\" name=\"k" . $this->RowIndex . "_key\" id=\"k" . $this->RowIndex . "_key\" value=\"" . ew_HtmlEncode($this->id_detailpendaftaran->CurrentValue) . "\">";
-			return;
-		}
 
 		// "view"
 		$oListOpt = &$this->ListOptions->Items["view"];
@@ -2073,7 +1497,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		$editcaption = ew_HtmlTitle($Language->Phrase("EditLink"));
 		if ($Security->CanEdit()) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
-			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineEditLink")) . "\" href=\"" . ew_HtmlEncode(ew_GetHashUrl($this->InlineEditUrl, $this->PageObjName . "_row_" . $this->RowCnt)) . "\">" . $Language->Phrase("InlineEditLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
 		}
@@ -2083,7 +1506,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		$copycaption = ew_HtmlTitle($Language->Phrase("CopyLink"));
 		if ($Security->CanAdd()) {
 			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . $copycaption . "\" data-caption=\"" . $copycaption . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
-			$oListOpt->Body .= "<a class=\"ewRowLink ewInlineCopy\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineCopyUrl) . "\">" . $Language->Phrase("InlineCopyLink") . "</a>";
 		} else {
 			$oListOpt->Body = "";
 		}
@@ -2120,9 +1542,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
 		$oListOpt->Body = "<input type=\"checkbox\" name=\"key_m[]\" value=\"" . ew_HtmlEncode($this->id_detailpendaftaran->CurrentValue) . "\" onclick='ew_ClickMultiCheckbox(event);'>";
-		if ($this->CurrentAction == "gridedit" && is_numeric($this->RowIndex)) {
-			$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $KeyName . "\" id=\"" . $KeyName . "\" value=\"" . $this->id_detailpendaftaran->CurrentValue . "\">";
-		}
 		$this->RenderListOptionsExt();
 
 		// Call ListOptions_Rendered event
@@ -2140,20 +1559,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "" && $Security->CanAdd());
-
-		// Inline Add
-		$item = &$option->Add("inlineadd");
-		$item->Body = "<a class=\"ewAddEdit ewInlineAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("InlineAddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("InlineAddLink")) . "\" href=\"" . ew_HtmlEncode($this->InlineAddUrl) . "\">" .$Language->Phrase("InlineAddLink") . "</a>";
-		$item->Visible = ($this->InlineAddUrl <> "" && $Security->CanAdd());
-		$item = &$option->Add("gridadd");
-		$item->Body = "<a class=\"ewAddEdit ewGridAdd\" title=\"" . ew_HtmlTitle($Language->Phrase("GridAddLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridAddLink")) . "\" href=\"" . ew_HtmlEncode($this->GridAddUrl) . "\">" . $Language->Phrase("GridAddLink") . "</a>";
-		$item->Visible = ($this->GridAddUrl <> "" && $Security->CanAdd());
-
-		// Add grid edit
-		$option = $options["addedit"];
-		$item = &$option->Add("gridedit");
-		$item->Body = "<a class=\"ewAddEdit ewGridEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("GridEditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GridEditUrl) . "\">" . $Language->Phrase("GridEditLink") . "</a>";
-		$item->Visible = ($this->GridEditUrl <> "" && $Security->CanEdit());
 		$option = $options["action"];
 
 		// Add multi delete
@@ -2196,7 +1601,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 	function RenderOtherOptions() {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
-		if ($this->CurrentAction <> "gridadd" && $this->CurrentAction <> "gridedit") { // Not grid add/edit mode
 			$option = &$options["action"];
 
 			// Set up list action buttons
@@ -2218,56 +1622,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 				$option = &$options["action"];
 				$option->HideAllOptions();
 			}
-		} else { // Grid add/edit mode
-
-			// Hide all options first
-			foreach ($options as &$option)
-				$option->HideAllOptions();
-			if ($this->CurrentAction == "gridadd") {
-				if ($this->AllowAddDeleteRow) {
-
-					// Add add blank row
-					$option = &$options["addedit"];
-					$option->UseDropDownButton = FALSE;
-					$option->UseImageAndText = TRUE;
-					$item = &$option->Add("addblankrow");
-					$item->Body = "<a class=\"ewAddEdit ewAddBlankRow\" title=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" href=\"javascript:void(0);\" onclick=\"ew_AddGridRow(this);\">" . $Language->Phrase("AddBlankRow") . "</a>";
-					$item->Visible = $Security->CanAdd();
-				}
-				$option = &$options["action"];
-				$option->UseDropDownButton = FALSE;
-				$option->UseImageAndText = TRUE;
-
-				// Add grid insert
-				$item = &$option->Add("gridinsert");
-				$item->Body = "<a class=\"ewAction ewGridInsert\" title=\"" . ew_HtmlTitle($Language->Phrase("GridInsertLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridInsertLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . $this->PageName() . "');\">" . $Language->Phrase("GridInsertLink") . "</a>";
-
-				// Add grid cancel
-				$item = &$option->Add("gridcancel");
-				$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-				$item->Body = "<a class=\"ewAction ewGridCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("GridCancelLink") . "</a>";
-			}
-			if ($this->CurrentAction == "gridedit") {
-				if ($this->AllowAddDeleteRow) {
-
-					// Add add blank row
-					$option = &$options["addedit"];
-					$option->UseDropDownButton = FALSE;
-					$option->UseImageAndText = TRUE;
-					$item = &$option->Add("addblankrow");
-					$item->Body = "<a class=\"ewAddEdit ewAddBlankRow\" title=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("AddBlankRow")) . "\" href=\"javascript:void(0);\" onclick=\"ew_AddGridRow(this);\">" . $Language->Phrase("AddBlankRow") . "</a>";
-					$item->Visible = $Security->CanAdd();
-				}
-				$option = &$options["action"];
-				$option->UseDropDownButton = FALSE;
-				$option->UseImageAndText = TRUE;
-					$item = &$option->Add("gridsave");
-					$item->Body = "<a class=\"ewAction ewGridSave\" title=\"" . ew_HtmlTitle($Language->Phrase("GridSaveLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridSaveLink")) . "\" href=\"\" onclick=\"return ewForms(this).Submit('" . $this->PageName() . "');\">" . $Language->Phrase("GridSaveLink") . "</a>";
-					$item = &$option->Add("gridcancel");
-					$cancelurl = $this->AddMasterUrl($this->PageUrl() . "a=cancel");
-					$item->Body = "<a class=\"ewAction ewGridCancel\" title=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("GridCancelLink")) . "\" href=\"" . $cancelurl . "\">" . $Language->Phrase("GridCancelLink") . "</a>";
-			}
-		}
 	}
 
 	// Process list action
@@ -2432,40 +1786,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		}
 	}
 
-	// Load default values
-	function LoadDefaultValues() {
-		$this->id_detailpendaftaran->CurrentValue = NULL;
-		$this->id_detailpendaftaran->OldValue = $this->id_detailpendaftaran->CurrentValue;
-		$this->fk_kodedaftar->CurrentValue = NULL;
-		$this->fk_kodedaftar->OldValue = $this->fk_kodedaftar->CurrentValue;
-		$this->fk_jenis_praktikum->CurrentValue = NULL;
-		$this->fk_jenis_praktikum->OldValue = $this->fk_jenis_praktikum->CurrentValue;
-		$this->biaya_bayar->CurrentValue = NULL;
-		$this->biaya_bayar->OldValue = $this->biaya_bayar->CurrentValue;
-		$this->tgl_daftar_detail->CurrentValue = NULL;
-		$this->tgl_daftar_detail->OldValue = $this->tgl_daftar_detail->CurrentValue;
-		$this->jam_daftar_detail->CurrentValue = NULL;
-		$this->jam_daftar_detail->OldValue = $this->jam_daftar_detail->CurrentValue;
-		$this->status_praktikum->CurrentValue = NULL;
-		$this->status_praktikum->OldValue = $this->status_praktikum->CurrentValue;
-		$this->id_kelompok->CurrentValue = NULL;
-		$this->id_kelompok->OldValue = $this->id_kelompok->CurrentValue;
-		$this->id_jam_prak->CurrentValue = NULL;
-		$this->id_jam_prak->OldValue = $this->id_jam_prak->CurrentValue;
-		$this->id_lab->CurrentValue = NULL;
-		$this->id_lab->OldValue = $this->id_lab->CurrentValue;
-		$this->id_pngjar->CurrentValue = NULL;
-		$this->id_pngjar->OldValue = $this->id_pngjar->CurrentValue;
-		$this->id_asisten->CurrentValue = NULL;
-		$this->id_asisten->OldValue = $this->id_asisten->CurrentValue;
-		$this->status_kelompok->CurrentValue = NULL;
-		$this->status_kelompok->OldValue = $this->status_kelompok->CurrentValue;
-		$this->nilai_akhir->CurrentValue = NULL;
-		$this->nilai_akhir->OldValue = $this->nilai_akhir->CurrentValue;
-		$this->persetujuan->CurrentValue = NULL;
-		$this->persetujuan->OldValue = $this->persetujuan->CurrentValue;
-	}
-
 	// Load basic search values
 	function LoadBasicSearchValues() {
 		$this->BasicSearch->Keyword = @$_GET[EW_TABLE_BASIC_SEARCH];
@@ -2555,96 +1875,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		$this->persetujuan->AdvancedSearch->SearchValue = ew_StripSlashes(@$_GET["x_persetujuan"]);
 		if ($this->persetujuan->AdvancedSearch->SearchValue <> "") $this->Command = "search";
 		$this->persetujuan->AdvancedSearch->SearchOperator = @$_GET["z_persetujuan"];
-	}
-
-	// Load form values
-	function LoadFormValues() {
-
-		// Load from form
-		global $objForm;
-		if (!$this->id_detailpendaftaran->FldIsDetailKey && $this->CurrentAction <> "gridadd" && $this->CurrentAction <> "add")
-			$this->id_detailpendaftaran->setFormValue($objForm->GetValue("x_id_detailpendaftaran"));
-		if (!$this->fk_kodedaftar->FldIsDetailKey) {
-			$this->fk_kodedaftar->setFormValue($objForm->GetValue("x_fk_kodedaftar"));
-		}
-		$this->fk_kodedaftar->setOldValue($objForm->GetValue("o_fk_kodedaftar"));
-		if (!$this->fk_jenis_praktikum->FldIsDetailKey) {
-			$this->fk_jenis_praktikum->setFormValue($objForm->GetValue("x_fk_jenis_praktikum"));
-		}
-		$this->fk_jenis_praktikum->setOldValue($objForm->GetValue("o_fk_jenis_praktikum"));
-		if (!$this->biaya_bayar->FldIsDetailKey) {
-			$this->biaya_bayar->setFormValue($objForm->GetValue("x_biaya_bayar"));
-		}
-		$this->biaya_bayar->setOldValue($objForm->GetValue("o_biaya_bayar"));
-		if (!$this->tgl_daftar_detail->FldIsDetailKey) {
-			$this->tgl_daftar_detail->setFormValue($objForm->GetValue("x_tgl_daftar_detail"));
-			$this->tgl_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0);
-		}
-		$this->tgl_daftar_detail->setOldValue($objForm->GetValue("o_tgl_daftar_detail"));
-		if (!$this->jam_daftar_detail->FldIsDetailKey) {
-			$this->jam_daftar_detail->setFormValue($objForm->GetValue("x_jam_daftar_detail"));
-			$this->jam_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_detail->CurrentValue, 4);
-		}
-		$this->jam_daftar_detail->setOldValue($objForm->GetValue("o_jam_daftar_detail"));
-		if (!$this->status_praktikum->FldIsDetailKey) {
-			$this->status_praktikum->setFormValue($objForm->GetValue("x_status_praktikum"));
-		}
-		$this->status_praktikum->setOldValue($objForm->GetValue("o_status_praktikum"));
-		if (!$this->id_kelompok->FldIsDetailKey) {
-			$this->id_kelompok->setFormValue($objForm->GetValue("x_id_kelompok"));
-		}
-		$this->id_kelompok->setOldValue($objForm->GetValue("o_id_kelompok"));
-		if (!$this->id_jam_prak->FldIsDetailKey) {
-			$this->id_jam_prak->setFormValue($objForm->GetValue("x_id_jam_prak"));
-		}
-		$this->id_jam_prak->setOldValue($objForm->GetValue("o_id_jam_prak"));
-		if (!$this->id_lab->FldIsDetailKey) {
-			$this->id_lab->setFormValue($objForm->GetValue("x_id_lab"));
-		}
-		$this->id_lab->setOldValue($objForm->GetValue("o_id_lab"));
-		if (!$this->id_pngjar->FldIsDetailKey) {
-			$this->id_pngjar->setFormValue($objForm->GetValue("x_id_pngjar"));
-		}
-		$this->id_pngjar->setOldValue($objForm->GetValue("o_id_pngjar"));
-		if (!$this->id_asisten->FldIsDetailKey) {
-			$this->id_asisten->setFormValue($objForm->GetValue("x_id_asisten"));
-		}
-		$this->id_asisten->setOldValue($objForm->GetValue("o_id_asisten"));
-		if (!$this->status_kelompok->FldIsDetailKey) {
-			$this->status_kelompok->setFormValue($objForm->GetValue("x_status_kelompok"));
-		}
-		$this->status_kelompok->setOldValue($objForm->GetValue("o_status_kelompok"));
-		if (!$this->nilai_akhir->FldIsDetailKey) {
-			$this->nilai_akhir->setFormValue($objForm->GetValue("x_nilai_akhir"));
-		}
-		$this->nilai_akhir->setOldValue($objForm->GetValue("o_nilai_akhir"));
-		if (!$this->persetujuan->FldIsDetailKey) {
-			$this->persetujuan->setFormValue($objForm->GetValue("x_persetujuan"));
-		}
-		$this->persetujuan->setOldValue($objForm->GetValue("o_persetujuan"));
-	}
-
-	// Restore form values
-	function RestoreFormValues() {
-		global $objForm;
-		if ($this->CurrentAction <> "gridadd" && $this->CurrentAction <> "add")
-			$this->id_detailpendaftaran->CurrentValue = $this->id_detailpendaftaran->FormValue;
-		$this->fk_kodedaftar->CurrentValue = $this->fk_kodedaftar->FormValue;
-		$this->fk_jenis_praktikum->CurrentValue = $this->fk_jenis_praktikum->FormValue;
-		$this->biaya_bayar->CurrentValue = $this->biaya_bayar->FormValue;
-		$this->tgl_daftar_detail->CurrentValue = $this->tgl_daftar_detail->FormValue;
-		$this->tgl_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0);
-		$this->jam_daftar_detail->CurrentValue = $this->jam_daftar_detail->FormValue;
-		$this->jam_daftar_detail->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_detail->CurrentValue, 4);
-		$this->status_praktikum->CurrentValue = $this->status_praktikum->FormValue;
-		$this->id_kelompok->CurrentValue = $this->id_kelompok->FormValue;
-		$this->id_jam_prak->CurrentValue = $this->id_jam_prak->FormValue;
-		$this->id_lab->CurrentValue = $this->id_lab->FormValue;
-		$this->id_pngjar->CurrentValue = $this->id_pngjar->FormValue;
-		$this->id_asisten->CurrentValue = $this->id_asisten->FormValue;
-		$this->status_kelompok->CurrentValue = $this->status_kelompok->FormValue;
-		$this->nilai_akhir->CurrentValue = $this->nilai_akhir->FormValue;
-		$this->persetujuan->CurrentValue = $this->persetujuan->FormValue;
 	}
 
 	// Load recordset
@@ -3049,11 +2279,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		}
 		$this->persetujuan->ViewCustomAttributes = "";
 
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-			$this->id_detailpendaftaran->TooltipValue = "";
-
 			// fk_kodedaftar
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
@@ -3068,16 +2293,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			$this->biaya_bayar->LinkCustomAttributes = "";
 			$this->biaya_bayar->HrefValue = "";
 			$this->biaya_bayar->TooltipValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-			$this->tgl_daftar_detail->TooltipValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
-			$this->jam_daftar_detail->TooltipValue = "";
 
 			// status_praktikum
 			$this->status_praktikum->LinkCustomAttributes = "";
@@ -3123,553 +2338,7 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			$this->persetujuan->LinkCustomAttributes = "";
 			$this->persetujuan->HrefValue = "";
 			$this->persetujuan->TooltipValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
-
-			// id_detailpendaftaran
-			// fk_kodedaftar
-
-			$this->fk_kodedaftar->EditAttrs["class"] = "form-control";
-			$this->fk_kodedaftar->EditCustomAttributes = "";
-			if ($this->fk_kodedaftar->getSessionValue() <> "") {
-				$this->fk_kodedaftar->CurrentValue = $this->fk_kodedaftar->getSessionValue();
-				$this->fk_kodedaftar->OldValue = $this->fk_kodedaftar->CurrentValue;
-			$this->fk_kodedaftar->ViewValue = $this->fk_kodedaftar->CurrentValue;
-			$this->fk_kodedaftar->ViewCustomAttributes = "";
-			} else {
-			$this->fk_kodedaftar->EditValue = ew_HtmlEncode($this->fk_kodedaftar->CurrentValue);
-			$this->fk_kodedaftar->PlaceHolder = ew_RemoveHtml($this->fk_kodedaftar->FldCaption());
-			}
-
-			// fk_jenis_praktikum
-			$this->fk_jenis_praktikum->EditCustomAttributes = "";
-			if (trim(strval($this->fk_jenis_praktikum->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`kode_praktikum`" . ew_SearchString("=", $this->fk_jenis_praktikum->CurrentValue, EW_DATATYPE_STRING, "");
-			}
-			$sSqlWrk = "SELECT `kode_praktikum`, `jenis_praktikum` AS `DispFld`, `semester` AS `Disp2Fld`, `biaya` AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `praktikum`";
-			$sWhereWrk = "";
-			$this->fk_jenis_praktikum->LookupFilters = array("dx1" => '`jenis_praktikum`', "dx2" => '`semester`', "dx3" => '`biaya`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->fk_jenis_praktikum, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$arwrk[2] = ew_HtmlEncode($rswrk->fields('Disp2Fld'));
-				$arwrk[3] = ew_HtmlEncode($rswrk->fields('Disp3Fld'));
-				$this->fk_jenis_praktikum->ViewValue = $this->fk_jenis_praktikum->DisplayValue($arwrk);
-			} else {
-				$this->fk_jenis_praktikum->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->fk_jenis_praktikum->EditValue = $arwrk;
-
-			// biaya_bayar
-			$this->biaya_bayar->EditAttrs["class"] = "form-control";
-			$this->biaya_bayar->EditCustomAttributes = "";
-			$this->biaya_bayar->EditValue = ew_HtmlEncode($this->biaya_bayar->CurrentValue);
-			$this->biaya_bayar->PlaceHolder = ew_RemoveHtml($this->biaya_bayar->FldCaption());
-			if (strval($this->biaya_bayar->EditValue) <> "" && is_numeric($this->biaya_bayar->EditValue)) {
-			$this->biaya_bayar->EditValue = ew_FormatNumber($this->biaya_bayar->EditValue, -2, -1, -2, 0);
-			$this->biaya_bayar->OldValue = $this->biaya_bayar->EditValue;
-			}
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_detail->EditCustomAttributes = "";
-			$this->tgl_daftar_detail->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl_daftar_detail->CurrentValue, 8));
-			$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_detail->EditCustomAttributes = "";
-			$this->jam_daftar_detail->EditValue = ew_HtmlEncode($this->jam_daftar_detail->CurrentValue);
-			$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
-
-			// status_praktikum
-			$this->status_praktikum->EditCustomAttributes = "";
-			$this->status_praktikum->EditValue = $this->status_praktikum->Options(FALSE);
-
-			// id_kelompok
-			$this->id_kelompok->EditCustomAttributes = "";
-			if (trim(strval($this->id_kelompok->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_kelompok`" . ew_SearchString("=", $this->id_kelompok->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_kelompok`, `nama_kelompok` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_nama_kelompok`";
-			$sWhereWrk = "";
-			$this->id_kelompok->LookupFilters = array("dx1" => '`nama_kelompok`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_kelompok, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_kelompok->ViewValue = $this->id_kelompok->DisplayValue($arwrk);
-			} else {
-				$this->id_kelompok->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_kelompok->EditValue = $arwrk;
-
-			// id_jam_prak
-			$this->id_jam_prak->EditCustomAttributes = "";
-			if (trim(strval($this->id_jam_prak->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_jam_praktikum`" . ew_SearchString("=", $this->id_jam_prak->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_jam_praktikum`, `jam_praktikum` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_jam_praktikum`";
-			$sWhereWrk = "";
-			$this->id_jam_prak->LookupFilters = array("dx1" => '`jam_praktikum`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_jam_prak, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_jam_prak->ViewValue = $this->id_jam_prak->DisplayValue($arwrk);
-			} else {
-				$this->id_jam_prak->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_jam_prak->EditValue = $arwrk;
-
-			// id_lab
-			$this->id_lab->EditCustomAttributes = "";
-			if (trim(strval($this->id_lab->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_lab`" . ew_SearchString("=", $this->id_lab->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_lab`, `nama_lab` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_lab`";
-			$sWhereWrk = "";
-			$this->id_lab->LookupFilters = array("dx1" => '`nama_lab`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_lab, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_lab->ViewValue = $this->id_lab->DisplayValue($arwrk);
-			} else {
-				$this->id_lab->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_lab->EditValue = $arwrk;
-
-			// id_pngjar
-			$this->id_pngjar->EditCustomAttributes = "";
-			if (trim(strval($this->id_pngjar->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`kode_pengajar`" . ew_SearchString("=", $this->id_pngjar->CurrentValue, EW_DATATYPE_STRING, "");
-			}
-			$sSqlWrk = "SELECT `kode_pengajar`, `nama_pngajar` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_pengajar`";
-			$sWhereWrk = "";
-			$this->id_pngjar->LookupFilters = array("dx1" => '`nama_pngajar`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_pngjar, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_pngjar->ViewValue = $this->id_pngjar->DisplayValue($arwrk);
-			} else {
-				$this->id_pngjar->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_pngjar->EditValue = $arwrk;
-
-			// id_asisten
-			$this->id_asisten->EditCustomAttributes = "";
-			if (trim(strval($this->id_asisten->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`kode_asisten`" . ew_SearchString("=", $this->id_asisten->CurrentValue, EW_DATATYPE_STRING, "");
-			}
-			$sSqlWrk = "SELECT `kode_asisten`, `nama_asisten` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_asisten_pengajar`";
-			$sWhereWrk = "";
-			$this->id_asisten->LookupFilters = array("dx1" => '`nama_asisten`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_asisten, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_asisten->ViewValue = $this->id_asisten->DisplayValue($arwrk);
-			} else {
-				$this->id_asisten->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_asisten->EditValue = $arwrk;
-
-			// status_kelompok
-			$this->status_kelompok->EditCustomAttributes = "";
-			$this->status_kelompok->EditValue = $this->status_kelompok->Options(FALSE);
-
-			// nilai_akhir
-			$this->nilai_akhir->EditCustomAttributes = "";
-			$this->nilai_akhir->EditValue = $this->nilai_akhir->Options(FALSE);
-
-			// persetujuan
-			$this->persetujuan->EditCustomAttributes = "";
-			$this->persetujuan->EditValue = $this->persetujuan->Options(FALSE);
-
-			// Add refer script
-			// id_detailpendaftaran
-
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-
-			// fk_kodedaftar
-			$this->fk_kodedaftar->LinkCustomAttributes = "";
-			$this->fk_kodedaftar->HrefValue = "";
-
-			// fk_jenis_praktikum
-			$this->fk_jenis_praktikum->LinkCustomAttributes = "";
-			$this->fk_jenis_praktikum->HrefValue = "";
-
-			// biaya_bayar
-			$this->biaya_bayar->LinkCustomAttributes = "";
-			$this->biaya_bayar->HrefValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
-
-			// status_praktikum
-			$this->status_praktikum->LinkCustomAttributes = "";
-			$this->status_praktikum->HrefValue = "";
-
-			// id_kelompok
-			$this->id_kelompok->LinkCustomAttributes = "";
-			$this->id_kelompok->HrefValue = "";
-
-			// id_jam_prak
-			$this->id_jam_prak->LinkCustomAttributes = "";
-			$this->id_jam_prak->HrefValue = "";
-
-			// id_lab
-			$this->id_lab->LinkCustomAttributes = "";
-			$this->id_lab->HrefValue = "";
-
-			// id_pngjar
-			$this->id_pngjar->LinkCustomAttributes = "";
-			$this->id_pngjar->HrefValue = "";
-
-			// id_asisten
-			$this->id_asisten->LinkCustomAttributes = "";
-			$this->id_asisten->HrefValue = "";
-
-			// status_kelompok
-			$this->status_kelompok->LinkCustomAttributes = "";
-			$this->status_kelompok->HrefValue = "";
-
-			// nilai_akhir
-			$this->nilai_akhir->LinkCustomAttributes = "";
-			$this->nilai_akhir->HrefValue = "";
-
-			// persetujuan
-			$this->persetujuan->LinkCustomAttributes = "";
-			$this->persetujuan->HrefValue = "";
-		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
-
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->EditAttrs["class"] = "form-control";
-			$this->id_detailpendaftaran->EditCustomAttributes = "";
-			$this->id_detailpendaftaran->EditValue = $this->id_detailpendaftaran->CurrentValue;
-			$this->id_detailpendaftaran->ViewCustomAttributes = "";
-
-			// fk_kodedaftar
-			$this->fk_kodedaftar->EditAttrs["class"] = "form-control";
-			$this->fk_kodedaftar->EditCustomAttributes = "";
-			if ($this->fk_kodedaftar->getSessionValue() <> "") {
-				$this->fk_kodedaftar->CurrentValue = $this->fk_kodedaftar->getSessionValue();
-				$this->fk_kodedaftar->OldValue = $this->fk_kodedaftar->CurrentValue;
-			$this->fk_kodedaftar->ViewValue = $this->fk_kodedaftar->CurrentValue;
-			$this->fk_kodedaftar->ViewCustomAttributes = "";
-			} else {
-			$this->fk_kodedaftar->EditValue = ew_HtmlEncode($this->fk_kodedaftar->CurrentValue);
-			$this->fk_kodedaftar->PlaceHolder = ew_RemoveHtml($this->fk_kodedaftar->FldCaption());
-			}
-
-			// fk_jenis_praktikum
-			$this->fk_jenis_praktikum->EditCustomAttributes = "";
-			if (trim(strval($this->fk_jenis_praktikum->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`kode_praktikum`" . ew_SearchString("=", $this->fk_jenis_praktikum->CurrentValue, EW_DATATYPE_STRING, "");
-			}
-			$sSqlWrk = "SELECT `kode_praktikum`, `jenis_praktikum` AS `DispFld`, `semester` AS `Disp2Fld`, `biaya` AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `praktikum`";
-			$sWhereWrk = "";
-			$this->fk_jenis_praktikum->LookupFilters = array("dx1" => '`jenis_praktikum`', "dx2" => '`semester`', "dx3" => '`biaya`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->fk_jenis_praktikum, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$arwrk[2] = ew_HtmlEncode($rswrk->fields('Disp2Fld'));
-				$arwrk[3] = ew_HtmlEncode($rswrk->fields('Disp3Fld'));
-				$this->fk_jenis_praktikum->ViewValue = $this->fk_jenis_praktikum->DisplayValue($arwrk);
-			} else {
-				$this->fk_jenis_praktikum->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->fk_jenis_praktikum->EditValue = $arwrk;
-
-			// biaya_bayar
-			$this->biaya_bayar->EditAttrs["class"] = "form-control";
-			$this->biaya_bayar->EditCustomAttributes = "";
-			$this->biaya_bayar->EditValue = ew_HtmlEncode($this->biaya_bayar->CurrentValue);
-			$this->biaya_bayar->PlaceHolder = ew_RemoveHtml($this->biaya_bayar->FldCaption());
-			if (strval($this->biaya_bayar->EditValue) <> "" && is_numeric($this->biaya_bayar->EditValue)) {
-			$this->biaya_bayar->EditValue = ew_FormatNumber($this->biaya_bayar->EditValue, -2, -1, -2, 0);
-			$this->biaya_bayar->OldValue = $this->biaya_bayar->EditValue;
-			}
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_detail->EditCustomAttributes = "";
-			$this->tgl_daftar_detail->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl_daftar_detail->CurrentValue, 8));
-			$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_detail->EditCustomAttributes = "";
-			$this->jam_daftar_detail->EditValue = ew_HtmlEncode($this->jam_daftar_detail->CurrentValue);
-			$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
-
-			// status_praktikum
-			$this->status_praktikum->EditCustomAttributes = "";
-			$this->status_praktikum->EditValue = $this->status_praktikum->Options(FALSE);
-
-			// id_kelompok
-			$this->id_kelompok->EditCustomAttributes = "";
-			if (trim(strval($this->id_kelompok->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_kelompok`" . ew_SearchString("=", $this->id_kelompok->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_kelompok`, `nama_kelompok` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_nama_kelompok`";
-			$sWhereWrk = "";
-			$this->id_kelompok->LookupFilters = array("dx1" => '`nama_kelompok`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_kelompok, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_kelompok->ViewValue = $this->id_kelompok->DisplayValue($arwrk);
-			} else {
-				$this->id_kelompok->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_kelompok->EditValue = $arwrk;
-
-			// id_jam_prak
-			$this->id_jam_prak->EditCustomAttributes = "";
-			if (trim(strval($this->id_jam_prak->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_jam_praktikum`" . ew_SearchString("=", $this->id_jam_prak->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_jam_praktikum`, `jam_praktikum` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_jam_praktikum`";
-			$sWhereWrk = "";
-			$this->id_jam_prak->LookupFilters = array("dx1" => '`jam_praktikum`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_jam_prak, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_jam_prak->ViewValue = $this->id_jam_prak->DisplayValue($arwrk);
-			} else {
-				$this->id_jam_prak->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_jam_prak->EditValue = $arwrk;
-
-			// id_lab
-			$this->id_lab->EditCustomAttributes = "";
-			if (trim(strval($this->id_lab->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_lab`" . ew_SearchString("=", $this->id_lab->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_lab`, `nama_lab` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_lab`";
-			$sWhereWrk = "";
-			$this->id_lab->LookupFilters = array("dx1" => '`nama_lab`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_lab, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_lab->ViewValue = $this->id_lab->DisplayValue($arwrk);
-			} else {
-				$this->id_lab->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_lab->EditValue = $arwrk;
-
-			// id_pngjar
-			$this->id_pngjar->EditCustomAttributes = "";
-			if (trim(strval($this->id_pngjar->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`kode_pengajar`" . ew_SearchString("=", $this->id_pngjar->CurrentValue, EW_DATATYPE_STRING, "");
-			}
-			$sSqlWrk = "SELECT `kode_pengajar`, `nama_pngajar` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_pengajar`";
-			$sWhereWrk = "";
-			$this->id_pngjar->LookupFilters = array("dx1" => '`nama_pngajar`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_pngjar, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_pngjar->ViewValue = $this->id_pngjar->DisplayValue($arwrk);
-			} else {
-				$this->id_pngjar->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_pngjar->EditValue = $arwrk;
-
-			// id_asisten
-			$this->id_asisten->EditCustomAttributes = "";
-			if (trim(strval($this->id_asisten->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`kode_asisten`" . ew_SearchString("=", $this->id_asisten->CurrentValue, EW_DATATYPE_STRING, "");
-			}
-			$sSqlWrk = "SELECT `kode_asisten`, `nama_asisten` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `master_asisten_pengajar`";
-			$sWhereWrk = "";
-			$this->id_asisten->LookupFilters = array("dx1" => '`nama_asisten`');
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_asisten, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			if ($rswrk && !$rswrk->EOF) { // Lookup values found
-				$arwrk = array();
-				$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-				$this->id_asisten->ViewValue = $this->id_asisten->DisplayValue($arwrk);
-			} else {
-				$this->id_asisten->ViewValue = $Language->Phrase("PleaseSelect");
-			}
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_asisten->EditValue = $arwrk;
-
-			// status_kelompok
-			$this->status_kelompok->EditCustomAttributes = "";
-			$this->status_kelompok->EditValue = $this->status_kelompok->Options(FALSE);
-
-			// nilai_akhir
-			$this->nilai_akhir->EditCustomAttributes = "";
-			$this->nilai_akhir->EditValue = $this->nilai_akhir->Options(FALSE);
-
-			// persetujuan
-			$this->persetujuan->EditCustomAttributes = "";
-			$this->persetujuan->EditValue = $this->persetujuan->Options(FALSE);
-
-			// Edit refer script
-			// id_detailpendaftaran
-
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-
-			// fk_kodedaftar
-			$this->fk_kodedaftar->LinkCustomAttributes = "";
-			$this->fk_kodedaftar->HrefValue = "";
-
-			// fk_jenis_praktikum
-			$this->fk_jenis_praktikum->LinkCustomAttributes = "";
-			$this->fk_jenis_praktikum->HrefValue = "";
-
-			// biaya_bayar
-			$this->biaya_bayar->LinkCustomAttributes = "";
-			$this->biaya_bayar->HrefValue = "";
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->LinkCustomAttributes = "";
-			$this->tgl_daftar_detail->HrefValue = "";
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->LinkCustomAttributes = "";
-			$this->jam_daftar_detail->HrefValue = "";
-
-			// status_praktikum
-			$this->status_praktikum->LinkCustomAttributes = "";
-			$this->status_praktikum->HrefValue = "";
-
-			// id_kelompok
-			$this->id_kelompok->LinkCustomAttributes = "";
-			$this->id_kelompok->HrefValue = "";
-
-			// id_jam_prak
-			$this->id_jam_prak->LinkCustomAttributes = "";
-			$this->id_jam_prak->HrefValue = "";
-
-			// id_lab
-			$this->id_lab->LinkCustomAttributes = "";
-			$this->id_lab->HrefValue = "";
-
-			// id_pngjar
-			$this->id_pngjar->LinkCustomAttributes = "";
-			$this->id_pngjar->HrefValue = "";
-
-			// id_asisten
-			$this->id_asisten->LinkCustomAttributes = "";
-			$this->id_asisten->HrefValue = "";
-
-			// status_kelompok
-			$this->status_kelompok->LinkCustomAttributes = "";
-			$this->status_kelompok->HrefValue = "";
-
-			// nilai_akhir
-			$this->nilai_akhir->LinkCustomAttributes = "";
-			$this->nilai_akhir->HrefValue = "";
-
-			// persetujuan
-			$this->persetujuan->LinkCustomAttributes = "";
-			$this->persetujuan->HrefValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_SEARCH) { // Search row
-
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->EditAttrs["class"] = "form-control";
-			$this->id_detailpendaftaran->EditCustomAttributes = "";
-			$this->id_detailpendaftaran->EditValue = ew_HtmlEncode($this->id_detailpendaftaran->AdvancedSearch->SearchValue);
-			$this->id_detailpendaftaran->PlaceHolder = ew_RemoveHtml($this->id_detailpendaftaran->FldCaption());
 
 			// fk_kodedaftar
 			$this->fk_kodedaftar->EditAttrs["class"] = "form-control";
@@ -3688,18 +2357,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			$this->biaya_bayar->EditCustomAttributes = "";
 			$this->biaya_bayar->EditValue = ew_HtmlEncode($this->biaya_bayar->AdvancedSearch->SearchValue);
 			$this->biaya_bayar->PlaceHolder = ew_RemoveHtml($this->biaya_bayar->FldCaption());
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_detail->EditCustomAttributes = "";
-			$this->tgl_daftar_detail->EditValue = ew_HtmlEncode(ew_FormatDateTime(ew_UnFormatDateTime($this->tgl_daftar_detail->AdvancedSearch->SearchValue, 0), 8));
-			$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_detail->EditCustomAttributes = "";
-			$this->jam_daftar_detail->EditValue = ew_HtmlEncode(ew_UnFormatDateTime($this->jam_daftar_detail->AdvancedSearch->SearchValue, 4));
-			$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
 
 			// status_praktikum
 			$this->status_praktikum->EditCustomAttributes = "";
@@ -3779,306 +2436,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			ew_AddMessage($gsSearchError, $sFormCustomError);
 		}
 		return $ValidateSearch;
-	}
-
-	// Validate form
-	function ValidateForm() {
-		global $Language, $gsFormError;
-
-		// Initialize form error message
-		$gsFormError = "";
-
-		// Check if validation required
-		if (!EW_SERVER_VALIDATE)
-			return ($gsFormError == "");
-		if (!ew_CheckNumber($this->biaya_bayar->FormValue)) {
-			ew_AddMessage($gsFormError, $this->biaya_bayar->FldErrMsg());
-		}
-		if (!ew_CheckDateDef($this->tgl_daftar_detail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->tgl_daftar_detail->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->jam_daftar_detail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->jam_daftar_detail->FldErrMsg());
-		}
-
-		// Return validate result
-		$ValidateForm = ($gsFormError == "");
-
-		// Call Form_CustomValidate event
-		$sFormCustomError = "";
-		$ValidateForm = $ValidateForm && $this->Form_CustomValidate($sFormCustomError);
-		if ($sFormCustomError <> "") {
-			ew_AddMessage($gsFormError, $sFormCustomError);
-		}
-		return $ValidateForm;
-	}
-
-	//
-	// Delete records based on current filter
-	//
-	function DeleteRows() {
-		global $Language, $Security;
-		if (!$Security->CanDelete()) {
-			$this->setFailureMessage($Language->Phrase("NoDeletePermission")); // No delete permission
-			return FALSE;
-		}
-		$DeleteRows = TRUE;
-		$sSql = $this->SQL();
-		$conn = &$this->Connection();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE) {
-			return FALSE;
-		} elseif ($rs->EOF) {
-			$this->setFailureMessage($Language->Phrase("NoRecord")); // No record found
-			$rs->Close();
-			return FALSE;
-
-		//} else {
-		//	$this->LoadRowValues($rs); // Load row values
-
-		}
-		$rows = ($rs) ? $rs->GetRows() : array();
-		if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteBegin")); // Batch delete begin
-
-		// Clone old rows
-		$rsold = $rows;
-		if ($rs)
-			$rs->Close();
-
-		// Call row deleting event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$DeleteRows = $this->Row_Deleting($row);
-				if (!$DeleteRows) break;
-			}
-		}
-		if ($DeleteRows) {
-			$sKey = "";
-			foreach ($rsold as $row) {
-				$sThisKey = "";
-				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-				$sThisKey .= $row['id_detailpendaftaran'];
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-				$DeleteRows = $this->Delete($row); // Delete
-				$conn->raiseErrorFn = '';
-				if ($DeleteRows === FALSE)
-					break;
-				if ($sKey <> "") $sKey .= ", ";
-				$sKey .= $sThisKey;
-			}
-		} else {
-
-			// Set up error message
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
-			} else {
-				$this->setFailureMessage($Language->Phrase("DeleteCancelled"));
-			}
-		}
-		if ($DeleteRows) {
-			if ($this->AuditTrailOnDelete) $this->WriteAuditTrailDummy($Language->Phrase("BatchDeleteSuccess")); // Batch delete success
-		} else {
-		}
-
-		// Call Row Deleted event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$this->Row_Deleted($row);
-			}
-		}
-		return $DeleteRows;
-	}
-
-	// Update record based on key values
-	function EditRow() {
-		global $Security, $Language;
-		$sFilter = $this->KeyFilter();
-		$sFilter = $this->ApplyUserIDFilters($sFilter);
-		$conn = &$this->Connection();
-		$this->CurrentFilter = $sFilter;
-		$sSql = $this->SQL();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE)
-			return FALSE;
-		if ($rs->EOF) {
-			$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record message
-			$EditRow = FALSE; // Update Failed
-		} else {
-
-			// Save old values
-			$rsold = &$rs->fields;
-			$this->LoadDbValues($rsold);
-			$rsnew = array();
-
-			// fk_kodedaftar
-			$this->fk_kodedaftar->SetDbValueDef($rsnew, $this->fk_kodedaftar->CurrentValue, NULL, $this->fk_kodedaftar->ReadOnly);
-
-			// fk_jenis_praktikum
-			$this->fk_jenis_praktikum->SetDbValueDef($rsnew, $this->fk_jenis_praktikum->CurrentValue, NULL, $this->fk_jenis_praktikum->ReadOnly);
-
-			// biaya_bayar
-			$this->biaya_bayar->SetDbValueDef($rsnew, $this->biaya_bayar->CurrentValue, NULL, $this->biaya_bayar->ReadOnly);
-
-			// tgl_daftar_detail
-			$this->tgl_daftar_detail->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0), NULL, $this->tgl_daftar_detail->ReadOnly);
-
-			// jam_daftar_detail
-			$this->jam_daftar_detail->SetDbValueDef($rsnew, $this->jam_daftar_detail->CurrentValue, NULL, $this->jam_daftar_detail->ReadOnly);
-
-			// status_praktikum
-			$this->status_praktikum->SetDbValueDef($rsnew, $this->status_praktikum->CurrentValue, NULL, $this->status_praktikum->ReadOnly);
-
-			// id_kelompok
-			$this->id_kelompok->SetDbValueDef($rsnew, $this->id_kelompok->CurrentValue, NULL, $this->id_kelompok->ReadOnly);
-
-			// id_jam_prak
-			$this->id_jam_prak->SetDbValueDef($rsnew, $this->id_jam_prak->CurrentValue, NULL, $this->id_jam_prak->ReadOnly);
-
-			// id_lab
-			$this->id_lab->SetDbValueDef($rsnew, $this->id_lab->CurrentValue, NULL, $this->id_lab->ReadOnly);
-
-			// id_pngjar
-			$this->id_pngjar->SetDbValueDef($rsnew, $this->id_pngjar->CurrentValue, NULL, $this->id_pngjar->ReadOnly);
-
-			// id_asisten
-			$this->id_asisten->SetDbValueDef($rsnew, $this->id_asisten->CurrentValue, NULL, $this->id_asisten->ReadOnly);
-
-			// status_kelompok
-			$tmpBool = $this->status_kelompok->CurrentValue;
-			if ($tmpBool <> "1" && $tmpBool <> "0")
-				$tmpBool = (!empty($tmpBool)) ? "1" : "0";
-			$this->status_kelompok->SetDbValueDef($rsnew, $tmpBool, NULL, $this->status_kelompok->ReadOnly);
-
-			// nilai_akhir
-			$this->nilai_akhir->SetDbValueDef($rsnew, $this->nilai_akhir->CurrentValue, NULL, $this->nilai_akhir->ReadOnly);
-
-			// persetujuan
-			$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, NULL, $this->persetujuan->ReadOnly);
-
-			// Call Row Updating event
-			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
-			if ($bUpdateRow) {
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-				if (count($rsnew) > 0)
-					$EditRow = $this->Update($rsnew, "", $rsold);
-				else
-					$EditRow = TRUE; // No field to update
-				$conn->raiseErrorFn = '';
-				if ($EditRow) {
-				}
-			} else {
-				if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-					// Use the message, do nothing
-				} elseif ($this->CancelMessage <> "") {
-					$this->setFailureMessage($this->CancelMessage);
-					$this->CancelMessage = "";
-				} else {
-					$this->setFailureMessage($Language->Phrase("UpdateCancelled"));
-				}
-				$EditRow = FALSE;
-			}
-		}
-
-		// Call Row_Updated event
-		if ($EditRow)
-			$this->Row_Updated($rsold, $rsnew);
-		$rs->Close();
-		return $EditRow;
-	}
-
-	// Add record
-	function AddRow($rsold = NULL) {
-		global $Language, $Security;
-		$conn = &$this->Connection();
-
-		// Load db values from rsold
-		if ($rsold) {
-			$this->LoadDbValues($rsold);
-		}
-		$rsnew = array();
-
-		// fk_kodedaftar
-		$this->fk_kodedaftar->SetDbValueDef($rsnew, $this->fk_kodedaftar->CurrentValue, NULL, FALSE);
-
-		// fk_jenis_praktikum
-		$this->fk_jenis_praktikum->SetDbValueDef($rsnew, $this->fk_jenis_praktikum->CurrentValue, NULL, FALSE);
-
-		// biaya_bayar
-		$this->biaya_bayar->SetDbValueDef($rsnew, $this->biaya_bayar->CurrentValue, NULL, FALSE);
-
-		// tgl_daftar_detail
-		$this->tgl_daftar_detail->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0), NULL, FALSE);
-
-		// jam_daftar_detail
-		$this->jam_daftar_detail->SetDbValueDef($rsnew, $this->jam_daftar_detail->CurrentValue, NULL, FALSE);
-
-		// status_praktikum
-		$this->status_praktikum->SetDbValueDef($rsnew, $this->status_praktikum->CurrentValue, NULL, FALSE);
-
-		// id_kelompok
-		$this->id_kelompok->SetDbValueDef($rsnew, $this->id_kelompok->CurrentValue, NULL, FALSE);
-
-		// id_jam_prak
-		$this->id_jam_prak->SetDbValueDef($rsnew, $this->id_jam_prak->CurrentValue, NULL, FALSE);
-
-		// id_lab
-		$this->id_lab->SetDbValueDef($rsnew, $this->id_lab->CurrentValue, NULL, FALSE);
-
-		// id_pngjar
-		$this->id_pngjar->SetDbValueDef($rsnew, $this->id_pngjar->CurrentValue, NULL, FALSE);
-
-		// id_asisten
-		$this->id_asisten->SetDbValueDef($rsnew, $this->id_asisten->CurrentValue, NULL, FALSE);
-
-		// status_kelompok
-		$tmpBool = $this->status_kelompok->CurrentValue;
-		if ($tmpBool <> "1" && $tmpBool <> "0")
-			$tmpBool = (!empty($tmpBool)) ? "1" : "0";
-		$this->status_kelompok->SetDbValueDef($rsnew, $tmpBool, NULL, FALSE);
-
-		// nilai_akhir
-		$this->nilai_akhir->SetDbValueDef($rsnew, $this->nilai_akhir->CurrentValue, NULL, FALSE);
-
-		// persetujuan
-		$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, NULL, FALSE);
-
-		// Call Row Inserting event
-		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
-		if ($bInsertRow) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-			$AddRow = $this->Insert($rsnew);
-			$conn->raiseErrorFn = '';
-			if ($AddRow) {
-			}
-		} else {
-			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
-
-				// Use the message, do nothing
-			} elseif ($this->CancelMessage <> "") {
-				$this->setFailureMessage($this->CancelMessage);
-				$this->CancelMessage = "";
-			} else {
-				$this->setFailureMessage($Language->Phrase("InsertCancelled"));
-			}
-			$AddRow = FALSE;
-		}
-		if ($AddRow) {
-
-			// Call Row Inserted event
-			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
-			$this->Row_Inserted($rs, $rsnew);
-		}
-		return $AddRow;
 	}
 
 	// Load advanced search
@@ -4487,78 +2844,6 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 		$pageId = $pageId ?: $this->PageID;
 		if ($pageId == "list") {
 			switch ($fld->FldVar) {
-		case "x_fk_jenis_praktikum":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `kode_praktikum` AS `LinkFld`, `jenis_praktikum` AS `DispFld`, `semester` AS `Disp2Fld`, `biaya` AS `Disp3Fld`, '' AS `Disp4Fld` FROM `praktikum`";
-			$sWhereWrk = "{filter}";
-			$this->fk_jenis_praktikum->LookupFilters = array("dx1" => '`jenis_praktikum`', "dx2" => '`semester`', "dx3" => '`biaya`');
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`kode_praktikum` = {filter_value}', "t0" => "200", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->fk_jenis_praktikum, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
-		case "x_id_kelompok":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_kelompok` AS `LinkFld`, `nama_kelompok` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `master_nama_kelompok`";
-			$sWhereWrk = "{filter}";
-			$this->id_kelompok->LookupFilters = array("dx1" => '`nama_kelompok`');
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_kelompok` = {filter_value}', "t0" => "3", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_kelompok, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
-		case "x_id_jam_prak":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_jam_praktikum` AS `LinkFld`, `jam_praktikum` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `master_jam_praktikum`";
-			$sWhereWrk = "{filter}";
-			$this->id_jam_prak->LookupFilters = array("dx1" => '`jam_praktikum`');
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_jam_praktikum` = {filter_value}', "t0" => "3", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_jam_prak, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
-		case "x_id_lab":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_lab` AS `LinkFld`, `nama_lab` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `master_lab`";
-			$sWhereWrk = "{filter}";
-			$this->id_lab->LookupFilters = array("dx1" => '`nama_lab`');
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_lab` = {filter_value}', "t0" => "3", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_lab, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
-		case "x_id_pngjar":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `kode_pengajar` AS `LinkFld`, `nama_pngajar` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `master_pengajar`";
-			$sWhereWrk = "{filter}";
-			$this->id_pngjar->LookupFilters = array("dx1" => '`nama_pngajar`');
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`kode_pengajar` = {filter_value}', "t0" => "200", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_pngjar, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
-		case "x_id_asisten":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `kode_asisten` AS `LinkFld`, `nama_asisten` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `master_asisten_pengajar`";
-			$sWhereWrk = "{filter}";
-			$this->id_asisten->LookupFilters = array("dx1" => '`nama_asisten`');
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`kode_asisten` = {filter_value}', "t0" => "200", "fn0" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_asisten, $sWhereWrk); // Call Lookup selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
 			}
 		} elseif ($pageId == "extbs") {
 			switch ($fld->FldVar) {
@@ -4726,66 +3011,6 @@ var CurrentPageID = EW_PAGE_ID = "list";
 var CurrentForm = fdetail_pendaftaranlist = new ew_Form("fdetail_pendaftaranlist", "list");
 fdetail_pendaftaranlist.FormKeyCountName = '<?php echo $detail_pendaftaran_list->FormKeyCountName ?>';
 
-// Validate form
-fdetail_pendaftaranlist.Validate = function() {
-	if (!this.ValidateRequired)
-		return true; // Ignore validation
-	var $ = jQuery, fobj = this.GetForm(), $fobj = $(fobj);
-	if ($fobj.find("#a_confirm").val() == "F")
-		return true;
-	var elm, felm, uelm, addcnt = 0;
-	var $k = $fobj.find("#" + this.FormKeyCountName); // Get key_count
-	var rowcnt = ($k[0]) ? parseInt($k.val(), 10) : 1;
-	var startcnt = (rowcnt == 0) ? 0 : 1; // Check rowcnt == 0 => Inline-Add
-	var gridinsert = $fobj.find("#a_list").val() == "gridinsert";
-	for (var i = startcnt; i <= rowcnt; i++) {
-		var infix = ($k[0]) ? String(i) : "";
-		$fobj.data("rowindex", infix);
-		var checkrow = (gridinsert) ? !this.EmptyRow(infix) : true;
-		if (checkrow) {
-			addcnt++;
-			elm = this.GetElements("x" + infix + "_biaya_bayar");
-			if (elm && !ew_CheckNumber(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->biaya_bayar->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_tgl_daftar_detail");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->tgl_daftar_detail->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_jam_daftar_detail");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->jam_daftar_detail->FldErrMsg()) ?>");
-
-			// Fire Form_CustomValidate event
-			if (!this.Form_CustomValidate(fobj))
-				return false;
-		} // End Grid Add checking
-	}
-	if (gridinsert && addcnt == 0) { // No row added
-		ew_Alert(ewLanguage.Phrase("NoAddRecord"));
-		return false;
-	}
-	return true;
-}
-
-// Check empty row
-fdetail_pendaftaranlist.EmptyRow = function(infix) {
-	var fobj = this.Form;
-	if (ew_ValueChanged(fobj, infix, "fk_kodedaftar", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "fk_jenis_praktikum", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "biaya_bayar", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "tgl_daftar_detail", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "jam_daftar_detail", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "status_praktikum", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "id_kelompok", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "id_jam_prak", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "id_lab", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "id_pngjar", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "id_asisten", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "status_kelompok[]", true)) return false;
-	if (ew_ValueChanged(fobj, infix, "nilai_akhir", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "persetujuan", false)) return false;
-	return true;
-}
-
 // Form_CustomValidate event
 fdetail_pendaftaranlist.Form_CustomValidate = 
  function(fobj) { // DO NOT CHANGE THIS LINE!
@@ -4895,13 +3120,6 @@ if ($detail_pendaftaran_list->DbMasterFilter <> "" && $detail_pendaftaran->getCu
 ?>
 <?php } ?>
 <?php
-if ($detail_pendaftaran->CurrentAction == "gridadd") {
-	$detail_pendaftaran->CurrentFilter = "0=1";
-	$detail_pendaftaran_list->StartRec = 1;
-	$detail_pendaftaran_list->DisplayRecs = $detail_pendaftaran->GridAddRowCount;
-	$detail_pendaftaran_list->TotalRecs = $detail_pendaftaran_list->DisplayRecs;
-	$detail_pendaftaran_list->StopRec = $detail_pendaftaran_list->DisplayRecs;
-} else {
 	$bSelectLimit = $detail_pendaftaran_list->UseSelectLimit;
 	if ($bSelectLimit) {
 		if ($detail_pendaftaran_list->TotalRecs <= 0)
@@ -4934,7 +3152,6 @@ if ($detail_pendaftaran->CurrentAction == "gridadd") {
 		$searchsql = $detail_pendaftaran_list->getSessionWhere();
 		$detail_pendaftaran_list->WriteAuditTrailOnSearch($searchparm, $searchsql);
 	}
-}
 $detail_pendaftaran_list->RenderOtherOptions();
 ?>
 <?php if ($Security->CanSearch()) { ?>
@@ -5120,7 +3337,7 @@ $detail_pendaftaran_list->ShowMessage();
 <input type="hidden" name="fk_kodedaftar_mahasiswa" value="<?php echo $detail_pendaftaran->fk_kodedaftar->getSessionValue() ?>">
 <?php } ?>
 <div id="gmp_detail_pendaftaran" class="<?php if (ew_IsResponsiveLayout()) { echo "table-responsive "; } ?>ewGridMiddlePanel">
-<?php if ($detail_pendaftaran_list->TotalRecs > 0 || $detail_pendaftaran->CurrentAction == "add" || $detail_pendaftaran->CurrentAction == "copy" || $detail_pendaftaran->CurrentAction == "gridedit") { ?>
+<?php if ($detail_pendaftaran_list->TotalRecs > 0 || $detail_pendaftaran->CurrentAction == "gridedit") { ?>
 <table id="tbl_detail_pendaftaranlist" class="table ewTable">
 <?php echo $detail_pendaftaran->TableCustomInnerHtml ?>
 <thead><!-- Table header -->
@@ -5136,15 +3353,6 @@ $detail_pendaftaran_list->RenderListOptions();
 // Render list options (header, left)
 $detail_pendaftaran_list->ListOptions->Render("header", "left");
 ?>
-<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->id_detailpendaftaran) == "") { ?>
-		<th data-name="id_detailpendaftaran"><div id="elh_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_detailpendaftaran"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $detail_pendaftaran->SortUrl($detail_pendaftaran->id_detailpendaftaran) ?>',2);"><div id="elh_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->id_detailpendaftaran->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->id_detailpendaftaran->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
 <?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->fk_kodedaftar) == "") { ?>
 		<th data-name="fk_kodedaftar"><div id="elh_detail_pendaftaran_fk_kodedaftar" class="detail_pendaftaran_fk_kodedaftar"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->fk_kodedaftar->FldCaption() ?></div></div></th>
@@ -5169,24 +3377,6 @@ $detail_pendaftaran_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="biaya_bayar"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $detail_pendaftaran->SortUrl($detail_pendaftaran->biaya_bayar) ?>',2);"><div id="elh_detail_pendaftaran_biaya_bayar" class="detail_pendaftaran_biaya_bayar">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->biaya_bayar->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->biaya_bayar->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->biaya_bayar->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
-<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->tgl_daftar_detail) == "") { ?>
-		<th data-name="tgl_daftar_detail"><div id="elh_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->tgl_daftar_detail->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="tgl_daftar_detail"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $detail_pendaftaran->SortUrl($detail_pendaftaran->tgl_daftar_detail) ?>',2);"><div id="elh_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->tgl_daftar_detail->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->tgl_daftar_detail->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->tgl_daftar_detail->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-        </div></div></th>
-	<?php } ?>
-<?php } ?>		
-<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-	<?php if ($detail_pendaftaran->SortUrl($detail_pendaftaran->jam_daftar_detail) == "") { ?>
-		<th data-name="jam_daftar_detail"><div id="elh_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail"><div class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->jam_daftar_detail->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="jam_daftar_detail"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $detail_pendaftaran->SortUrl($detail_pendaftaran->jam_daftar_detail) ?>',2);"><div id="elh_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detail_pendaftaran->jam_daftar_detail->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detail_pendaftaran->jam_daftar_detail->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detail_pendaftaran->jam_daftar_detail->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
         </div></div></th>
 	<?php } ?>
 <?php } ?>		
@@ -5280,214 +3470,6 @@ $detail_pendaftaran_list->ListOptions->Render("header", "right");
 </thead>
 <tbody>
 <?php
-	if ($detail_pendaftaran->CurrentAction == "add" || $detail_pendaftaran->CurrentAction == "copy") {
-		$detail_pendaftaran_list->RowIndex = 0;
-		$detail_pendaftaran_list->KeyCount = $detail_pendaftaran_list->RowIndex;
-		if ($detail_pendaftaran->CurrentAction == "copy" && !$detail_pendaftaran_list->LoadRow())
-				$detail_pendaftaran->CurrentAction = "add";
-		if ($detail_pendaftaran->CurrentAction == "add")
-			$detail_pendaftaran_list->LoadDefaultValues();
-		if ($detail_pendaftaran->EventCancelled) // Insert failed
-			$detail_pendaftaran_list->RestoreFormValues(); // Restore form values
-
-		// Set row properties
-		$detail_pendaftaran->ResetAttrs();
-		$detail_pendaftaran->RowAttrs = array_merge($detail_pendaftaran->RowAttrs, array('data-rowindex'=>0, 'id'=>'r0_detail_pendaftaran', 'data-rowtype'=>EW_ROWTYPE_ADD));
-		$detail_pendaftaran->RowType = EW_ROWTYPE_ADD;
-
-		// Render row
-		$detail_pendaftaran_list->RenderRow();
-
-		// Render list options
-		$detail_pendaftaran_list->RenderListOptions();
-		$detail_pendaftaran_list->StartRowCnt = 0;
-?>
-	<tr<?php echo $detail_pendaftaran->RowAttributes() ?>>
-<?php
-
-// Render list options (body, left)
-$detail_pendaftaran_list->ListOptions->Render("body", "left", $detail_pendaftaran_list->RowCnt);
-?>
-	<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<td data-name="id_detailpendaftaran">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
-		<td data-name="fk_kodedaftar">
-<?php if ($detail_pendaftaran->fk_kodedaftar->getSessionValue() <> "") { ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<span<?php echo $detail_pendaftaran->fk_kodedaftar->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->fk_kodedaftar->ViewValue ?></p></span>
-</span>
-<input type="hidden" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->CurrentValue) ?>">
-<?php } else { ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->fk_kodedaftar->EditValue ?>"<?php echo $detail_pendaftaran->fk_kodedaftar->EditAttributes() ?>>
-</span>
-<?php } ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->fk_jenis_praktikum->Visible) { // fk_jenis_praktikum ?>
-		<td data-name="fk_jenis_praktikum">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_jenis_praktikum" class="form-group detail_pendaftaran_fk_jenis_praktikum">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum"><?php echo (strval($detail_pendaftaran->fk_jenis_praktikum->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->fk_jenis_praktikum->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->fk_jenis_praktikum->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->fk_jenis_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->CurrentValue ?>"<?php echo $detail_pendaftaran->fk_jenis_praktikum->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_jenis_praktikum->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->biaya_bayar->Visible) { // biaya_bayar ?>
-		<td data-name="biaya_bayar">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_biaya_bayar" class="form-group detail_pendaftaran_biaya_bayar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" size="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->biaya_bayar->EditValue ?>"<?php echo $detail_pendaftaran->biaya_bayar->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<td data-name="tgl_daftar_detail">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<td data-name="jam_daftar_detail">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->status_praktikum->Visible) { // status_praktikum ?>
-		<td data-name="status_praktikum">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_praktikum" class="form-group detail_pendaftaran_status_praktikum">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_status_praktikum" data-value-separator="<?php echo $detail_pendaftaran->status_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="{value}"<?php echo $detail_pendaftaran->status_praktikum->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->status_praktikum->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_status_praktikum") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_status_praktikum" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="<?php echo ew_HtmlEncode($detail_pendaftaran->status_praktikum->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_kelompok->Visible) { // id_kelompok ?>
-		<td data-name="id_kelompok">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_kelompok" class="form-group detail_pendaftaran_id_kelompok">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok"><?php echo (strval($detail_pendaftaran->id_kelompok->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_kelompok->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_kelompok->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_kelompok->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->CurrentValue ?>"<?php echo $detail_pendaftaran->id_kelompok->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_kelompok->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_jam_prak->Visible) { // id_jam_prak ?>
-		<td data-name="id_jam_prak">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_jam_prak" class="form-group detail_pendaftaran_id_jam_prak">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak"><?php echo (strval($detail_pendaftaran->id_jam_prak->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_jam_prak->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_jam_prak->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_jam_prak->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->CurrentValue ?>"<?php echo $detail_pendaftaran->id_jam_prak->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_jam_prak->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_lab->Visible) { // id_lab ?>
-		<td data-name="id_lab">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_lab" class="form-group detail_pendaftaran_id_lab">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab"><?php echo (strval($detail_pendaftaran->id_lab->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_lab->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_lab->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_lab->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->CurrentValue ?>"<?php echo $detail_pendaftaran->id_lab->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_lab->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_pngjar->Visible) { // id_pngjar ?>
-		<td data-name="id_pngjar">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_pngjar" class="form-group detail_pendaftaran_id_pngjar">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar"><?php echo (strval($detail_pendaftaran->id_pngjar->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_pngjar->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_pngjar->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_pngjar->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->CurrentValue ?>"<?php echo $detail_pendaftaran->id_pngjar->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_pngjar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_asisten->Visible) { // id_asisten ?>
-		<td data-name="id_asisten">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_asisten" class="form-group detail_pendaftaran_id_asisten">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten"><?php echo (strval($detail_pendaftaran->id_asisten->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_asisten->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_asisten->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_asisten->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->CurrentValue ?>"<?php echo $detail_pendaftaran->id_asisten->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_asisten->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->status_kelompok->Visible) { // status_kelompok ?>
-		<td data-name="status_kelompok">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_kelompok" class="form-group detail_pendaftaran_status_kelompok">
-<?php
-$selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue)) ? " checked" : "";
-?>
-<input type="checkbox" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="1"<?php echo $selwrk ?><?php echo $detail_pendaftaran->status_kelompok->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="<?php echo ew_HtmlEncode($detail_pendaftaran->status_kelompok->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->nilai_akhir->Visible) { // nilai_akhir ?>
-		<td data-name="nilai_akhir">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_nilai_akhir" class="form-group detail_pendaftaran_nilai_akhir">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_nilai_akhir" data-value-separator="<?php echo $detail_pendaftaran->nilai_akhir->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="{value}"<?php echo $detail_pendaftaran->nilai_akhir->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->nilai_akhir->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_nilai_akhir") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_nilai_akhir" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="<?php echo ew_HtmlEncode($detail_pendaftaran->nilai_akhir->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->persetujuan->Visible) { // persetujuan ?>
-		<td data-name="persetujuan">
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_persetujuan" class="form-group detail_pendaftaran_persetujuan">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_persetujuan" data-value-separator="<?php echo $detail_pendaftaran->persetujuan->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="{value}"<?php echo $detail_pendaftaran->persetujuan->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->persetujuan->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_persetujuan") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_persetujuan" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="<?php echo ew_HtmlEncode($detail_pendaftaran->persetujuan->OldValue) ?>">
-</td>
-	<?php } ?>
-<?php
-
-// Render list options (body, right)
-$detail_pendaftaran_list->ListOptions->Render("body", "right", $detail_pendaftaran_list->RowCnt);
-?>
-<script type="text/javascript">
-fdetail_pendaftaranlist.UpdateOpts(<?php echo $detail_pendaftaran_list->RowIndex ?>);
-</script>
-	</tr>
-<?php
-}
-?>
-<?php
 if ($detail_pendaftaran->ExportAll && $detail_pendaftaran->Export <> "") {
 	$detail_pendaftaran_list->StopRec = $detail_pendaftaran_list->TotalRecs;
 } else {
@@ -5497,15 +3479,6 @@ if ($detail_pendaftaran->ExportAll && $detail_pendaftaran->Export <> "") {
 		$detail_pendaftaran_list->StopRec = $detail_pendaftaran_list->StartRec + $detail_pendaftaran_list->DisplayRecs - 1;
 	else
 		$detail_pendaftaran_list->StopRec = $detail_pendaftaran_list->TotalRecs;
-}
-
-// Restore number of post back records
-if ($objForm) {
-	$objForm->Index = -1;
-	if ($objForm->HasValue($detail_pendaftaran_list->FormKeyCountName) && ($detail_pendaftaran->CurrentAction == "gridadd" || $detail_pendaftaran->CurrentAction == "gridedit" || $detail_pendaftaran->CurrentAction == "F")) {
-		$detail_pendaftaran_list->KeyCount = $objForm->GetValue($detail_pendaftaran_list->FormKeyCountName);
-		$detail_pendaftaran_list->StopRec = $detail_pendaftaran_list->StartRec + $detail_pendaftaran_list->KeyCount - 1;
-	}
 }
 $detail_pendaftaran_list->RecCnt = $detail_pendaftaran_list->StartRec - 1;
 if ($detail_pendaftaran_list->Recordset && !$detail_pendaftaran_list->Recordset->EOF) {
@@ -5521,27 +3494,10 @@ if ($detail_pendaftaran_list->Recordset && !$detail_pendaftaran_list->Recordset-
 $detail_pendaftaran->RowType = EW_ROWTYPE_AGGREGATEINIT;
 $detail_pendaftaran->ResetAttrs();
 $detail_pendaftaran_list->RenderRow();
-$detail_pendaftaran_list->EditRowCnt = 0;
-if ($detail_pendaftaran->CurrentAction == "edit")
-	$detail_pendaftaran_list->RowIndex = 1;
-if ($detail_pendaftaran->CurrentAction == "gridadd")
-	$detail_pendaftaran_list->RowIndex = 0;
-if ($detail_pendaftaran->CurrentAction == "gridedit")
-	$detail_pendaftaran_list->RowIndex = 0;
 while ($detail_pendaftaran_list->RecCnt < $detail_pendaftaran_list->StopRec) {
 	$detail_pendaftaran_list->RecCnt++;
 	if (intval($detail_pendaftaran_list->RecCnt) >= intval($detail_pendaftaran_list->StartRec)) {
 		$detail_pendaftaran_list->RowCnt++;
-		if ($detail_pendaftaran->CurrentAction == "gridadd" || $detail_pendaftaran->CurrentAction == "gridedit" || $detail_pendaftaran->CurrentAction == "F") {
-			$detail_pendaftaran_list->RowIndex++;
-			$objForm->Index = $detail_pendaftaran_list->RowIndex;
-			if ($objForm->HasValue($detail_pendaftaran_list->FormActionName))
-				$detail_pendaftaran_list->RowAction = strval($objForm->GetValue($detail_pendaftaran_list->FormActionName));
-			elseif ($detail_pendaftaran->CurrentAction == "gridadd")
-				$detail_pendaftaran_list->RowAction = "insert";
-			else
-				$detail_pendaftaran_list->RowAction = "";
-		}
 
 		// Set up key count
 		$detail_pendaftaran_list->KeyCount = $detail_pendaftaran_list->RowIndex;
@@ -5550,37 +3506,10 @@ while ($detail_pendaftaran_list->RecCnt < $detail_pendaftaran_list->StopRec) {
 		$detail_pendaftaran->ResetAttrs();
 		$detail_pendaftaran->CssClass = "";
 		if ($detail_pendaftaran->CurrentAction == "gridadd") {
-			$detail_pendaftaran_list->LoadDefaultValues(); // Load default values
 		} else {
 			$detail_pendaftaran_list->LoadRowValues($detail_pendaftaran_list->Recordset); // Load row values
 		}
 		$detail_pendaftaran->RowType = EW_ROWTYPE_VIEW; // Render view
-		if ($detail_pendaftaran->CurrentAction == "gridadd") // Grid add
-			$detail_pendaftaran->RowType = EW_ROWTYPE_ADD; // Render add
-		if ($detail_pendaftaran->CurrentAction == "gridadd" && $detail_pendaftaran->EventCancelled && !$objForm->HasValue("k_blankrow")) // Insert failed
-			$detail_pendaftaran_list->RestoreCurrentRowFormValues($detail_pendaftaran_list->RowIndex); // Restore form values
-		if ($detail_pendaftaran->CurrentAction == "edit") {
-			if ($detail_pendaftaran_list->CheckInlineEditKey() && $detail_pendaftaran_list->EditRowCnt == 0) { // Inline edit
-				$detail_pendaftaran->RowType = EW_ROWTYPE_EDIT; // Render edit
-			}
-		}
-		if ($detail_pendaftaran->CurrentAction == "gridedit") { // Grid edit
-			if ($detail_pendaftaran->EventCancelled) {
-				$detail_pendaftaran_list->RestoreCurrentRowFormValues($detail_pendaftaran_list->RowIndex); // Restore form values
-			}
-			if ($detail_pendaftaran_list->RowAction == "insert")
-				$detail_pendaftaran->RowType = EW_ROWTYPE_ADD; // Render add
-			else
-				$detail_pendaftaran->RowType = EW_ROWTYPE_EDIT; // Render edit
-		}
-		if ($detail_pendaftaran->CurrentAction == "edit" && $detail_pendaftaran->RowType == EW_ROWTYPE_EDIT && $detail_pendaftaran->EventCancelled) { // Update failed
-			$objForm->Index = 1;
-			$detail_pendaftaran_list->RestoreFormValues(); // Restore form values
-		}
-		if ($detail_pendaftaran->CurrentAction == "gridedit" && ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT || $detail_pendaftaran->RowType == EW_ROWTYPE_ADD) && $detail_pendaftaran->EventCancelled) // Update failed
-			$detail_pendaftaran_list->RestoreCurrentRowFormValues($detail_pendaftaran_list->RowIndex); // Restore form values
-		if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) // Edit row
-			$detail_pendaftaran_list->EditRowCnt++;
 
 		// Set up row id / data-rowindex
 		$detail_pendaftaran->RowAttrs = array_merge($detail_pendaftaran->RowAttrs, array('data-rowindex'=>$detail_pendaftaran_list->RowCnt, 'id'=>'r' . $detail_pendaftaran_list->RowCnt . '_detail_pendaftaran', 'data-rowtype'=>$detail_pendaftaran->RowType));
@@ -5590,9 +3519,6 @@ while ($detail_pendaftaran_list->RecCnt < $detail_pendaftaran_list->StopRec) {
 
 		// Render list options
 		$detail_pendaftaran_list->RenderListOptions();
-
-		// Skip delete row / empty row for confirm page
-		if ($detail_pendaftaran_list->RowAction <> "delete" && $detail_pendaftaran_list->RowAction <> "insertdelete" && !($detail_pendaftaran_list->RowAction == "insert" && $detail_pendaftaran->CurrentAction == "F" && $detail_pendaftaran_list->EmptyRow())) {
 ?>
 	<tr<?php echo $detail_pendaftaran->RowAttributes() ?>>
 <?php
@@ -5600,359 +3526,80 @@ while ($detail_pendaftaran_list->RecCnt < $detail_pendaftaran_list->StopRec) {
 // Render list options (body, left)
 $detail_pendaftaran_list->ListOptions->Render("body", "left", $detail_pendaftaran_list->RowCnt);
 ?>
-	<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<td data-name="id_detailpendaftaran"<?php echo $detail_pendaftaran->id_detailpendaftaran->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_detailpendaftaran" class="form-group detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->id_detailpendaftaran->EditValue ?></p></span>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->CurrentValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_detailpendaftaran" class="detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->id_detailpendaftaran->ListViewValue() ?></span>
-</span>
-<?php } ?>
-<a id="<?php echo $detail_pendaftaran_list->PageObjName . "_row_" . $detail_pendaftaran_list->RowCnt ?>"></a></td>
-	<?php } ?>
 	<?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 		<td data-name="fk_kodedaftar"<?php echo $detail_pendaftaran->fk_kodedaftar->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<?php if ($detail_pendaftaran->fk_kodedaftar->getSessionValue() <> "") { ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<span<?php echo $detail_pendaftaran->fk_kodedaftar->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->fk_kodedaftar->ViewValue ?></p></span>
-</span>
-<input type="hidden" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->CurrentValue) ?>">
-<?php } else { ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->fk_kodedaftar->EditValue ?>"<?php echo $detail_pendaftaran->fk_kodedaftar->EditAttributes() ?>>
-</span>
-<?php } ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<?php if ($detail_pendaftaran->fk_kodedaftar->getSessionValue() <> "") { ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<span<?php echo $detail_pendaftaran->fk_kodedaftar->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->fk_kodedaftar->ViewValue ?></p></span>
-</span>
-<input type="hidden" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->CurrentValue) ?>">
-<?php } else { ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->fk_kodedaftar->EditValue ?>"<?php echo $detail_pendaftaran->fk_kodedaftar->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_kodedaftar" class="detail_pendaftaran_fk_kodedaftar">
 <span<?php echo $detail_pendaftaran->fk_kodedaftar->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->fk_kodedaftar->ListViewValue() ?></span>
 </span>
-<?php } ?>
-</td>
+<a id="<?php echo $detail_pendaftaran_list->PageObjName . "_row_" . $detail_pendaftaran_list->RowCnt ?>"></a></td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->fk_jenis_praktikum->Visible) { // fk_jenis_praktikum ?>
 		<td data-name="fk_jenis_praktikum"<?php echo $detail_pendaftaran->fk_jenis_praktikum->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_jenis_praktikum" class="form-group detail_pendaftaran_fk_jenis_praktikum">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum"><?php echo (strval($detail_pendaftaran->fk_jenis_praktikum->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->fk_jenis_praktikum->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->fk_jenis_praktikum->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->fk_jenis_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->CurrentValue ?>"<?php echo $detail_pendaftaran->fk_jenis_praktikum->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_jenis_praktikum->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_jenis_praktikum" class="form-group detail_pendaftaran_fk_jenis_praktikum">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum"><?php echo (strval($detail_pendaftaran->fk_jenis_praktikum->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->fk_jenis_praktikum->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->fk_jenis_praktikum->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->fk_jenis_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->CurrentValue ?>"<?php echo $detail_pendaftaran->fk_jenis_praktikum->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->LookupFilterQuery() ?>">
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_fk_jenis_praktikum" class="detail_pendaftaran_fk_jenis_praktikum">
 <span<?php echo $detail_pendaftaran->fk_jenis_praktikum->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->fk_jenis_praktikum->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->biaya_bayar->Visible) { // biaya_bayar ?>
 		<td data-name="biaya_bayar"<?php echo $detail_pendaftaran->biaya_bayar->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_biaya_bayar" class="form-group detail_pendaftaran_biaya_bayar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" size="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->biaya_bayar->EditValue ?>"<?php echo $detail_pendaftaran->biaya_bayar->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_biaya_bayar" class="form-group detail_pendaftaran_biaya_bayar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" size="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->biaya_bayar->EditValue ?>"<?php echo $detail_pendaftaran->biaya_bayar->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_biaya_bayar" class="detail_pendaftaran_biaya_bayar">
 <span<?php echo $detail_pendaftaran->biaya_bayar->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->biaya_bayar->ListViewValue() ?></span>
 </span>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<td data-name="tgl_daftar_detail"<?php echo $detail_pendaftaran->tgl_daftar_detail->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_tgl_daftar_detail" class="detail_pendaftaran_tgl_daftar_detail">
-<span<?php echo $detail_pendaftaran->tgl_daftar_detail->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->tgl_daftar_detail->ListViewValue() ?></span>
-</span>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<td data-name="jam_daftar_detail"<?php echo $detail_pendaftaran->jam_daftar_detail->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_jam_daftar_detail" class="detail_pendaftaran_jam_daftar_detail">
-<span<?php echo $detail_pendaftaran->jam_daftar_detail->ViewAttributes() ?>>
-<?php echo $detail_pendaftaran->jam_daftar_detail->ListViewValue() ?></span>
-</span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->status_praktikum->Visible) { // status_praktikum ?>
 		<td data-name="status_praktikum"<?php echo $detail_pendaftaran->status_praktikum->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_praktikum" class="form-group detail_pendaftaran_status_praktikum">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_status_praktikum" data-value-separator="<?php echo $detail_pendaftaran->status_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="{value}"<?php echo $detail_pendaftaran->status_praktikum->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->status_praktikum->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_status_praktikum") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_status_praktikum" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="<?php echo ew_HtmlEncode($detail_pendaftaran->status_praktikum->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_praktikum" class="form-group detail_pendaftaran_status_praktikum">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_status_praktikum" data-value-separator="<?php echo $detail_pendaftaran->status_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="{value}"<?php echo $detail_pendaftaran->status_praktikum->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->status_praktikum->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_status_praktikum") ?>
-</div></div>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_praktikum" class="detail_pendaftaran_status_praktikum">
 <span<?php echo $detail_pendaftaran->status_praktikum->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->status_praktikum->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->id_kelompok->Visible) { // id_kelompok ?>
 		<td data-name="id_kelompok"<?php echo $detail_pendaftaran->id_kelompok->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_kelompok" class="form-group detail_pendaftaran_id_kelompok">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok"><?php echo (strval($detail_pendaftaran->id_kelompok->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_kelompok->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_kelompok->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_kelompok->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->CurrentValue ?>"<?php echo $detail_pendaftaran->id_kelompok->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_kelompok->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_kelompok" class="form-group detail_pendaftaran_id_kelompok">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok"><?php echo (strval($detail_pendaftaran->id_kelompok->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_kelompok->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_kelompok->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_kelompok->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->CurrentValue ?>"<?php echo $detail_pendaftaran->id_kelompok->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->LookupFilterQuery() ?>">
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_kelompok" class="detail_pendaftaran_id_kelompok">
 <span<?php echo $detail_pendaftaran->id_kelompok->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->id_kelompok->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->id_jam_prak->Visible) { // id_jam_prak ?>
 		<td data-name="id_jam_prak"<?php echo $detail_pendaftaran->id_jam_prak->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_jam_prak" class="form-group detail_pendaftaran_id_jam_prak">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak"><?php echo (strval($detail_pendaftaran->id_jam_prak->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_jam_prak->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_jam_prak->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_jam_prak->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->CurrentValue ?>"<?php echo $detail_pendaftaran->id_jam_prak->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_jam_prak->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_jam_prak" class="form-group detail_pendaftaran_id_jam_prak">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak"><?php echo (strval($detail_pendaftaran->id_jam_prak->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_jam_prak->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_jam_prak->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_jam_prak->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->CurrentValue ?>"<?php echo $detail_pendaftaran->id_jam_prak->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->LookupFilterQuery() ?>">
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_jam_prak" class="detail_pendaftaran_id_jam_prak">
 <span<?php echo $detail_pendaftaran->id_jam_prak->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->id_jam_prak->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->id_lab->Visible) { // id_lab ?>
 		<td data-name="id_lab"<?php echo $detail_pendaftaran->id_lab->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_lab" class="form-group detail_pendaftaran_id_lab">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab"><?php echo (strval($detail_pendaftaran->id_lab->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_lab->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_lab->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_lab->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->CurrentValue ?>"<?php echo $detail_pendaftaran->id_lab->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_lab->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_lab" class="form-group detail_pendaftaran_id_lab">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab"><?php echo (strval($detail_pendaftaran->id_lab->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_lab->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_lab->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_lab->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->CurrentValue ?>"<?php echo $detail_pendaftaran->id_lab->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->LookupFilterQuery() ?>">
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_lab" class="detail_pendaftaran_id_lab">
 <span<?php echo $detail_pendaftaran->id_lab->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->id_lab->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->id_pngjar->Visible) { // id_pngjar ?>
 		<td data-name="id_pngjar"<?php echo $detail_pendaftaran->id_pngjar->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_pngjar" class="form-group detail_pendaftaran_id_pngjar">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar"><?php echo (strval($detail_pendaftaran->id_pngjar->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_pngjar->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_pngjar->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_pngjar->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->CurrentValue ?>"<?php echo $detail_pendaftaran->id_pngjar->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_pngjar->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_pngjar" class="form-group detail_pendaftaran_id_pngjar">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar"><?php echo (strval($detail_pendaftaran->id_pngjar->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_pngjar->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_pngjar->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_pngjar->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->CurrentValue ?>"<?php echo $detail_pendaftaran->id_pngjar->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->LookupFilterQuery() ?>">
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_pngjar" class="detail_pendaftaran_id_pngjar">
 <span<?php echo $detail_pendaftaran->id_pngjar->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->id_pngjar->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->id_asisten->Visible) { // id_asisten ?>
 		<td data-name="id_asisten"<?php echo $detail_pendaftaran->id_asisten->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_asisten" class="form-group detail_pendaftaran_id_asisten">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten"><?php echo (strval($detail_pendaftaran->id_asisten->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_asisten->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_asisten->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_asisten->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->CurrentValue ?>"<?php echo $detail_pendaftaran->id_asisten->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_asisten->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_asisten" class="form-group detail_pendaftaran_id_asisten">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten"><?php echo (strval($detail_pendaftaran->id_asisten->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_asisten->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_asisten->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_asisten->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->CurrentValue ?>"<?php echo $detail_pendaftaran->id_asisten->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->LookupFilterQuery() ?>">
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_id_asisten" class="detail_pendaftaran_id_asisten">
 <span<?php echo $detail_pendaftaran->id_asisten->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->id_asisten->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->status_kelompok->Visible) { // status_kelompok ?>
 		<td data-name="status_kelompok"<?php echo $detail_pendaftaran->status_kelompok->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_kelompok" class="form-group detail_pendaftaran_status_kelompok">
-<?php
-$selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue)) ? " checked" : "";
-?>
-<input type="checkbox" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="1"<?php echo $selwrk ?><?php echo $detail_pendaftaran->status_kelompok->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="<?php echo ew_HtmlEncode($detail_pendaftaran->status_kelompok->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_kelompok" class="form-group detail_pendaftaran_status_kelompok">
-<?php
-$selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue)) ? " checked" : "";
-?>
-<input type="checkbox" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="1"<?php echo $selwrk ?><?php echo $detail_pendaftaran->status_kelompok->EditAttributes() ?>>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_status_kelompok" class="detail_pendaftaran_status_kelompok">
 <span<?php echo $detail_pendaftaran->status_kelompok->ViewAttributes() ?>>
 <?php if (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue)) { ?>
@@ -5962,61 +3609,22 @@ $selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue))
 <?php } ?>
 </span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->nilai_akhir->Visible) { // nilai_akhir ?>
 		<td data-name="nilai_akhir"<?php echo $detail_pendaftaran->nilai_akhir->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_nilai_akhir" class="form-group detail_pendaftaran_nilai_akhir">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_nilai_akhir" data-value-separator="<?php echo $detail_pendaftaran->nilai_akhir->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="{value}"<?php echo $detail_pendaftaran->nilai_akhir->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->nilai_akhir->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_nilai_akhir") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_nilai_akhir" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="<?php echo ew_HtmlEncode($detail_pendaftaran->nilai_akhir->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_nilai_akhir" class="form-group detail_pendaftaran_nilai_akhir">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_nilai_akhir" data-value-separator="<?php echo $detail_pendaftaran->nilai_akhir->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="{value}"<?php echo $detail_pendaftaran->nilai_akhir->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->nilai_akhir->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_nilai_akhir") ?>
-</div></div>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_nilai_akhir" class="detail_pendaftaran_nilai_akhir">
 <span<?php echo $detail_pendaftaran->nilai_akhir->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->nilai_akhir->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 	<?php if ($detail_pendaftaran->persetujuan->Visible) { // persetujuan ?>
 		<td data-name="persetujuan"<?php echo $detail_pendaftaran->persetujuan->CellAttributes() ?>>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_persetujuan" class="form-group detail_pendaftaran_persetujuan">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_persetujuan" data-value-separator="<?php echo $detail_pendaftaran->persetujuan->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="{value}"<?php echo $detail_pendaftaran->persetujuan->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->persetujuan->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_persetujuan") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_persetujuan" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="<?php echo ew_HtmlEncode($detail_pendaftaran->persetujuan->OldValue) ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_persetujuan" class="form-group detail_pendaftaran_persetujuan">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_persetujuan" data-value-separator="<?php echo $detail_pendaftaran->persetujuan->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="{value}"<?php echo $detail_pendaftaran->persetujuan->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->persetujuan->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_persetujuan") ?>
-</div></div>
-</span>
-<?php } ?>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_VIEW) { // View record ?>
 <span id="el<?php echo $detail_pendaftaran_list->RowCnt ?>_detail_pendaftaran_persetujuan" class="detail_pendaftaran_persetujuan">
 <span<?php echo $detail_pendaftaran->persetujuan->ViewAttributes() ?>>
 <?php echo $detail_pendaftaran->persetujuan->ListViewValue() ?></span>
 </span>
-<?php } ?>
 </td>
 	<?php } ?>
 <?php
@@ -6025,239 +3633,14 @@ $selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue))
 $detail_pendaftaran_list->ListOptions->Render("body", "right", $detail_pendaftaran_list->RowCnt);
 ?>
 	</tr>
-<?php if ($detail_pendaftaran->RowType == EW_ROWTYPE_ADD || $detail_pendaftaran->RowType == EW_ROWTYPE_EDIT) { ?>
-<script type="text/javascript">
-fdetail_pendaftaranlist.UpdateOpts(<?php echo $detail_pendaftaran_list->RowIndex ?>);
-</script>
-<?php } ?>
 <?php
 	}
-	} // End delete row checking
 	if ($detail_pendaftaran->CurrentAction <> "gridadd")
-		if (!$detail_pendaftaran_list->Recordset->EOF) $detail_pendaftaran_list->Recordset->MoveNext();
-}
-?>
-<?php
-	if ($detail_pendaftaran->CurrentAction == "gridadd" || $detail_pendaftaran->CurrentAction == "gridedit") {
-		$detail_pendaftaran_list->RowIndex = '$rowindex$';
-		$detail_pendaftaran_list->LoadDefaultValues();
-
-		// Set row properties
-		$detail_pendaftaran->ResetAttrs();
-		$detail_pendaftaran->RowAttrs = array_merge($detail_pendaftaran->RowAttrs, array('data-rowindex'=>$detail_pendaftaran_list->RowIndex, 'id'=>'r0_detail_pendaftaran', 'data-rowtype'=>EW_ROWTYPE_ADD));
-		ew_AppendClass($detail_pendaftaran->RowAttrs["class"], "ewTemplate");
-		$detail_pendaftaran->RowType = EW_ROWTYPE_ADD;
-
-		// Render row
-		$detail_pendaftaran_list->RenderRow();
-
-		// Render list options
-		$detail_pendaftaran_list->RenderListOptions();
-		$detail_pendaftaran_list->StartRowCnt = 0;
-?>
-	<tr<?php echo $detail_pendaftaran->RowAttributes() ?>>
-<?php
-
-// Render list options (body, left)
-$detail_pendaftaran_list->ListOptions->Render("body", "left", $detail_pendaftaran_list->RowIndex);
-?>
-	<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-		<td data-name="id_detailpendaftaran">
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
-		<td data-name="fk_kodedaftar">
-<?php if ($detail_pendaftaran->fk_kodedaftar->getSessionValue() <> "") { ?>
-<span id="el$rowindex$_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<span<?php echo $detail_pendaftaran->fk_kodedaftar->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->fk_kodedaftar->ViewValue ?></p></span>
-</span>
-<input type="hidden" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->CurrentValue) ?>">
-<?php } else { ?>
-<span id="el$rowindex$_detail_pendaftaran_fk_kodedaftar" class="form-group detail_pendaftaran_fk_kodedaftar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" size="30" maxlength="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->fk_kodedaftar->EditValue ?>"<?php echo $detail_pendaftaran->fk_kodedaftar->EditAttributes() ?>>
-</span>
-<?php } ?>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_kodedaftar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_kodedaftar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_kodedaftar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->fk_jenis_praktikum->Visible) { // fk_jenis_praktikum ?>
-		<td data-name="fk_jenis_praktikum">
-<span id="el$rowindex$_detail_pendaftaran_fk_jenis_praktikum" class="form-group detail_pendaftaran_fk_jenis_praktikum">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum"><?php echo (strval($detail_pendaftaran->fk_jenis_praktikum->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->fk_jenis_praktikum->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->fk_jenis_praktikum->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->fk_jenis_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->CurrentValue ?>"<?php echo $detail_pendaftaran->fk_jenis_praktikum->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo $detail_pendaftaran->fk_jenis_praktikum->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_fk_jenis_praktikum" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_fk_jenis_praktikum" value="<?php echo ew_HtmlEncode($detail_pendaftaran->fk_jenis_praktikum->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->biaya_bayar->Visible) { // biaya_bayar ?>
-		<td data-name="biaya_bayar">
-<span id="el$rowindex$_detail_pendaftaran_biaya_bayar" class="form-group detail_pendaftaran_biaya_bayar">
-<input type="text" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" size="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->biaya_bayar->EditValue ?>"<?php echo $detail_pendaftaran->biaya_bayar->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_biaya_bayar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-		<td data-name="tgl_daftar_detail">
-<span id="el$rowindex$_detail_pendaftaran_tgl_daftar_detail" class="form-group detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_tgl_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-		<td data-name="jam_daftar_detail">
-<span id="el$rowindex$_detail_pendaftaran_jam_daftar_detail" class="form-group detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_jam_daftar_detail" value="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->status_praktikum->Visible) { // status_praktikum ?>
-		<td data-name="status_praktikum">
-<span id="el$rowindex$_detail_pendaftaran_status_praktikum" class="form-group detail_pendaftaran_status_praktikum">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_status_praktikum" data-value-separator="<?php echo $detail_pendaftaran->status_praktikum->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="{value}"<?php echo $detail_pendaftaran->status_praktikum->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->status_praktikum->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_status_praktikum") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_status_praktikum" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_praktikum" value="<?php echo ew_HtmlEncode($detail_pendaftaran->status_praktikum->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_kelompok->Visible) { // id_kelompok ?>
-		<td data-name="id_kelompok">
-<span id="el$rowindex$_detail_pendaftaran_id_kelompok" class="form-group detail_pendaftaran_id_kelompok">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok"><?php echo (strval($detail_pendaftaran->id_kelompok->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_kelompok->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_kelompok->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_kelompok->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->CurrentValue ?>"<?php echo $detail_pendaftaran->id_kelompok->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo $detail_pendaftaran->id_kelompok->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_kelompok" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_kelompok" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_kelompok->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_jam_prak->Visible) { // id_jam_prak ?>
-		<td data-name="id_jam_prak">
-<span id="el$rowindex$_detail_pendaftaran_id_jam_prak" class="form-group detail_pendaftaran_id_jam_prak">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak"><?php echo (strval($detail_pendaftaran->id_jam_prak->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_jam_prak->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_jam_prak->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_jam_prak->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->CurrentValue ?>"<?php echo $detail_pendaftaran->id_jam_prak->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo $detail_pendaftaran->id_jam_prak->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_jam_prak" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_jam_prak" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_jam_prak->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_lab->Visible) { // id_lab ?>
-		<td data-name="id_lab">
-<span id="el$rowindex$_detail_pendaftaran_id_lab" class="form-group detail_pendaftaran_id_lab">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab"><?php echo (strval($detail_pendaftaran->id_lab->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_lab->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_lab->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_lab->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->CurrentValue ?>"<?php echo $detail_pendaftaran->id_lab->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo $detail_pendaftaran->id_lab->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_lab" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_lab" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_lab->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_pngjar->Visible) { // id_pngjar ?>
-		<td data-name="id_pngjar">
-<span id="el$rowindex$_detail_pendaftaran_id_pngjar" class="form-group detail_pendaftaran_id_pngjar">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar"><?php echo (strval($detail_pendaftaran->id_pngjar->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_pngjar->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_pngjar->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_pngjar->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->CurrentValue ?>"<?php echo $detail_pendaftaran->id_pngjar->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo $detail_pendaftaran->id_pngjar->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_pngjar" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_pngjar" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_pngjar->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->id_asisten->Visible) { // id_asisten ?>
-		<td data-name="id_asisten">
-<span id="el$rowindex$_detail_pendaftaran_id_asisten" class="form-group detail_pendaftaran_id_asisten">
-<span class="ewLookupList">
-	<span onclick="jQuery(this).parent().next().click();" tabindex="-1" class="form-control ewLookupText" id="lu_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten"><?php echo (strval($detail_pendaftaran->id_asisten->ViewValue) == "" ? $Language->Phrase("PleaseSelect") : $detail_pendaftaran->id_asisten->ViewValue); ?></span>
-</span>
-<button type="button" title="<?php echo ew_HtmlEncode(str_replace("%s", ew_RemoveHtml($detail_pendaftaran->id_asisten->FldCaption()), $Language->Phrase("LookupLink", TRUE))) ?>" onclick="ew_ModalLookupShow({lnk:this,el:'x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten',m:0,n:10});" class="ewLookupBtn btn btn-default btn-sm"><span class="glyphicon glyphicon-search ewIcon"></span></button>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" data-multiple="0" data-lookup="1" data-value-separator="<?php echo $detail_pendaftaran->id_asisten->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->CurrentValue ?>"<?php echo $detail_pendaftaran->id_asisten->EditAttributes() ?>>
-<input type="hidden" name="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="s_x<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo $detail_pendaftaran->id_asisten->LookupFilterQuery() ?>">
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_asisten" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_id_asisten" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_asisten->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->status_kelompok->Visible) { // status_kelompok ?>
-		<td data-name="status_kelompok">
-<span id="el$rowindex$_detail_pendaftaran_status_kelompok" class="form-group detail_pendaftaran_status_kelompok">
-<?php
-$selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue)) ? " checked" : "";
-?>
-<input type="checkbox" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="1"<?php echo $selwrk ?><?php echo $detail_pendaftaran->status_kelompok->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_status_kelompok" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_status_kelompok[]" value="<?php echo ew_HtmlEncode($detail_pendaftaran->status_kelompok->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->nilai_akhir->Visible) { // nilai_akhir ?>
-		<td data-name="nilai_akhir">
-<span id="el$rowindex$_detail_pendaftaran_nilai_akhir" class="form-group detail_pendaftaran_nilai_akhir">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_nilai_akhir" data-value-separator="<?php echo $detail_pendaftaran->nilai_akhir->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="{value}"<?php echo $detail_pendaftaran->nilai_akhir->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->nilai_akhir->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_nilai_akhir") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_nilai_akhir" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_nilai_akhir" value="<?php echo ew_HtmlEncode($detail_pendaftaran->nilai_akhir->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detail_pendaftaran->persetujuan->Visible) { // persetujuan ?>
-		<td data-name="persetujuan">
-<span id="el$rowindex$_detail_pendaftaran_persetujuan" class="form-group detail_pendaftaran_persetujuan">
-<div id="tp_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" class="ewTemplate"><input type="radio" data-table="detail_pendaftaran" data-field="x_persetujuan" data-value-separator="<?php echo $detail_pendaftaran->persetujuan->DisplayValueSeparatorAttribute() ?>" name="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="{value}"<?php echo $detail_pendaftaran->persetujuan->EditAttributes() ?>></div>
-<div id="dsl_x<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
-<?php echo $detail_pendaftaran->persetujuan->RadioButtonListHtml(FALSE, "x{$detail_pendaftaran_list->RowIndex}_persetujuan") ?>
-</div></div>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_persetujuan" name="o<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" id="o<?php echo $detail_pendaftaran_list->RowIndex ?>_persetujuan" value="<?php echo ew_HtmlEncode($detail_pendaftaran->persetujuan->OldValue) ?>">
-</td>
-	<?php } ?>
-<?php
-
-// Render list options (body, right)
-$detail_pendaftaran_list->ListOptions->Render("body", "right", $detail_pendaftaran_list->RowCnt);
-?>
-<script type="text/javascript">
-fdetail_pendaftaranlist.UpdateOpts(<?php echo $detail_pendaftaran_list->RowIndex ?>);
-</script>
-	</tr>
-<?php
+		$detail_pendaftaran_list->Recordset->MoveNext();
 }
 ?>
 </tbody>
 </table>
-<?php } ?>
-<?php if ($detail_pendaftaran->CurrentAction == "add" || $detail_pendaftaran->CurrentAction == "copy") { ?>
-<input type="hidden" name="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" id="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" value="<?php echo $detail_pendaftaran_list->KeyCount ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->CurrentAction == "gridadd") { ?>
-<input type="hidden" name="a_list" id="a_list" value="gridinsert">
-<input type="hidden" name="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" id="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" value="<?php echo $detail_pendaftaran_list->KeyCount ?>">
-<?php echo $detail_pendaftaran_list->MultiSelectKey ?>
-<?php } ?>
-<?php if ($detail_pendaftaran->CurrentAction == "edit") { ?>
-<input type="hidden" name="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" id="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" value="<?php echo $detail_pendaftaran_list->KeyCount ?>">
-<?php } ?>
-<?php if ($detail_pendaftaran->CurrentAction == "gridedit") { ?>
-<input type="hidden" name="a_list" id="a_list" value="gridupdate">
-<input type="hidden" name="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" id="<?php echo $detail_pendaftaran_list->FormKeyCountName ?>" value="<?php echo $detail_pendaftaran_list->KeyCount ?>">
-<?php echo $detail_pendaftaran_list->MultiSelectKey ?>
 <?php } ?>
 <?php if ($detail_pendaftaran->CurrentAction == "") { ?>
 <input type="hidden" name="a_list" id="a_list" value="">

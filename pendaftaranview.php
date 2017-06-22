@@ -390,6 +390,7 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->kelas_mahasiswa->SetVisibility();
 		$this->semester_mahasiswa->SetVisibility();
 		$this->total_biaya->SetVisibility();
+		$this->foto->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -792,7 +793,8 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->setDbValue($rs->fields('tgl_daftar_mahasiswa'));
 		$this->jam_daftar_mahasiswa->setDbValue($rs->fields('jam_daftar_mahasiswa'));
 		$this->total_biaya->setDbValue($rs->fields('total_biaya'));
-		$this->foto->setDbValue($rs->fields('foto'));
+		$this->foto->Upload->DbValue = $rs->fields('foto');
+		$this->foto->CurrentValue = $this->foto->Upload->DbValue;
 		$this->alamat->setDbValue($rs->fields('alamat'));
 		$this->tlp->setDbValue($rs->fields('tlp'));
 		$this->tempat->setDbValue($rs->fields('tempat'));
@@ -813,7 +815,7 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->DbValue = $row['tgl_daftar_mahasiswa'];
 		$this->jam_daftar_mahasiswa->DbValue = $row['jam_daftar_mahasiswa'];
 		$this->total_biaya->DbValue = $row['total_biaya'];
-		$this->foto->DbValue = $row['foto'];
+		$this->foto->Upload->DbValue = $row['foto'];
 		$this->alamat->DbValue = $row['alamat'];
 		$this->tlp->DbValue = $row['tlp'];
 		$this->tempat->DbValue = $row['tempat'];
@@ -899,7 +901,12 @@ class cpendaftaran_view extends cpendaftaran {
 		$this->total_biaya->ViewCustomAttributes = "";
 
 		// foto
-		$this->foto->ViewValue = $this->foto->CurrentValue;
+		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageAlt = $this->foto->FldAlt();
+			$this->foto->ViewValue = $this->foto->Upload->DbValue;
+		} else {
+			$this->foto->ViewValue = "";
+		}
 		$this->foto->ViewCustomAttributes = "";
 
 		// alamat
@@ -956,6 +963,24 @@ class cpendaftaran_view extends cpendaftaran {
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
 			$this->total_biaya->TooltipValue = "";
+
+			// foto
+			$this->foto->LinkCustomAttributes = "";
+			if (!ew_Empty($this->foto->Upload->DbValue)) {
+				$this->foto->HrefValue = ew_GetFileUploadUrl($this->foto, $this->foto->Upload->DbValue); // Add prefix/suffix
+				$this->foto->LinkAttrs["target"] = ""; // Add target
+				if ($this->Export <> "") $this->foto->HrefValue = ew_ConvertFullUrl($this->foto->HrefValue);
+			} else {
+				$this->foto->HrefValue = "";
+			}
+			$this->foto->HrefValue2 = $this->foto->UploadPath . $this->foto->Upload->DbValue;
+			$this->foto->TooltipValue = "";
+			if ($this->foto->UseColorbox) {
+				if (ew_Empty($this->foto->TooltipValue))
+					$this->foto->LinkAttrs["title"] = $Language->Phrase("ViewImageGallery");
+				$this->foto->LinkAttrs["data-rel"] = "pendaftaran_x_foto";
+				ew_AppendClass($this->foto->LinkAttrs["class"], "ewLightbox");
+			}
 		}
 
 		// Call Row Rendered event
@@ -1564,6 +1589,18 @@ $pendaftaran_view->ShowMessage();
 <span id="el_pendaftaran_total_biaya">
 <span<?php echo $pendaftaran->total_biaya->ViewAttributes() ?>>
 <?php echo $pendaftaran->total_biaya->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($pendaftaran->foto->Visible) { // foto ?>
+	<tr id="r_foto">
+		<td><span id="elh_pendaftaran_foto"><?php echo $pendaftaran->foto->FldCaption() ?></span></td>
+		<td data-name="foto"<?php echo $pendaftaran->foto->CellAttributes() ?>>
+<span id="el_pendaftaran_foto">
+<span>
+<?php echo ew_GetFileViewTag($pendaftaran->foto, $pendaftaran->foto->ViewValue) ?>
+</span>
 </span>
 </td>
 	</tr>

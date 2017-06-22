@@ -1189,18 +1189,9 @@ class cdetail_pendaftaran extends cTable {
 		if (strval($this->biaya_bayar->EditValue) <> "" && is_numeric($this->biaya_bayar->EditValue)) $this->biaya_bayar->EditValue = ew_FormatNumber($this->biaya_bayar->EditValue, -2, -1, -2, 0);
 
 		// tgl_daftar_detail
-		$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-		$this->tgl_daftar_detail->EditCustomAttributes = "";
-		$this->tgl_daftar_detail->EditValue = ew_FormatDateTime($this->tgl_daftar_detail->CurrentValue, 8);
-		$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
 		// jam_daftar_detail
-		$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-		$this->jam_daftar_detail->EditCustomAttributes = "";
-		$this->jam_daftar_detail->EditValue = $this->jam_daftar_detail->CurrentValue;
-		$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
-
 		// status_praktikum
+
 		$this->status_praktikum->EditCustomAttributes = "";
 		$this->status_praktikum->EditValue = $this->status_praktikum->Options(FALSE);
 
@@ -1263,7 +1254,6 @@ class cdetail_pendaftaran extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_detailpendaftaran->Exportable) $Doc->ExportCaption($this->id_detailpendaftaran);
 					if ($this->fk_kodedaftar->Exportable) $Doc->ExportCaption($this->fk_kodedaftar);
 					if ($this->fk_jenis_praktikum->Exportable) $Doc->ExportCaption($this->fk_jenis_praktikum);
 					if ($this->biaya_bayar->Exportable) $Doc->ExportCaption($this->biaya_bayar);
@@ -1325,7 +1315,6 @@ class cdetail_pendaftaran extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_detailpendaftaran->Exportable) $Doc->ExportField($this->id_detailpendaftaran);
 						if ($this->fk_kodedaftar->Exportable) $Doc->ExportField($this->fk_kodedaftar);
 						if ($this->fk_jenis_praktikum->Exportable) $Doc->ExportField($this->fk_jenis_praktikum);
 						if ($this->biaya_bayar->Exportable) $Doc->ExportField($this->biaya_bayar);

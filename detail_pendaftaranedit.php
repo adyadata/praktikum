@@ -289,8 +289,6 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 		// Create form object
 		$objForm = new cFormObj();
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_detailpendaftaran->SetVisibility();
-		$this->id_detailpendaftaran->Visible = !$this->IsAdd() && !$this->IsCopy() && !$this->IsGridAdd();
 		$this->fk_kodedaftar->SetVisibility();
 		$this->fk_jenis_praktikum->SetVisibility();
 		$this->biaya_bayar->SetVisibility();
@@ -559,8 +557,6 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 
 		// Load from form
 		global $objForm;
-		if (!$this->id_detailpendaftaran->FldIsDetailKey)
-			$this->id_detailpendaftaran->setFormValue($objForm->GetValue("x_id_detailpendaftaran"));
 		if (!$this->fk_kodedaftar->FldIsDetailKey) {
 			$this->fk_kodedaftar->setFormValue($objForm->GetValue("x_fk_kodedaftar"));
 		}
@@ -605,6 +601,8 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 		if (!$this->persetujuan->FldIsDetailKey) {
 			$this->persetujuan->setFormValue($objForm->GetValue("x_persetujuan"));
 		}
+		if (!$this->id_detailpendaftaran->FldIsDetailKey)
+			$this->id_detailpendaftaran->setFormValue($objForm->GetValue("x_id_detailpendaftaran"));
 	}
 
 	// Restore form values
@@ -1003,11 +1001,6 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 		}
 		$this->persetujuan->ViewCustomAttributes = "";
 
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-			$this->id_detailpendaftaran->TooltipValue = "";
-
 			// fk_kodedaftar
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
@@ -1079,12 +1072,6 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 			$this->persetujuan->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
-			// id_detailpendaftaran
-			$this->id_detailpendaftaran->EditAttrs["class"] = "form-control";
-			$this->id_detailpendaftaran->EditCustomAttributes = "";
-			$this->id_detailpendaftaran->EditValue = $this->id_detailpendaftaran->CurrentValue;
-			$this->id_detailpendaftaran->ViewCustomAttributes = "";
-
 			// fk_kodedaftar
 			$this->fk_kodedaftar->EditAttrs["class"] = "form-control";
 			$this->fk_kodedaftar->EditCustomAttributes = "";
@@ -1132,18 +1119,9 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 			if (strval($this->biaya_bayar->EditValue) <> "" && is_numeric($this->biaya_bayar->EditValue)) $this->biaya_bayar->EditValue = ew_FormatNumber($this->biaya_bayar->EditValue, -2, -1, -2, 0);
 
 			// tgl_daftar_detail
-			$this->tgl_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->tgl_daftar_detail->EditCustomAttributes = "";
-			$this->tgl_daftar_detail->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->tgl_daftar_detail->CurrentValue, 8));
-			$this->tgl_daftar_detail->PlaceHolder = ew_RemoveHtml($this->tgl_daftar_detail->FldCaption());
-
 			// jam_daftar_detail
-			$this->jam_daftar_detail->EditAttrs["class"] = "form-control";
-			$this->jam_daftar_detail->EditCustomAttributes = "";
-			$this->jam_daftar_detail->EditValue = ew_HtmlEncode($this->jam_daftar_detail->CurrentValue);
-			$this->jam_daftar_detail->PlaceHolder = ew_RemoveHtml($this->jam_daftar_detail->FldCaption());
-
 			// status_praktikum
+
 			$this->status_praktikum->EditCustomAttributes = "";
 			$this->status_praktikum->EditValue = $this->status_praktikum->Options(FALSE);
 
@@ -1285,12 +1263,8 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 			$this->persetujuan->EditValue = $this->persetujuan->Options(FALSE);
 
 			// Edit refer script
-			// id_detailpendaftaran
-
-			$this->id_detailpendaftaran->LinkCustomAttributes = "";
-			$this->id_detailpendaftaran->HrefValue = "";
-
 			// fk_kodedaftar
+
 			$this->fk_kodedaftar->LinkCustomAttributes = "";
 			$this->fk_kodedaftar->HrefValue = "";
 
@@ -1370,12 +1344,6 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 		if (!ew_CheckNumber($this->biaya_bayar->FormValue)) {
 			ew_AddMessage($gsFormError, $this->biaya_bayar->FldErrMsg());
 		}
-		if (!ew_CheckDateDef($this->tgl_daftar_detail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->tgl_daftar_detail->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->jam_daftar_detail->FormValue)) {
-			ew_AddMessage($gsFormError, $this->jam_daftar_detail->FldErrMsg());
-		}
 
 		// Return validate result
 		$ValidateForm = ($gsFormError == "");
@@ -1422,10 +1390,12 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 			$this->biaya_bayar->SetDbValueDef($rsnew, $this->biaya_bayar->CurrentValue, NULL, $this->biaya_bayar->ReadOnly);
 
 			// tgl_daftar_detail
-			$this->tgl_daftar_detail->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->tgl_daftar_detail->CurrentValue, 0), NULL, $this->tgl_daftar_detail->ReadOnly);
+			$this->tgl_daftar_detail->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
+			$rsnew['tgl_daftar_detail'] = &$this->tgl_daftar_detail->DbValue;
 
 			// jam_daftar_detail
-			$this->jam_daftar_detail->SetDbValueDef($rsnew, $this->jam_daftar_detail->CurrentValue, NULL, $this->jam_daftar_detail->ReadOnly);
+			$this->jam_daftar_detail->SetDbValueDef($rsnew, ew_CurrentTime(), NULL);
+			$rsnew['jam_daftar_detail'] = &$this->jam_daftar_detail->DbValue;
 
 			// status_praktikum
 			$this->status_praktikum->SetDbValueDef($rsnew, $this->status_praktikum->CurrentValue, NULL, $this->status_praktikum->ReadOnly);
@@ -1650,6 +1620,7 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 	function Page_Load() {
 
 		//echo "Page Load";
+		$this->GridAddRowCount = 2;
 	}
 
 	// Page Unload event
@@ -1757,12 +1728,6 @@ fdetail_pendaftaranedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_biaya_bayar");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->biaya_bayar->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_tgl_daftar_detail");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->tgl_daftar_detail->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_jam_daftar_detail");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detail_pendaftaran->jam_daftar_detail->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1887,18 +1852,6 @@ $detail_pendaftaran_edit->ShowMessage();
 <input type="hidden" name="fk_kodedaftar_mahasiswa" value="<?php echo $detail_pendaftaran->fk_kodedaftar->getSessionValue() ?>">
 <?php } ?>
 <div>
-<?php if ($detail_pendaftaran->id_detailpendaftaran->Visible) { // id_detailpendaftaran ?>
-	<div id="r_id_detailpendaftaran" class="form-group">
-		<label id="elh_detail_pendaftaran_id_detailpendaftaran" class="col-sm-2 control-label ewLabel"><?php echo $detail_pendaftaran->id_detailpendaftaran->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $detail_pendaftaran->id_detailpendaftaran->CellAttributes() ?>>
-<span id="el_detail_pendaftaran_id_detailpendaftaran">
-<span<?php echo $detail_pendaftaran->id_detailpendaftaran->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detail_pendaftaran->id_detailpendaftaran->EditValue ?></p></span>
-</span>
-<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x_id_detailpendaftaran" id="x_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->CurrentValue) ?>">
-<?php echo $detail_pendaftaran->id_detailpendaftaran->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
 <?php if ($detail_pendaftaran->fk_kodedaftar->Visible) { // fk_kodedaftar ?>
 	<div id="r_fk_kodedaftar" class="form-group">
 		<label id="elh_detail_pendaftaran_fk_kodedaftar" for="x_fk_kodedaftar" class="col-sm-2 control-label ewLabel"><?php echo $detail_pendaftaran->fk_kodedaftar->FldCaption() ?></label>
@@ -1940,26 +1893,6 @@ $detail_pendaftaran_edit->ShowMessage();
 <input type="text" data-table="detail_pendaftaran" data-field="x_biaya_bayar" name="x_biaya_bayar" id="x_biaya_bayar" size="30" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->biaya_bayar->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->biaya_bayar->EditValue ?>"<?php echo $detail_pendaftaran->biaya_bayar->EditAttributes() ?>>
 </span>
 <?php echo $detail_pendaftaran->biaya_bayar->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($detail_pendaftaran->tgl_daftar_detail->Visible) { // tgl_daftar_detail ?>
-	<div id="r_tgl_daftar_detail" class="form-group">
-		<label id="elh_detail_pendaftaran_tgl_daftar_detail" for="x_tgl_daftar_detail" class="col-sm-2 control-label ewLabel"><?php echo $detail_pendaftaran->tgl_daftar_detail->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $detail_pendaftaran->tgl_daftar_detail->CellAttributes() ?>>
-<span id="el_detail_pendaftaran_tgl_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_tgl_daftar_detail" name="x_tgl_daftar_detail" id="x_tgl_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->tgl_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->tgl_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->tgl_daftar_detail->EditAttributes() ?>>
-</span>
-<?php echo $detail_pendaftaran->tgl_daftar_detail->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($detail_pendaftaran->jam_daftar_detail->Visible) { // jam_daftar_detail ?>
-	<div id="r_jam_daftar_detail" class="form-group">
-		<label id="elh_detail_pendaftaran_jam_daftar_detail" for="x_jam_daftar_detail" class="col-sm-2 control-label ewLabel"><?php echo $detail_pendaftaran->jam_daftar_detail->FldCaption() ?></label>
-		<div class="col-sm-10"><div<?php echo $detail_pendaftaran->jam_daftar_detail->CellAttributes() ?>>
-<span id="el_detail_pendaftaran_jam_daftar_detail">
-<input type="text" data-table="detail_pendaftaran" data-field="x_jam_daftar_detail" name="x_jam_daftar_detail" id="x_jam_daftar_detail" placeholder="<?php echo ew_HtmlEncode($detail_pendaftaran->jam_daftar_detail->getPlaceHolder()) ?>" value="<?php echo $detail_pendaftaran->jam_daftar_detail->EditValue ?>"<?php echo $detail_pendaftaran->jam_daftar_detail->EditAttributes() ?>>
-</span>
-<?php echo $detail_pendaftaran->jam_daftar_detail->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($detail_pendaftaran->status_praktikum->Visible) { // status_praktikum ?>
@@ -2090,6 +2023,7 @@ $selwrk = (ew_ConvertToBool($detail_pendaftaran->status_kelompok->CurrentValue))
 	</div>
 <?php } ?>
 </div>
+<input type="hidden" data-table="detail_pendaftaran" data-field="x_id_detailpendaftaran" name="x_id_detailpendaftaran" id="x_id_detailpendaftaran" value="<?php echo ew_HtmlEncode($detail_pendaftaran->id_detailpendaftaran->CurrentValue) ?>">
 <?php if (!$detail_pendaftaran_edit->IsModal) { ?>
 <div class="form-group">
 	<div class="col-sm-offset-2 col-sm-10">

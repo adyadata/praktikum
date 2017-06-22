@@ -629,7 +629,7 @@
       <phrase id="menutext" value="accounting debit kredit" />
     </menu>
     <menu id="3">
-      <phrase id="menutext" value="Detail" />
+      <phrase id="menutext" value="Detail Pendaftaran" />
     </menu>
     <menu id="13">
       <phrase id="menutext" value="user" />
@@ -693,18 +693,18 @@
       </field>
     </table>
     <table id="detail_pendaftaran">
-      <phrase id="tblcaption" value="Detail" />
+      <phrase id="tblcaption" value="Detail Pendaftaran" />
       <field id="id_detailpendaftaran">
-        <phrase id="fldcaption" value="id detailpendaftaran" />
+        <phrase id="fldcaption" value="ID" />
       </field>
       <field id="fk_kodedaftar">
-        <phrase id="fldcaption" value="fk kodedaftar" />
+        <phrase id="fldcaption" value="Kode Daftar" />
       </field>
       <field id="fk_jenis_praktikum">
-        <phrase id="fldcaption" value="fk jenis praktikum" />
+        <phrase id="fldcaption" value="Jenis Praktikum" />
       </field>
       <field id="biaya_bayar">
-        <phrase id="fldcaption" value="biaya bayar" />
+        <phrase id="fldcaption" value="Jumlah Bayar" />
       </field>
       <field id="tgl_daftar_detail">
         <phrase id="fldcaption" value="tgl daftar detail" />
@@ -713,7 +713,7 @@
         <phrase id="fldcaption" value="jam daftar detail" />
       </field>
       <field id="status_praktikum">
-        <phrase id="fldcaption" value="status praktikum" />
+        <phrase id="fldcaption" value="Status Praktikum" />
         <phrase id="fldtagvalue1" value="Sudah" />
         <phrase id="fldtagcaption1" value="Sudah" />
         <phrase id="fldtagvalue2" value="Belum" />
@@ -892,10 +892,10 @@
         <phrase id="fldcaption" value="jam daftar mahasiswa" />
       </field>
       <field id="total_biaya">
-        <phrase id="fldcaption" value="total biaya" />
+        <phrase id="fldcaption" value="Total Bayar" />
       </field>
       <field id="foto">
-        <phrase id="fldcaption" value="foto" />
+        <phrase id="fldcaption" value="Bukti Bayar" />
       </field>
       <field id="alamat">
         <phrase id="fldcaption" value="alamat" />

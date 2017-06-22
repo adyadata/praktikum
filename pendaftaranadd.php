@@ -291,9 +291,8 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->nama_mahasiswa->SetVisibility();
 		$this->kelas_mahasiswa->SetVisibility();
 		$this->semester_mahasiswa->SetVisibility();
-		$this->tgl_daftar_mahasiswa->SetVisibility();
-		$this->jam_daftar_mahasiswa->SetVisibility();
 		$this->total_biaya->SetVisibility();
+		$this->foto->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -496,6 +495,9 @@ class cpendaftaran_add extends cpendaftaran {
 		global $objForm, $Language;
 
 		// Get upload data
+		$this->foto->Upload->Index = $objForm->Index;
+		$this->foto->Upload->UploadFile();
+		$this->foto->CurrentValue = $this->foto->Upload->FileName;
 	}
 
 	// Load default values
@@ -510,10 +512,11 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->kelas_mahasiswa->OldValue = $this->kelas_mahasiswa->CurrentValue;
 		$this->semester_mahasiswa->CurrentValue = NULL;
 		$this->semester_mahasiswa->OldValue = $this->semester_mahasiswa->CurrentValue;
-		$this->tgl_daftar_mahasiswa->CurrentValue = ew_CurrentDate();
-		$this->jam_daftar_mahasiswa->CurrentValue = ew_CurrentTime();
 		$this->total_biaya->CurrentValue = NULL;
 		$this->total_biaya->OldValue = $this->total_biaya->CurrentValue;
+		$this->foto->Upload->DbValue = NULL;
+		$this->foto->OldValue = $this->foto->Upload->DbValue;
+		$this->foto->CurrentValue = NULL; // Clear file related field
 	}
 
 	// Load form values
@@ -521,6 +524,7 @@ class cpendaftaran_add extends cpendaftaran {
 
 		// Load from form
 		global $objForm;
+		$this->GetUploadFiles(); // Get upload files
 		if (!$this->kodedaftar_mahasiswa->FldIsDetailKey) {
 			$this->kodedaftar_mahasiswa->setFormValue($objForm->GetValue("x_kodedaftar_mahasiswa"));
 		}
@@ -536,14 +540,6 @@ class cpendaftaran_add extends cpendaftaran {
 		if (!$this->semester_mahasiswa->FldIsDetailKey) {
 			$this->semester_mahasiswa->setFormValue($objForm->GetValue("x_semester_mahasiswa"));
 		}
-		if (!$this->tgl_daftar_mahasiswa->FldIsDetailKey) {
-			$this->tgl_daftar_mahasiswa->setFormValue($objForm->GetValue("x_tgl_daftar_mahasiswa"));
-			$this->tgl_daftar_mahasiswa->CurrentValue = ew_UnFormatDateTime($this->tgl_daftar_mahasiswa->CurrentValue, 0);
-		}
-		if (!$this->jam_daftar_mahasiswa->FldIsDetailKey) {
-			$this->jam_daftar_mahasiswa->setFormValue($objForm->GetValue("x_jam_daftar_mahasiswa"));
-			$this->jam_daftar_mahasiswa->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_mahasiswa->CurrentValue, 4);
-		}
 		if (!$this->total_biaya->FldIsDetailKey) {
 			$this->total_biaya->setFormValue($objForm->GetValue("x_total_biaya"));
 		}
@@ -558,10 +554,6 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->nama_mahasiswa->CurrentValue = $this->nama_mahasiswa->FormValue;
 		$this->kelas_mahasiswa->CurrentValue = $this->kelas_mahasiswa->FormValue;
 		$this->semester_mahasiswa->CurrentValue = $this->semester_mahasiswa->FormValue;
-		$this->tgl_daftar_mahasiswa->CurrentValue = $this->tgl_daftar_mahasiswa->FormValue;
-		$this->tgl_daftar_mahasiswa->CurrentValue = ew_UnFormatDateTime($this->tgl_daftar_mahasiswa->CurrentValue, 0);
-		$this->jam_daftar_mahasiswa->CurrentValue = $this->jam_daftar_mahasiswa->FormValue;
-		$this->jam_daftar_mahasiswa->CurrentValue = ew_UnFormatDateTime($this->jam_daftar_mahasiswa->CurrentValue, 4);
 		$this->total_biaya->CurrentValue = $this->total_biaya->FormValue;
 	}
 
@@ -602,7 +594,8 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->setDbValue($rs->fields('tgl_daftar_mahasiswa'));
 		$this->jam_daftar_mahasiswa->setDbValue($rs->fields('jam_daftar_mahasiswa'));
 		$this->total_biaya->setDbValue($rs->fields('total_biaya'));
-		$this->foto->setDbValue($rs->fields('foto'));
+		$this->foto->Upload->DbValue = $rs->fields('foto');
+		$this->foto->CurrentValue = $this->foto->Upload->DbValue;
 		$this->alamat->setDbValue($rs->fields('alamat'));
 		$this->tlp->setDbValue($rs->fields('tlp'));
 		$this->tempat->setDbValue($rs->fields('tempat'));
@@ -623,7 +616,7 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->tgl_daftar_mahasiswa->DbValue = $row['tgl_daftar_mahasiswa'];
 		$this->jam_daftar_mahasiswa->DbValue = $row['jam_daftar_mahasiswa'];
 		$this->total_biaya->DbValue = $row['total_biaya'];
-		$this->foto->DbValue = $row['foto'];
+		$this->foto->Upload->DbValue = $row['foto'];
 		$this->alamat->DbValue = $row['alamat'];
 		$this->tlp->DbValue = $row['tlp'];
 		$this->tempat->DbValue = $row['tempat'];
@@ -726,7 +719,12 @@ class cpendaftaran_add extends cpendaftaran {
 		$this->total_biaya->ViewCustomAttributes = "";
 
 		// foto
-		$this->foto->ViewValue = $this->foto->CurrentValue;
+		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageAlt = $this->foto->FldAlt();
+			$this->foto->ViewValue = $this->foto->Upload->DbValue;
+		} else {
+			$this->foto->ViewValue = "";
+		}
 		$this->foto->ViewCustomAttributes = "";
 
 		// alamat
@@ -779,20 +777,28 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->semester_mahasiswa->HrefValue = "";
 			$this->semester_mahasiswa->TooltipValue = "";
 
-			// tgl_daftar_mahasiswa
-			$this->tgl_daftar_mahasiswa->LinkCustomAttributes = "";
-			$this->tgl_daftar_mahasiswa->HrefValue = "";
-			$this->tgl_daftar_mahasiswa->TooltipValue = "";
-
-			// jam_daftar_mahasiswa
-			$this->jam_daftar_mahasiswa->LinkCustomAttributes = "";
-			$this->jam_daftar_mahasiswa->HrefValue = "";
-			$this->jam_daftar_mahasiswa->TooltipValue = "";
-
 			// total_biaya
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
 			$this->total_biaya->TooltipValue = "";
+
+			// foto
+			$this->foto->LinkCustomAttributes = "";
+			if (!ew_Empty($this->foto->Upload->DbValue)) {
+				$this->foto->HrefValue = ew_GetFileUploadUrl($this->foto, $this->foto->Upload->DbValue); // Add prefix/suffix
+				$this->foto->LinkAttrs["target"] = ""; // Add target
+				if ($this->Export <> "") $this->foto->HrefValue = ew_ConvertFullUrl($this->foto->HrefValue);
+			} else {
+				$this->foto->HrefValue = "";
+			}
+			$this->foto->HrefValue2 = $this->foto->UploadPath . $this->foto->Upload->DbValue;
+			$this->foto->TooltipValue = "";
+			if ($this->foto->UseColorbox) {
+				if (ew_Empty($this->foto->TooltipValue))
+					$this->foto->LinkAttrs["title"] = $Language->Phrase("ViewImageGallery");
+				$this->foto->LinkAttrs["data-rel"] = "pendaftaran_x_foto";
+				ew_AppendClass($this->foto->LinkAttrs["class"], "ewLightbox");
+			}
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
 			// kodedaftar_mahasiswa
@@ -823,15 +829,25 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->semester_mahasiswa->EditValue = ew_HtmlEncode($this->semester_mahasiswa->CurrentValue);
 			$this->semester_mahasiswa->PlaceHolder = ew_RemoveHtml($this->semester_mahasiswa->FldCaption());
 
-			// tgl_daftar_mahasiswa
-			// jam_daftar_mahasiswa
 			// total_biaya
-
 			$this->total_biaya->EditAttrs["class"] = "form-control";
 			$this->total_biaya->EditCustomAttributes = "";
 			$this->total_biaya->EditValue = ew_HtmlEncode($this->total_biaya->CurrentValue);
 			$this->total_biaya->PlaceHolder = ew_RemoveHtml($this->total_biaya->FldCaption());
 			if (strval($this->total_biaya->EditValue) <> "" && is_numeric($this->total_biaya->EditValue)) $this->total_biaya->EditValue = ew_FormatNumber($this->total_biaya->EditValue, -2, -1, -2, 0);
+
+			// foto
+			$this->foto->EditAttrs["class"] = "form-control";
+			$this->foto->EditCustomAttributes = "";
+			if (!ew_Empty($this->foto->Upload->DbValue)) {
+				$this->foto->ImageAlt = $this->foto->FldAlt();
+				$this->foto->EditValue = $this->foto->Upload->DbValue;
+			} else {
+				$this->foto->EditValue = "";
+			}
+			if (!ew_Empty($this->foto->CurrentValue))
+				$this->foto->Upload->FileName = $this->foto->CurrentValue;
+			if (($this->CurrentAction == "I" || $this->CurrentAction == "C") && !$this->EventCancelled) ew_RenderUploadField($this->foto);
 
 			// Add refer script
 			// kodedaftar_mahasiswa
@@ -855,17 +871,20 @@ class cpendaftaran_add extends cpendaftaran {
 			$this->semester_mahasiswa->LinkCustomAttributes = "";
 			$this->semester_mahasiswa->HrefValue = "";
 
-			// tgl_daftar_mahasiswa
-			$this->tgl_daftar_mahasiswa->LinkCustomAttributes = "";
-			$this->tgl_daftar_mahasiswa->HrefValue = "";
-
-			// jam_daftar_mahasiswa
-			$this->jam_daftar_mahasiswa->LinkCustomAttributes = "";
-			$this->jam_daftar_mahasiswa->HrefValue = "";
-
 			// total_biaya
 			$this->total_biaya->LinkCustomAttributes = "";
 			$this->total_biaya->HrefValue = "";
+
+			// foto
+			$this->foto->LinkCustomAttributes = "";
+			if (!ew_Empty($this->foto->Upload->DbValue)) {
+				$this->foto->HrefValue = ew_GetFileUploadUrl($this->foto, $this->foto->Upload->DbValue); // Add prefix/suffix
+				$this->foto->LinkAttrs["target"] = ""; // Add target
+				if ($this->Export <> "") $this->foto->HrefValue = ew_ConvertFullUrl($this->foto->HrefValue);
+			} else {
+				$this->foto->HrefValue = "";
+			}
+			$this->foto->HrefValue2 = $this->foto->UploadPath . $this->foto->Upload->DbValue;
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD ||
 			$this->RowType == EW_ROWTYPE_EDIT ||
@@ -950,16 +969,23 @@ class cpendaftaran_add extends cpendaftaran {
 		// semester_mahasiswa
 		$this->semester_mahasiswa->SetDbValueDef($rsnew, $this->semester_mahasiswa->CurrentValue, NULL, FALSE);
 
-		// tgl_daftar_mahasiswa
-		$this->tgl_daftar_mahasiswa->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
-		$rsnew['tgl_daftar_mahasiswa'] = &$this->tgl_daftar_mahasiswa->DbValue;
-
-		// jam_daftar_mahasiswa
-		$this->jam_daftar_mahasiswa->SetDbValueDef($rsnew, ew_CurrentTime(), NULL);
-		$rsnew['jam_daftar_mahasiswa'] = &$this->jam_daftar_mahasiswa->DbValue;
-
 		// total_biaya
 		$this->total_biaya->SetDbValueDef($rsnew, $this->total_biaya->CurrentValue, NULL, FALSE);
+
+		// foto
+		if ($this->foto->Visible && !$this->foto->Upload->KeepFile) {
+			$this->foto->Upload->DbValue = ""; // No need to delete old file
+			if ($this->foto->Upload->FileName == "") {
+				$rsnew['foto'] = NULL;
+			} else {
+				$rsnew['foto'] = $this->foto->Upload->FileName;
+			}
+		}
+		if ($this->foto->Visible && !$this->foto->Upload->KeepFile) {
+			if (!ew_Empty($this->foto->Upload->Value)) {
+				$rsnew['foto'] = ew_UploadFileNameEx(ew_UploadPathEx(TRUE, $this->foto->UploadPath), $rsnew['foto']); // Get new file name
+			}
+		}
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -987,6 +1013,14 @@ class cpendaftaran_add extends cpendaftaran {
 			$AddRow = $this->Insert($rsnew);
 			$conn->raiseErrorFn = '';
 			if ($AddRow) {
+				if ($this->foto->Visible && !$this->foto->Upload->KeepFile) {
+					if (!ew_Empty($this->foto->Upload->Value)) {
+						if (!$this->foto->Upload->SaveToFile($this->foto->UploadPath, $rsnew['foto'], TRUE)) {
+							$this->setFailureMessage($Language->Phrase("UploadErrMsg7"));
+							return FALSE;
+						}
+					}
+				}
 			}
 		} else {
 			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
@@ -1029,6 +1063,9 @@ class cpendaftaran_add extends cpendaftaran {
 			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 			$this->Row_Inserted($rs, $rsnew);
 		}
+
+		// foto
+		ew_CleanUploadTempPath($this->foto, $this->foto->Upload->Index);
 		return $AddRow;
 	}
 
@@ -1335,6 +1372,27 @@ $pendaftaran_add->ShowMessage();
 <input type="text" data-table="pendaftaran" data-field="x_total_biaya" name="x_total_biaya" id="x_total_biaya" size="30" placeholder="<?php echo ew_HtmlEncode($pendaftaran->total_biaya->getPlaceHolder()) ?>" value="<?php echo $pendaftaran->total_biaya->EditValue ?>"<?php echo $pendaftaran->total_biaya->EditAttributes() ?>>
 </span>
 <?php echo $pendaftaran->total_biaya->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($pendaftaran->foto->Visible) { // foto ?>
+	<div id="r_foto" class="form-group">
+		<label id="elh_pendaftaran_foto" class="col-sm-2 control-label ewLabel"><?php echo $pendaftaran->foto->FldCaption() ?></label>
+		<div class="col-sm-10"><div<?php echo $pendaftaran->foto->CellAttributes() ?>>
+<span id="el_pendaftaran_foto">
+<div id="fd_x_foto">
+<span title="<?php echo $pendaftaran->foto->FldTitle() ? $pendaftaran->foto->FldTitle() : $Language->Phrase("ChooseFile") ?>" class="btn btn-default btn-sm fileinput-button ewTooltip<?php if ($pendaftaran->foto->ReadOnly || $pendaftaran->foto->Disabled) echo " hide"; ?>">
+	<span><?php echo $Language->Phrase("ChooseFileBtn") ?></span>
+	<input type="file" title=" " data-table="pendaftaran" data-field="x_foto" name="x_foto" id="x_foto"<?php echo $pendaftaran->foto->EditAttributes() ?>>
+</span>
+<input type="hidden" name="fn_x_foto" id= "fn_x_foto" value="<?php echo $pendaftaran->foto->Upload->FileName ?>">
+<input type="hidden" name="fa_x_foto" id= "fa_x_foto" value="0">
+<input type="hidden" name="fs_x_foto" id= "fs_x_foto" value="255">
+<input type="hidden" name="fx_x_foto" id= "fx_x_foto" value="<?php echo $pendaftaran->foto->UploadAllowedFileExt ?>">
+<input type="hidden" name="fm_x_foto" id= "fm_x_foto" value="<?php echo $pendaftaran->foto->UploadMaxFileSize ?>">
+</div>
+<table id="ft_x_foto" class="table table-condensed pull-left ewUploadTable"><tbody class="files"></tbody></table>
+</span>
+<?php echo $pendaftaran->foto->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div>
