@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 20, 2017 at 10:09 AM
+-- Generation Time: Jun 24, 2017 at 01:52 AM
 -- Server version: 5.1.41
 -- PHP Version: 5.3.1
 
@@ -3061,6 +3061,7 @@ INSERT INTO `pendaftaran` (`kodedaftar_mahasiswa`, `nim_mahasiswa`, `nama_mahasi
 ('DFTR0520170005', 1514312088, 'Nugraha Faradmono', 'Pagi', 6, '2017-05-23', '18:07:04', 70000, 'DSC_5059.jpg', '', '0', '', '2017-05-23', 'noqrcode.png', NULL),
 ('DFTR0520170006', 1514321048, 'Stefanus Ricky P.', 'Sore', 4, '2017-05-23', '18:16:02', 210000, 'DSC_5059.jpg', '', '0', '', '2017-05-23', 'noqrcode.png', NULL),
 ('DFTR0520170007', 1514321127, 'Rezky Alfan Centaury H.', 'Sore', 4, NULL, NULL, 280000, 'DSC_5059.jpg', '', '0', '', '2017-05-23', NULL, NULL),
+('DFTR0620170001', 24121974, 'Dodo Ananto', 'Sore', NULL, '2017-06-21', '01:54:30', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('DFTR1220150001', 9043170, 'Rizky Eko P', 'Sore', 1, '2015-12-08', '13:00:00', 350000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '9043170Rizky Eko P.png', 'DFTR12201500019043170'),
 ('DFTR1220150002', 10043034, 'Agung AD', 'Sore', 1, '2015-12-08', '13:00:00', 280000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '10043034Agung AD.png', 'DFTR122015000210043034'),
 ('DFTR1220150003', 10043125, 'M. Makinun Amin', 'Sore', 1, '2015-12-08', '13:00:00', 210000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '10043125M Makinun Amin.png', 'DFTR122015000310043125'),
@@ -3279,9 +3280,9 @@ INSERT INTO `pendaftaran` (`kodedaftar_mahasiswa`, `nim_mahasiswa`, `nama_mahasi
 ('DFTR1220150216', 1514321114, 'Choirun Nisa', 'Sore', 1, '2015-12-08', '13:00:00', 210000, 'DSC_5059.jpg', 'Kramat Jegu Rt.05 Rw.O1', '0', 'Sidoarjo', '1996-06-27', '1514321114Choirun Nisa.png', 'DFTR12201502161514321114'),
 ('DFTR1220150217', 15043120, 'Riza Anas S', 'Pagi', 1, '2015-12-08', '13:00:00', 210000, 'anas.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '15043120Riza Anas S.png', 'DFTR122015021715043120'),
 ('DFTR1220150218', 1514321121, 'Dimmaest Arvian R.', 'Sore', 1, '2015-12-08', '13:00:00', 70000, 'DSC_5059.jpg', 'Jl.Banyu Urip Lor Xi /17', '0', 'Surabaya', '1993-06-27', '1514321121Dimmaest Arvian R.png', 'DFTR12201502181514321121'),
-('DFTR1220150219', 1514321124, 'Adam Adi Prayogo', 'Sore', 1, '2015-12-08', '13:00:00', 210000, 'DSC_5059.jpg', 'Gedung Driyorejo Gresik', '0', 'Gresik', '1997-09-14', '1514321124Adam Adi Prayogo.png', 'DFTR12201502191514321124'),
-('DFTR1220150220', 14043114, 'Eko Firnando Siringo Ringo', 'Sore', 1, '2015-12-08', '13:00:00', 140000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '1997-09-15', '14043114Eko Firnando Siringo Ringo.png', 'DFTR122015022014043114');
+('DFTR1220150219', 1514321124, 'Adam Adi Prayogo', 'Sore', 1, '2015-12-08', '13:00:00', 210000, 'DSC_5059.jpg', 'Gedung Driyorejo Gresik', '0', 'Gresik', '1997-09-14', '1514321124Adam Adi Prayogo.png', 'DFTR12201502191514321124');
 INSERT INTO `pendaftaran` (`kodedaftar_mahasiswa`, `nim_mahasiswa`, `nama_mahasiswa`, `kelas_mahasiswa`, `semester_mahasiswa`, `tgl_daftar_mahasiswa`, `jam_daftar_mahasiswa`, `total_biaya`, `foto`, `alamat`, `tlp`, `tempat`, `tgl`, `qrcode`, `code`) VALUES
+('DFTR1220150220', 14043114, 'Eko Firnando Siringo Ringo', 'Sore', 1, '2015-12-08', '13:00:00', 140000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '1997-09-15', '14043114Eko Firnando Siringo Ringo.png', 'DFTR122015022014043114'),
 ('DFTR1220150221', 14043038, 'Yosaldi Hari Mardhika', 'Pagi', 1, '2015-12-08', '13:00:00', 0, 'DSC_5059.jpg', 'Sidoarjo, Jl.Malik Ibrahim No.44', '0', 'Sidoarjo', '1995-03-17', '14043038Yosaldi Hari Mardhika.png', 'DFTR122015022114043038'),
 ('DFTR1220150222', 1514321044, 'Muhammad Bagus Kuncoro', 'Pagi', 1, '2015-12-08', '13:00:00', 210000, 'DSC_5059.jpg', 'Jl.H.Abd.Rahman No.84 Rt 5 Rw 3', '0', 'Surabaya', '1995-05-29', 'noqrcode.png', 'DFTR12201502221514321044'),
 ('DFTR1220150223', 15043127, 'Rezky Alfan Centaury Harimu', 'Pagi', 1, '2015-12-08', '13:00:00', 0, 'DSC_5059.jpg', 'Perum. Csm B-10, Jumput Rejo, Sukodono, Sidoarjo', '0', 'Surabaya', '1995-06-19', '15043127Rezky Alfan Centaury Harimu.png', 'DFTR122015022315043127'),
@@ -3364,7 +3365,7 @@ CREATE TABLE IF NOT EXISTS `t_01_audit_trail` (
   `oldvalue` longtext,
   `newvalue` longtext,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=51 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=105 ;
 
 --
 -- Dumping data for table `t_01_audit_trail`
@@ -3420,7 +3421,61 @@ INSERT INTO `t_01_audit_trail` (`id`, `datetime`, `script`, `user`, `action`, `t
 (47, '2017-06-20 04:18:05', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
 (48, '2017-06-20 04:18:10', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
 (49, '2017-06-20 04:18:33', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
-(50, '2017-06-20 04:18:36', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', '');
+(50, '2017-06-20 04:18:36', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(51, '2017-06-20 22:07:31', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(52, '2017-06-20 22:08:26', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(53, '2017-06-20 22:08:31', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(54, '2017-06-21 00:03:57', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(55, '2017-06-21 00:04:02', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(56, '2017-06-21 00:04:39', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(57, '2017-06-21 00:04:43', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(58, '2017-06-21 00:05:18', '/praktikum/t_02_userlist.php', '14', 'U', 't_02_user', 'NIM', '14', '24121974', '1'),
+(59, '2017-06-21 00:28:46', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(60, '2017-06-21 00:28:49', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(61, '2017-06-21 00:40:00', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(62, '2017-06-21 00:40:07', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(63, '2017-06-21 00:41:11', '/praktikum/t_02_userlist.php', '14', 'U', 't_02_user', 'Nama', '14', 'Dodo Ananto', 'dodo'),
+(64, '2017-06-21 00:49:09', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(65, '2017-06-21 00:49:11', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(66, '2017-06-21 00:49:34', '/praktikum/t_02_useredit.php', '14', 'U', 't_02_user', 'Nama', '14', 'Dodo Ananto 2', 'Dodo Ananto'),
+(67, '2017-06-21 00:51:47', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(68, '2017-06-21 00:51:49', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(69, '2017-06-21 00:53:47', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(70, '2017-06-21 00:53:49', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(71, '2017-06-21 00:54:17', '/praktikum/t_02_userlist.php', '14', 'U', 't_02_user', 'Nama', '14', 'Dodo Ananto', 'Dodo Ananto 2'),
+(72, '2017-06-21 00:54:17', '/praktikum/t_02_userlist.php', '14', 'U', 't_02_user', 'NIM', '14', '241219747', '24121974'),
+(73, '2017-06-21 01:16:12', '/praktikum/t_02_useredit.php', '14', 'U', 't_02_user', 'NIM', '14', '24121974', '241219747'),
+(74, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'kodedaftar_mahasiswa', 'DFTR0620170001', '', 'DFTR0620170001'),
+(75, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'nim_mahasiswa', 'DFTR0620170001', '', '24121974'),
+(76, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'nama_mahasiswa', 'DFTR0620170001', '', 'Dodo Ananto'),
+(77, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'kelas_mahasiswa', 'DFTR0620170001', '', NULL),
+(78, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'semester_mahasiswa', 'DFTR0620170001', '', NULL),
+(79, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'tgl_daftar_mahasiswa', 'DFTR0620170001', '', '2017-06-21'),
+(80, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'jam_daftar_mahasiswa', 'DFTR0620170001', '', '01:35:29'),
+(81, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'total_biaya', 'DFTR0620170001', '', NULL),
+(82, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'foto', 'DFTR0620170001', '', NULL),
+(83, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'alamat', 'DFTR0620170001', '', NULL),
+(84, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'tlp', 'DFTR0620170001', '', NULL),
+(85, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'tempat', 'DFTR0620170001', '', NULL),
+(86, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'tgl', 'DFTR0620170001', '', NULL),
+(87, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'qrcode', 'DFTR0620170001', '', NULL),
+(88, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', 'A', 'pendaftaran', 'code', 'DFTR0620170001', '', NULL),
+(89, '2017-06-21 01:35:29', '/praktikum/pendaftaranadd.php', '14', '*** Batch insert begin ***', 'detail_pendaftaran', '', '', '', ''),
+(90, '2017-06-21 01:45:56', '/praktikum/pendaftaranlist.php', '14', 'U', 'pendaftaran', 'kelas_mahasiswa', 'DFTR0620170001', 'Pagi', NULL),
+(91, '2017-06-21 01:54:30', '/praktikum/pendaftaranedit.php', '14', 'U', 'pendaftaran', 'kelas_mahasiswa', 'DFTR0620170001', 'Sore', 'Pagi'),
+(92, '2017-06-21 01:54:30', '/praktikum/pendaftaranedit.php', '14', 'U', 'pendaftaran', 'jam_daftar_mahasiswa', 'DFTR0620170001', '01:54:30', '01:35:29'),
+(93, '2017-06-21 02:04:32', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(94, '2017-06-21 02:04:37', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(95, '2017-06-21 02:06:52', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(96, '2017-06-21 02:06:58', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(97, '2017-06-21 04:12:47', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(98, '2017-06-21 04:12:56', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(99, '2017-06-21 13:35:07', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(100, '2017-06-21 13:35:10', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(101, '2017-06-21 15:50:32', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(102, '2017-06-21 15:50:35', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(103, '2017-06-22 12:24:22', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(104, '2017-06-22 12:24:28', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -3446,7 +3501,7 @@ CREATE TABLE IF NOT EXISTS `t_02_user` (
 --
 
 INSERT INTO `t_02_user` (`UserID`, `Nama`, `Handphone`, `Email`, `Password`, `UserLevel`, `UserName`, `NIM`) VALUES
-(14, 'dodo', '0', 'dodo@dodo.dodo', '81dc9bdb52d04dc20036dbd8313ed055', 1, 'dodo', 1),
+(14, 'Dodo Ananto', '0', 'dodo@dodo.dodo', '81dc9bdb52d04dc20036dbd8313ed055', 1, 'dodo', 24121974),
 (13, 'admin', '9', '9', '21232f297a57a5a743894a0e4a801fc3', -1, 'admin', 9);
 
 -- --------------------------------------------------------
@@ -3521,7 +3576,7 @@ INSERT INTO `t_04_userlevelpermissions` (`userlevelid`, `tablename`, `permission
 (1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}praktikum', 0),
 (1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}user', 0),
 (1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_01_audit_trail', 0),
-(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_02_user', 0),
+(1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_02_user', 44),
 (1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_03_userlevels', 0),
 (1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}t_04_userlevelpermissions', 0),
 (1, '{47E9807F-0BA5-4478-84CF-DB02752CE563}c_home.php', 111);
