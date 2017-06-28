@@ -2878,7 +2878,9 @@ class cdetail_pendaftaran_list extends cdetail_pendaftaran {
 			$this->id_asisten->Visible       = false;
 			$this->status_kelompok->Visible  = false;
 			$this->nilai_akhir->Visible      = false;
-			$this->persetujuan->Visible      = false;
+
+			//$this->persetujuan->Visible      = false;
+			$this->persetujuan->Disabled     = true;
 		}
 		$this->GridAddRowCount = 1;
 	}

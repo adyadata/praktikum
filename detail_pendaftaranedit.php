@@ -1425,7 +1425,7 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 			$this->nilai_akhir->SetDbValueDef($rsnew, $this->nilai_akhir->CurrentValue, NULL, $this->nilai_akhir->ReadOnly);
 
 			// persetujuan
-			$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, NULL, $this->persetujuan->ReadOnly);
+			$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, "", $this->persetujuan->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);

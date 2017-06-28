@@ -720,29 +720,29 @@
         <phrase id="fldtagcaption2" value="Belum" />
       </field>
       <field id="id_kelompok">
-        <phrase id="fldcaption" value="id kelompok" />
+        <phrase id="fldcaption" value="Kelompok" />
       </field>
       <field id="id_jam_prak">
-        <phrase id="fldcaption" value="id jam prak" />
+        <phrase id="fldcaption" value="Jam Praktek" />
       </field>
       <field id="id_lab">
-        <phrase id="fldcaption" value="id lab" />
+        <phrase id="fldcaption" value="Laboratorium" />
       </field>
       <field id="id_pngjar">
-        <phrase id="fldcaption" value="id pngjar" />
+        <phrase id="fldcaption" value="Pengajar" />
       </field>
       <field id="id_asisten">
-        <phrase id="fldcaption" value="id asisten" />
+        <phrase id="fldcaption" value="Asisten" />
       </field>
       <field id="status_kelompok">
-        <phrase id="fldcaption" value="status kelompok" />
+        <phrase id="fldcaption" value="Status Kelompok" />
         <phrase id="fldtagvalue1" value="0" />
         <phrase id="fldtagcaption1" value="0" />
         <phrase id="fldtagvalue2" value="1" />
         <phrase id="fldtagcaption2" value="1" />
       </field>
       <field id="nilai_akhir">
-        <phrase id="fldcaption" value="nilai akhir" />
+        <phrase id="fldcaption" value="Nilai Akhir" />
         <phrase id="fldtagvalue1" value="A" />
         <phrase id="fldtagcaption1" value="A" />
         <phrase id="fldtagvalue2" value="B" />
@@ -755,7 +755,7 @@
         <phrase id="fldtagcaption5" value="E" />
       </field>
       <field id="persetujuan">
-        <phrase id="fldcaption" value="persetujuan" />
+        <phrase id="fldcaption" value="Persetujuan" />
         <phrase id="fldtagvalue1" value="Disetujui" />
         <phrase id="fldtagcaption1" value="Disetujui" />
         <phrase id="fldtagvalue2" value="Menunggu" />

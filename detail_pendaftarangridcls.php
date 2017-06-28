@@ -1214,7 +1214,7 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 		$this->status_kelompok->OldValue = $this->status_kelompok->CurrentValue;
 		$this->nilai_akhir->CurrentValue = NULL;
 		$this->nilai_akhir->OldValue = $this->nilai_akhir->CurrentValue;
-		$this->persetujuan->CurrentValue = NULL;
+		$this->persetujuan->CurrentValue = 'Menunggu';
 		$this->persetujuan->OldValue = $this->persetujuan->CurrentValue;
 	}
 
@@ -2421,7 +2421,7 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->nilai_akhir->SetDbValueDef($rsnew, $this->nilai_akhir->CurrentValue, NULL, $this->nilai_akhir->ReadOnly);
 
 			// persetujuan
-			$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, NULL, $this->persetujuan->ReadOnly);
+			$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, "", $this->persetujuan->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -2508,7 +2508,7 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 		$this->nilai_akhir->SetDbValueDef($rsnew, $this->nilai_akhir->CurrentValue, NULL, FALSE);
 
 		// persetujuan
-		$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, NULL, FALSE);
+		$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, "", strval($this->persetujuan->CurrentValue) == "");
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -2655,7 +2655,9 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 			$this->id_asisten->Visible       = false;
 			$this->status_kelompok->Visible  = false;
 			$this->nilai_akhir->Visible      = false;
-			$this->persetujuan->Visible      = false;
+
+			//$this->persetujuan->Visible      = false;
+			$this->persetujuan->Disabled     = true;
 		}
 		$this->GridAddRowCount = 1;
 	}

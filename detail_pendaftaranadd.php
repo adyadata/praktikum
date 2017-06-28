@@ -516,8 +516,7 @@ class cdetail_pendaftaran_add extends cdetail_pendaftaran {
 		$this->status_kelompok->OldValue = $this->status_kelompok->CurrentValue;
 		$this->nilai_akhir->CurrentValue = NULL;
 		$this->nilai_akhir->OldValue = $this->nilai_akhir->CurrentValue;
-		$this->persetujuan->CurrentValue = NULL;
-		$this->persetujuan->OldValue = $this->persetujuan->CurrentValue;
+		$this->persetujuan->CurrentValue = 'Menunggu';
 	}
 
 	// Load form values
@@ -1375,7 +1374,7 @@ class cdetail_pendaftaran_add extends cdetail_pendaftaran {
 		$this->nilai_akhir->SetDbValueDef($rsnew, $this->nilai_akhir->CurrentValue, NULL, FALSE);
 
 		// persetujuan
-		$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, NULL, FALSE);
+		$this->persetujuan->SetDbValueDef($rsnew, $this->persetujuan->CurrentValue, "", strval($this->persetujuan->CurrentValue) == "");
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
