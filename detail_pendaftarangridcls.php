@@ -2645,6 +2645,19 @@ class cdetail_pendaftaran_grid extends cdetail_pendaftaran {
 	function Page_Load() {
 
 		//echo "Page Load";
+		if (CurrentUserLevel() >= 0) {
+			$this->biaya_bayar->Visible      = false;
+			$this->status_praktikum->Visible = false;
+			$this->id_kelompok->Visible      = false;
+			$this->id_jam_prak->Visible      = false;
+			$this->id_lab->Visible           = false;
+			$this->id_pngjar->Visible        = false;
+			$this->id_asisten->Visible       = false;
+			$this->status_kelompok->Visible  = false;
+			$this->nilai_akhir->Visible      = false;
+			$this->persetujuan->Visible      = false;
+		}
+		$this->GridAddRowCount = 1;
 	}
 
 	// Page Unload event

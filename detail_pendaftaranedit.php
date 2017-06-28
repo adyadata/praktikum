@@ -1620,7 +1620,6 @@ class cdetail_pendaftaran_edit extends cdetail_pendaftaran {
 	function Page_Load() {
 
 		//echo "Page Load";
-		$this->GridAddRowCount = 2;
 	}
 
 	// Page Unload event
