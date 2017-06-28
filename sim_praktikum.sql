@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 24, 2017 at 01:52 AM
+-- Generation Time: Jun 29, 2017 at 03:51 AM
 -- Server version: 5.1.41
 -- PHP Version: 5.3.1
 
@@ -2072,7 +2072,7 @@ CREATE TABLE IF NOT EXISTS `detail_pendaftaran` (
   KEY `fk_idlab` (`id_lab`),
   KEY `fk_kodepengjr` (`id_pngjar`),
   KEY `id_asisten` (`id_asisten`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=834 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=835 ;
 
 --
 -- Dumping data for table `detail_pendaftaran`
@@ -2658,7 +2658,8 @@ INSERT INTO `detail_pendaftaran` (`id_detailpendaftaran`, `fk_kodedaftar`, `fk_j
 (830, 'DFTR1220150216', 'TI3346', 70000, '2017-05-23', '18:22:37', 'Belum', NULL, NULL, NULL, NULL, NULL, '0', NULL, 'Disetujui'),
 (831, 'DFTR1220150219', 'TI3343', 70000, '2017-05-23', '18:22:55', 'Belum', NULL, NULL, NULL, NULL, NULL, '0', NULL, 'Disetujui'),
 (832, 'DFTR1220150219', 'TI3346', 70000, '2017-05-23', '18:23:00', 'Belum', NULL, NULL, NULL, NULL, NULL, '0', NULL, 'Disetujui'),
-(833, 'DFTR0520170007', 'TI1340', 70000, '2017-05-23', '18:27:24', 'Belum', NULL, NULL, NULL, NULL, NULL, '0', NULL, 'Disetujui');
+(833, 'DFTR0520170007', 'TI1340', 70000, '2017-05-23', '18:27:24', 'Belum', NULL, NULL, NULL, NULL, NULL, '0', NULL, 'Disetujui'),
+(834, 'DFTR0620170001', 'TI1340', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -3061,7 +3062,7 @@ INSERT INTO `pendaftaran` (`kodedaftar_mahasiswa`, `nim_mahasiswa`, `nama_mahasi
 ('DFTR0520170005', 1514312088, 'Nugraha Faradmono', 'Pagi', 6, '2017-05-23', '18:07:04', 70000, 'DSC_5059.jpg', '', '0', '', '2017-05-23', 'noqrcode.png', NULL),
 ('DFTR0520170006', 1514321048, 'Stefanus Ricky P.', 'Sore', 4, '2017-05-23', '18:16:02', 210000, 'DSC_5059.jpg', '', '0', '', '2017-05-23', 'noqrcode.png', NULL),
 ('DFTR0520170007', 1514321127, 'Rezky Alfan Centaury H.', 'Sore', 4, NULL, NULL, 280000, 'DSC_5059.jpg', '', '0', '', '2017-05-23', NULL, NULL),
-('DFTR0620170001', 24121974, 'Dodo Ananto', 'Sore', NULL, '2017-06-21', '01:54:30', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('DFTR0620170001', 24121974, 'Dodo Ananto', 'Sore', 1, '2017-06-21', '01:54:30', 140000, 'IMG_20140528_081117.jpg', NULL, NULL, NULL, NULL, NULL, NULL),
 ('DFTR1220150001', 9043170, 'Rizky Eko P', 'Sore', 1, '2015-12-08', '13:00:00', 350000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '9043170Rizky Eko P.png', 'DFTR12201500019043170'),
 ('DFTR1220150002', 10043034, 'Agung AD', 'Sore', 1, '2015-12-08', '13:00:00', 280000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '10043034Agung AD.png', 'DFTR122015000210043034'),
 ('DFTR1220150003', 10043125, 'M. Makinun Amin', 'Sore', 1, '2015-12-08', '13:00:00', 210000, 'DSC_5059.jpg', 'Jl. A. Yani', '0', 'Surabaya', '2015-12-08', '10043125M Makinun Amin.png', 'DFTR122015000310043125'),
@@ -3365,7 +3366,7 @@ CREATE TABLE IF NOT EXISTS `t_01_audit_trail` (
   `oldvalue` longtext,
   `newvalue` longtext,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=105 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=140 ;
 
 --
 -- Dumping data for table `t_01_audit_trail`
@@ -3475,7 +3476,42 @@ INSERT INTO `t_01_audit_trail` (`id`, `datetime`, `script`, `user`, `action`, `t
 (101, '2017-06-21 15:50:32', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
 (102, '2017-06-21 15:50:35', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
 (103, '2017-06-22 12:24:22', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
-(104, '2017-06-22 12:24:28', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', '');
+(104, '2017-06-22 12:24:28', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(105, '2017-06-28 22:27:46', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(106, '2017-06-28 22:35:09', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(107, '2017-06-28 22:35:17', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(108, '2017-06-28 23:02:00', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(109, '2017-06-28 23:40:18', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(110, '2017-06-28 23:41:05', '/praktikum/pendaftaranedit.php', '14', 'U', 'pendaftaran', 'semester_mahasiswa', 'DFTR0620170001', '1', NULL),
+(111, '2017-06-28 23:41:05', '/praktikum/pendaftaranedit.php', '14', 'U', 'pendaftaran', 'total_biaya', 'DFTR0620170001', '140000', NULL),
+(112, '2017-06-28 23:41:05', '/praktikum/pendaftaranedit.php', '14', '*** Batch update begin ***', 'detail_pendaftaran', '', '', '', ''),
+(113, '2017-06-28 23:41:05', '/praktikum/pendaftaranedit.php', '14', '*** Batch update successful ***', 'detail_pendaftaran', '', '', '', ''),
+(114, '2017-06-28 23:45:38', '/praktikum/pendaftaranedit.php', '14', 'U', 'pendaftaran', 'foto', 'DFTR0620170001', 'IMG_20140528_081117.jpg', NULL),
+(115, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', '*** Batch update begin ***', 'detail_pendaftaran', '', '', '', ''),
+(116, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'fk_kodedaftar', '834', '', 'DFTR0620170001'),
+(117, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'fk_jenis_praktikum', '834', '', 'TI1340'),
+(118, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'biaya_bayar', '834', '', NULL),
+(119, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'status_praktikum', '834', '', NULL),
+(120, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'id_kelompok', '834', '', NULL),
+(121, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'id_jam_prak', '834', '', NULL),
+(122, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'id_lab', '834', '', NULL),
+(123, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'id_pngjar', '834', '', NULL),
+(124, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'id_asisten', '834', '', NULL),
+(125, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'status_kelompok', '834', '', '0'),
+(126, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'nilai_akhir', '834', '', NULL),
+(127, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'persetujuan', '834', '', NULL),
+(128, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', 'A', 'detail_pendaftaran', 'id_detailpendaftaran', '834', '', '834'),
+(129, '2017-06-28 23:58:02', '/praktikum/pendaftaranedit.php', '14', '*** Batch update successful ***', 'detail_pendaftaran', '', '', '', ''),
+(130, '2017-06-29 00:00:12', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(131, '2017-06-29 00:00:18', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(132, '2017-06-29 00:01:15', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(133, '2017-06-29 01:30:06', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(134, '2017-06-29 01:31:31', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(135, '2017-06-29 01:31:35', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', ''),
+(136, '2017-06-29 01:59:41', '/praktikum/logout.php', 'admin', 'logout', '::1', '', '', '', ''),
+(137, '2017-06-29 01:59:46', '/praktikum/login.php', 'dodo', 'login', '::1', '', '', '', ''),
+(138, '2017-06-29 02:44:35', '/praktikum/logout.php', 'dodo', 'logout', '::1', '', '', '', ''),
+(139, '2017-06-29 02:44:41', '/praktikum/login.php', 'admin', 'login', '::1', '', '', '', '');
 
 -- --------------------------------------------------------
 
