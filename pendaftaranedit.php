@@ -766,6 +766,8 @@ class cpendaftaran_edit extends cpendaftaran {
 
 		// foto
 		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageWidth = EW_THUMBNAIL_DEFAULT_WIDTH;
+			$this->foto->ImageHeight = EW_THUMBNAIL_DEFAULT_HEIGHT;
 			$this->foto->ImageAlt = $this->foto->FldAlt();
 			$this->foto->ViewValue = $this->foto->Upload->DbValue;
 		} else {
@@ -886,6 +888,8 @@ class cpendaftaran_edit extends cpendaftaran {
 			$this->foto->EditAttrs["class"] = "form-control";
 			$this->foto->EditCustomAttributes = "";
 			if (!ew_Empty($this->foto->Upload->DbValue)) {
+				$this->foto->ImageWidth = EW_THUMBNAIL_DEFAULT_WIDTH;
+				$this->foto->ImageHeight = EW_THUMBNAIL_DEFAULT_HEIGHT;
 				$this->foto->ImageAlt = $this->foto->FldAlt();
 				$this->foto->EditValue = $this->foto->Upload->DbValue;
 			} else {

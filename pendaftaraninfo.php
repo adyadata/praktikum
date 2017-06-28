@@ -108,6 +108,7 @@ class cpendaftaran extends cTable {
 		// foto
 		$this->foto = new cField('pendaftaran', 'pendaftaran', 'x_foto', 'foto', '`foto`', '`foto`', 200, -1, TRUE, '`foto`', FALSE, FALSE, FALSE, 'IMAGE', 'FILE');
 		$this->foto->Sortable = TRUE; // Allow sort
+		$this->foto->ImageResize = TRUE;
 		$this->fields['foto'] = &$this->foto;
 
 		// alamat
@@ -755,6 +756,8 @@ class cpendaftaran extends cTable {
 
 		// foto
 		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageWidth = EW_THUMBNAIL_DEFAULT_WIDTH;
+			$this->foto->ImageHeight = EW_THUMBNAIL_DEFAULT_HEIGHT;
 			$this->foto->ImageAlt = $this->foto->FldAlt();
 			$this->foto->ViewValue = $this->foto->Upload->DbValue;
 		} else {
@@ -928,6 +931,8 @@ class cpendaftaran extends cTable {
 		$this->foto->EditAttrs["class"] = "form-control";
 		$this->foto->EditCustomAttributes = "";
 		if (!ew_Empty($this->foto->Upload->DbValue)) {
+			$this->foto->ImageWidth = EW_THUMBNAIL_DEFAULT_WIDTH;
+			$this->foto->ImageHeight = EW_THUMBNAIL_DEFAULT_HEIGHT;
 			$this->foto->ImageAlt = $this->foto->FldAlt();
 			$this->foto->EditValue = $this->foto->Upload->DbValue;
 		} else {
